@@ -2,50 +2,24 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
 )
 
-type User struct {
-	ID       uint   `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type MyHandler struct {
-	sessions map[string]uint
-	users    map[string]*User
-}
-
-func NewMyHandler() *MyHandler {
-	return &MyHandler{
-		sessions: make(map[string]uint, 10),
-		users: map[string]*User{
-			"rvasily": {1, "rvasily", "love"},
-		},
-	}
-}
-
-//копирнул из репока с лекциями, оставил временно
-func (api *MyHandler) Root(w http.ResponseWriter, r *http.Request) {
-	authorized := false
-	session, err := r.Cookie("session_id")
-	if err == nil && session != nil {
-		_, authorized = api.sessions[session.Value]
-	}
-
-	if authorized {
-		w.Write([]byte("autrorized"))
-	} else {
-		w.Write([]byte("not autrorized"))
-	}
-}
+var templates *template.Template
 
 func main() {
+	templates = template.Must(template.ParseGlob("public/*.html"))
 	r := mux.NewRouter()
 
-	api := NewMyHandler()
-	r.HandleFunc("/", api.Root)
-	r.HandleFunc("/new/repository", api.NewRepository)
-
+	r.HandleFunc("/new/repository", NewRepository).Methods("POST")
+	r.HandleFunc("/", indexHandler).Methods("GET")
+	fs := http.FileServer(http.Dir("./public"))
+	r.PathPrefix("/public/").Handler(http.StripPrefix("/public", fs))
+	http.Handle("/", r)
 	http.ListenAndServe(":8080", r)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	templates.ExecuteTemplate(w, "index.html", nil)
 }

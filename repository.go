@@ -31,7 +31,7 @@ type Repository struct {
     default_branch: "master"
 }
 */
-func (api *MyHandler) NewRepository(w http.ResponseWriter, r *http.Request) {
+func  NewRepository(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close() // важный пункт!
 	if err != nil {
