@@ -1,15 +1,11 @@
 package models
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -99,31 +95,30 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 
 // не работает
 func UploadAvatar(w http.ResponseWriter, r *http.Request) {
+
 	r.ParseMultipartForm(5 * 1024 * 1025)
-	file, handler, err := r.FormFile("avatar")
+	image, header, err := r.FormFile("avatar")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer file.Close()
+	defer image.Close()
 
-	fmt.Fprintf(w, "handler.Filename %v\n", handler.Filename)
-	fmt.Fprintf(w, "handler.Header %#v\n", handler.Header)
-
-	hasher := md5.New()
-	io.Copy(hasher, file)
-
-	filePath := "./static/image/" + handler.Filename
-	img, errImg := os.Create(filePath)
-	if errImg != nil {
-		json.NewEncoder(w).Encode(&Result{
-			Err: "Server Error",
-		})
-		// 	return
+	byteImage, err := ioutil.ReadAll(image)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
-	defer img.Close()
 
-	io.Copy(img, file)
+	filePath := "./static/image/" + header.Filename
+	err = ioutil.WriteFile(filePath, byteImage, 0644)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	webPath := "localhost:8080/static/image/" + header.Filename
+
 	elem, er := profilMap["antonelagin"]
 	if !er {
 		json.NewEncoder(w).Encode(&Result{
@@ -132,8 +127,6 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	elem.Avatar = "http://localhost:8080/static/image/" + handler.Filename
+	elem.Avatar = webPath
 	profilMap["antonelagin"] = elem
-
-	fmt.Fprintf(w, "md5 %x\n", hasher.Sum(nil))
 }
