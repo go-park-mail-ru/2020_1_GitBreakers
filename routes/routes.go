@@ -21,11 +21,9 @@ func NewRouter() *mux.Router {
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 
-	// staticHandler := http.StripPrefix(
-	// 	"/data/",
-	// 	http.FileServer(http.Dir("./static")),
-	// )
-	// http.Handle("/data/", staticHandler)
+
+	r.HandleFunc("/repository", models.GetRepository).Methods(http.MethodGet, http.MethodOptions)
+	r.Use(mux.CORSMethodMiddleware(r))
 
 	return r
 }
