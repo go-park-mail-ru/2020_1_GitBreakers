@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
@@ -35,7 +34,7 @@ type Profile struct {
 	Avatar    string `json:"avatar"`
 	Login     string `json:"login"`
 	Name      string `json:"name"`
-	Bio       string `json:"Bio"`
+	Bio       string `json:"bio"`
 	URL       string `json:"url"`
 	Followers uint   `json:"followers"`
 	Following uint   `json:"following"`
@@ -48,29 +47,27 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	prof := Profile{}
-	body, errB := ioutil.ReadAll(r.Body)
-
-	if errB != nil {
-		json.NewEncoder(w).Encode(&Result{
-			Err: "Server Error",
-		})
-		return
-	}
-
-	err := json.Unmarshal(body, &prof)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		json.NewEncoder(w).Encode(&Result{
-			Err: "bad body",
-		})
+		http.Error(w, `read body error`, http.StatusBadRequest)
+		// json.NewEncoder(w).Encode(&Result{
+		// 	Err: "Server Error",
+		// })
 		return
 	}
+
+	err = json.Unmarshal(body, &prof)
+	if err != nil {
+		http.Error(w, `invalid json`, http.StatusBadRequest)
+		return
+	}
+
 	login := strings.ToLower(prof.Login)
 	if _, ok := profilMap[login]; !ok {
-		json.NewEncoder(w).Encode(&Result{
-			Err: "unknown login",
-		})
+		http.Error(w, `login dont found`, http.StatusNotFound)
 		return
 	}
+
 	profilMap[login] = prof
 
 	json.NewEncoder(w).Encode(&Result{Body: "success"})
@@ -85,48 +82,45 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	profile, ok := profilMap[strings.ToLower(login)]
 	if !ok {
-		json.NewEncoder(w).Encode(&Result{
-			Err: "Not found"})
+		http.Error(w, `profile dont found`, http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(&Result{Body: profile})
 }
 
-// не работает
 func UploadAvatar(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	r.ParseMultipartForm(5 * 1024 * 1025)
 	image, header, err := r.FormFile("avatar")
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, `login dont found`, http.StatusNotFound)
 		return
 	}
 	defer image.Close()
 
 	byteImage, err := ioutil.ReadAll(image)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, `error`, http.StatusInternalServerError)
 		return
 	}
 
 	filePath := "./static/image/" + header.Filename
 	err = ioutil.WriteFile(filePath, byteImage, 0644)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, `error`, http.StatusInternalServerError)
 		return
 	}
 
-	webPath := "localhost:8080/static/image/" + header.Filename
+	webPath := "http://localhost:8080/static/image/" + header.Filename
 
 	elem, er := profilMap["antonelagin"]
 	if !er {
-		json.NewEncoder(w).Encode(&Result{
-			Err: "unknown login",
-		})
+		http.Error(w, `not found`, http.StatusNotFound)
 		return
 	}
 
 	elem.Avatar = webPath
 	profilMap["antonelagin"] = elem
+	json.NewEncoder(w).Encode(&Result{Body: map[string]string{"status": "okey"}})
 }
