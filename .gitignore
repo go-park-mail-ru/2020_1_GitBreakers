@@ -27,3 +27,6 @@
 # Editor and IDEs Files
 **/.idea/
 **/.vscode/
+
+# AppConfig file with SECRET KEYS !!!
+.env
