@@ -9,7 +9,7 @@ import (
 type User struct {
 	Login    string `json:"login"` // unique field
 	Email    string `json:"email"` // unique field
-	Password string `json:"password"` // password in UsersStore == some_hash(password)
+	Password string `json:"password;omitempty"` // password in UsersStore == some_hash(password)
 }
 
 const (
@@ -24,17 +24,20 @@ const (
 var EmailValidator = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 type UsersStore struct {
-	users map[string]User
-	mu    *sync.Mutex
+	emails map[string]bool
+	logins map[string]bool
+	users  map[string]User
+	mu     sync.Mutex
 }
 
 func (store *UsersStore) ValidateUser(user User) CommonError {
-	if _, isUniqueLogin := store.users[user.Login]; !isUniqueLogin {
-		return NewModelError(`user with same login already exists`, StatusUserLoginNotUnique)
+	if _, in := store.logins[user.Login]; in {
+		return NewModelError(`user with same login already exists`, StatusUserEmailNotUnique)
 	}
-	if _, isUniqueEmail := store.users[user.Email]; !isUniqueEmail {
+	if  _, in := store.emails[user.Email]; in {
 		return NewModelError(`user with same email already exists`, StatusUserEmailNotUnique)
 	}
+
 	if len(strings.Fields(user.Login)) != 1 {
 		return NewModelError(`user login invalid`, StatusUserLoginInvalid)
 	}
@@ -51,14 +54,23 @@ func (store *UsersStore) StoreUser(user User) CommonError {
 	if err := store.ValidateUser(user); err != nil {
 		return err
 	}
+
+	store.logins[user.Login] = true
+	store.emails[user.Email] = true
+
 	store.users[user.Login] = user
+
 	return nil
 }
 
 func (store *UsersStore) GetUser(userLogin string) (User, CommonError) {
-	user, inStore := store.users[userLogin]
-	if !inStore {
-		return user, NewModelError(`user not exits`, StatusUserNotExist)
+	user, loginIn := store.users[userLogin]
+	if !loginIn {
+		return User{}, NewModelError(`user not exits`, StatusUserNotExist)
 	}
-	return user, nil
+	return User{
+		Login: user.Login,
+		Email: user.Email,
+		Password: user.Password,
+	}, nil
 }

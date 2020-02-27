@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/sha3"
 	"log"
 	"net/http"
 	"time"
@@ -34,14 +34,16 @@ func (context *StoresContext) TryProcessUser(w http.ResponseWriter, r *http.Requ
 		return receivedUser, err
 	}
 
-	userPasswordHash, err := bcrypt.GenerateFromPassword([]byte(receivedUser.Password), bcrypt.DefaultCost)
+	sha3Hash := sha3.New256()
+	_, err := sha3Hash.Write([]byte(receivedUser.Password))
 	if err != nil {
 		http.Error(w, `Cant hash password`, http.StatusInternalServerError)
 		err = fmt.Errorf("[ERROR] cant create user hash from password=%s, err=%s",
 			receivedUser.Password, err.Error())
 		return receivedUser, err
 	}
-	receivedUser.Password = string(userPasswordHash)
+
+	receivedUser.Password = string(sha3Hash.Sum(nil))
 	return receivedUser, nil
 }
 
@@ -81,12 +83,13 @@ func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
 		Name:    "session_id",
 		Value:   sessionId.String(),
 		Expires: expiration,
+		Path: "/",
 	}
 	http.SetCookie(w, &cookie)
 
-	_ = json.NewEncoder(w).Encode(&models.Result{
-		Body: map[string]string{"status": "ok"},
-	})
+	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
+		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +98,11 @@ func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	var user *models.User
+
+	if _, err = context.TryProcessSessionId(r); err == nil {
+		http.Error(w, `Session already exist`, http.StatusBadRequest)
+		return
+	}
 
 	if user, err = context.TryProcessUser(w, r); err != nil {
 		log.Println(err.Error())
@@ -126,12 +134,13 @@ func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
 		Name:    "session_id",
 		Value:   sessionId.String(),
 		Expires: expiration,
+		Path: "/",
 	}
 	http.SetCookie(w, &cookie)
 
-	_ = json.NewEncoder(w).Encode(&models.Result{
-		Body: map[string]string{"status": "ok"},
-	})
+	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
+		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (context *StoresContext) Logout(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +160,7 @@ func (context *StoresContext) Logout(w http.ResponseWriter, r *http.Request) {
 	context.SessionStore.DeleteSession(sessionId.Value)
 	http.SetCookie(w, sessionId)
 
-	_ = json.NewEncoder(w).Encode(&models.Result{
-		Body: map[string]string{"status": "ok"},
-	})
+	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
+		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+	}
 }
