@@ -1,13 +1,27 @@
 package routes
 
 import (
+	"../handlers"
 	"../models"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-func NewRouter() *mux.Router {
+
+func NewRouter(config *AppConfig, ctx *handlers.StoresContext) *mux.Router {
 	r := mux.NewRouter()
+	
+	csrf.Secure(!config.IsDebug)
+	csrfMiddleware := csrf.Protect(config.CSRFTAuthKey)
+	
+	authRouter := r.PathPrefix("/auth").Subrouter()
+	authRouter.Use(csrfMiddleware)
+	
+	authRouter.HandleFunc("/login", ctx.Login).Methods("POST")
+	authRouter.HandleFunc("/signup", ctx.Signup).Methods("POST")
+	authRouter.HandleFunc("/logout", ctx.Logout).Methods("POST")
+	
 
 	r.HandleFunc("/new/repository", models.NewRepository).Methods("POST")
 	r.HandleFunc("/settings/profile", models.UpdateProfile).Methods("POST")
