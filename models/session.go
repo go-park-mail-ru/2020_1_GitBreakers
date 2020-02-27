@@ -13,7 +13,7 @@ type Session struct {
 
 type SessionsStore struct {
 	sessions map[string]Session
-	mu       *sync.Mutex
+	mu       sync.Mutex
 }
 
 const (

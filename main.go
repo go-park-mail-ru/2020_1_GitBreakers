@@ -2,6 +2,7 @@ package main
 
 import (
 	"./handlers"
+	"./models"
 	"./routes"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -43,9 +44,9 @@ func main() {
 		return
 	}
 
-	modelsContext := new(handlers.StoresContext)
+	storesContext := handlers.StoresContext(*models.CreateStoresContext())
 
-	r := routes.NewRouter(&appConfig, modelsContext)
+	r := routes.NewRouter(&appConfig, &storesContext)
 	http.Handle("/", r)
 
 	_ = http.ListenAndServe(":8080", r)
