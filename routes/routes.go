@@ -20,7 +20,6 @@ func NewRouter(config *AppConfig, ctx *handlers.StoresContext) *mux.Router {
 	authRouter.HandleFunc("/login", ctx.Login).Methods("POST")
 	authRouter.HandleFunc("/signup", ctx.Signup).Methods("POST")
 	authRouter.HandleFunc("/logout", ctx.Logout).Methods("POST")
-
 	userRouter := r.PathPrefix("/user").Subrouter()
 	userRouter.Use(csrfMiddleware)
 
