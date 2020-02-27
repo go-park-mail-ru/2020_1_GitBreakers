@@ -40,14 +40,22 @@ type Profile struct {
 	Following uint   `json:"following"`
 }
 
-func UpdateProfile(w http.ResponseWriter, r *http.Request) {
+func UpdateProfileOption(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Request-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
+	w.Header().Set("Content-Type", "application/json")
+}
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Request-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
 	w.Header().Set("Content-Type", "application/json")
 	prof := Profile{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "", http.StatusBadRequest)
+		// http.Error(w, "", http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&Result{
 			Err: "Server Error",
 		})
@@ -56,7 +64,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(body, &prof)
 	if err != nil {
-		http.Error(w, "", http.StatusBadRequest)
+		// http.Error(w, "", http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&Result{
 			Err: "invalid json",
 		})
@@ -65,7 +73,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	login := strings.ToLower(prof.Login)
 	if _, ok := profilMap[login]; !ok {
-		http.Error(w, "", http.StatusNotFound)
+		// http.Error(w, "", http.StatusNotFound)
 		json.NewEncoder(w).Encode(&Result{
 			Err: "not found login",
 		})
@@ -86,7 +94,7 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	profile, ok := profilMap[strings.ToLower(login)]
 	if !ok {
-		http.Error(w, `profile dont found`, http.StatusNotFound)
+		// http.Error(w, `profile dont found`, http.StatusNotFound)
 		json.NewEncoder(w).Encode(&Result{
 			Err: `profile dont found`,
 		})
@@ -111,7 +119,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 	byteImage, err := ioutil.ReadAll(image)
 	if err != nil {
-		http.Error(w, `error`, http.StatusInternalServerError)
+		// http.Error(w, `error`, http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(&Result{
 			Err: `error`,
 		})
@@ -121,7 +129,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	filePath := "./static/image/" + header.Filename
 	err = ioutil.WriteFile(filePath, byteImage, 0644)
 	if err != nil {
-		http.Error(w, `error`, http.StatusInternalServerError)
+		// http.Error(w, `error`, http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(&Result{
 			Err: `error`,
 		})
@@ -132,7 +140,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 	elem, er := profilMap["antonelagin"]
 	if !er {
-		http.Error(w, `not found`, http.StatusNotFound)
+		// http.Error(w, `not found`, http.StatusNotFound)
 		json.NewEncoder(w).Encode(&Result{
 			Err: `profile not found`,
 		})

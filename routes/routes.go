@@ -26,6 +26,7 @@ func NewRouter(config *AppConfig, ctx *handlers.StoresContext) *mux.Router {
 	r.HandleFunc("/profile/{login}", models.GetProfile).Methods("GET")
 	r.HandleFunc("/repository/{login}", models.GetRepositoryList).Methods("GET")
 	r.HandleFunc("/settings/avatar", models.UploadAvatar).Methods("POST")
+	r.HandleFunc("/settings/profile", models.UpdateProfileOption).Methods("OPTIONS")
 
 	fs := http.FileServer(http.Dir("./public"))
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public", fs))
