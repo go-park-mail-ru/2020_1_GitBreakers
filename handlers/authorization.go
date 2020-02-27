@@ -83,6 +83,7 @@ func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
 		Name:    "session_id",
 		Value:   sessionId.String(),
 		Expires: expiration,
+		Path: "/",
 	}
 	http.SetCookie(w, &cookie)
 
@@ -133,6 +134,7 @@ func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
 		Name:    "session_id",
 		Value:   sessionId.String(),
 		Expires: expiration,
+		Path: "/",
 	}
 	http.SetCookie(w, &cookie)
 
