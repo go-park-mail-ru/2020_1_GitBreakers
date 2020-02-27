@@ -8,20 +8,18 @@ import (
 	"net/http"
 )
 
-
 func NewRouter(config *AppConfig, ctx *handlers.StoresContext) *mux.Router {
 	r := mux.NewRouter()
-	
+
 	csrf.Secure(!config.IsDebug)
 	csrfMiddleware := csrf.Protect(config.CSRFTAuthKey)
-	
+
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.Use(csrfMiddleware)
-	
+
 	authRouter.HandleFunc("/login", ctx.Login).Methods("POST")
 	authRouter.HandleFunc("/signup", ctx.Signup).Methods("POST")
 	authRouter.HandleFunc("/logout", ctx.Logout).Methods("POST")
-	
 
 	r.HandleFunc("/new/repository", models.NewRepository).Methods("POST")
 	r.HandleFunc("/settings/profile", models.UpdateProfile).Methods("POST")
@@ -34,7 +32,6 @@ func NewRouter(config *AppConfig, ctx *handlers.StoresContext) *mux.Router {
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
-
 
 	r.HandleFunc("/repository", models.GetRepository).Methods(http.MethodGet, http.MethodOptions)
 	r.Use(mux.CORSMethodMiddleware(r))
