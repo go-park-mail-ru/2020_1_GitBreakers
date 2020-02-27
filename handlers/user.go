@@ -22,6 +22,8 @@ func (context *StoresContext) GetUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("[FATAL] %q\n", err)
 	}
 
+	user.Password = ""
+
 	if encErr := json.NewEncoder(w).Encode(&user); encErr != nil {
 		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
 	}
