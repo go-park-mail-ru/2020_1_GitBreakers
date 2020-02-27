@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -17,12 +16,18 @@ type SessionsStore struct {
 	mu       *sync.Mutex
 }
 
-func (store *SessionsStore) StoreSession(session Session) error {
+const (
+	_ = iota
+	StatusSessionAlreadyExist
+	StatusSessionNotExist
+)
+
+func (store *SessionsStore) StoreSession(session Session) CommonError {
 	defer store.mu.Unlock()
 	store.mu.Lock()
 
 	if _, isUnique := store.sessions[session.ID]; isUnique {
-		return fmt.Errorf("session with same id already in SessionsStore")
+		return NewModelError(`session with same id already in SessionsStore`, StatusSessionAlreadyExist)
 	}
 	store.sessions[session.ID] = session
 	return nil
@@ -33,10 +38,10 @@ func (store *SessionsStore) HaveSession(sessionId string) bool {
 	return in
 }
 
-func (store *SessionsStore) GetSession(sessionId string) (Session, error) {
+func (store *SessionsStore) GetSession(sessionId string) (Session, CommonError) {
 	session, inStore := store.sessions[sessionId]
 	if !inStore {
-		return session, fmt.Errorf("session not exits")
+		return session, NewModelError(`session not exits`, StatusSessionNotExist)
 	}
 	return session, nil
 }

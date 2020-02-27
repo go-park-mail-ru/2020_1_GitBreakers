@@ -8,43 +8,29 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"strings"
 )
 
 type StoresContext models.StoresContext
 
-type AuthError int
-
-func (err AuthError) Error() string {
-	return fmt.Sprintf("error code: %d", int(err))
-}
-
-func (context *StoresContext) TryProcessSessionId(r *http.Request) (string, AuthError) {
+func (context *StoresContext) TryProcessSessionId(r *http.Request) (string, models.CommonError) {
 	sessionId, err := r.Cookie("session_id")
 	if err == http.ErrNoCookie || sessionId == nil {
-		return "", AuthError(http.StatusUnauthorized)
+		return "", models.NewModelError(``, http.StatusUnauthorized)
 	}
 	if sessionId.Value == "" {
-		return "", AuthError(http.StatusUnprocessableEntity)
+		return "", models.NewModelError(``, http.StatusUnprocessableEntity)
 	}
 	if in := context.SessionStore.HaveSession(sessionId.Value); in {
-		return sessionId.Value, 0
+		return sessionId.Value, nil
 	}
-	return "", AuthError(http.StatusUnauthorized)
+	return "", models.NewModelError(``, http.StatusUnauthorized)
 }
 
 func (context *StoresContext) TryProcessUser(w http.ResponseWriter, r *http.Request) (*models.User, error) {
 	receivedUser := new(models.User)
 	if err := json.NewDecoder(r.Body).Decode(receivedUser); err != nil {
 		http.Error(w, `Invalid data`, http.StatusNotAcceptable)
-		return receivedUser, fmt.Errorf(`invalid data`)
-	}
-
-	if len(strings.Fields(receivedUser.Login)) != 1 {
-		_ = json.NewEncoder(w).Encode(&models.Result{
-			Err: "invalid login",
-		})
-		return receivedUser, fmt.Errorf(`invalid login`)
+		return receivedUser, err
 	}
 
 	userPasswordHash, err := bcrypt.GenerateFromPassword([]byte(receivedUser.Password), bcrypt.DefaultCost)
@@ -58,8 +44,8 @@ func (context *StoresContext) TryProcessUser(w http.ResponseWriter, r *http.Requ
 	return receivedUser, nil
 }
 
-// Register user
-func (context *StoresContext) Register(w http.ResponseWriter, r *http.Request) {
+// Signup user
+func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 
