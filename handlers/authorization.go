@@ -84,9 +84,9 @@ func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	_ = json.NewEncoder(w).Encode(&models.Result{
-		Body: map[string]string{"status": "ok"},
-	})
+	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
+		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
@@ -129,9 +129,9 @@ func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	_ = json.NewEncoder(w).Encode(&models.Result{
-		Body: map[string]string{"status": "ok"},
-	})
+	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
+		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (context *StoresContext) Logout(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +151,7 @@ func (context *StoresContext) Logout(w http.ResponseWriter, r *http.Request) {
 	context.SessionStore.DeleteSession(sessionId.Value)
 	http.SetCookie(w, sessionId)
 
-	_ = json.NewEncoder(w).Encode(&models.Result{
-		Body: map[string]string{"status": "ok"},
-	})
+	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
+		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+	}
 }
