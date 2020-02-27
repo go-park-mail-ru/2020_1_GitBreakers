@@ -43,10 +43,9 @@ func main() {
 		return
 	}
 
-
 	modelsContext := new(handlers.StoresContext)
 
-	r:= routes.NewRouter(&appConfig, modelsContext)
+	r := routes.NewRouter(&appConfig, modelsContext)
 	http.Handle("/", r)
 
 	_ = http.ListenAndServe(":8080", r)
