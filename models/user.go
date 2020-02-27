@@ -9,7 +9,7 @@ import (
 type User struct {
 	Login    string `json:"login"` // unique field
 	Email    string `json:"email"` // unique field
-	Password string `json:"password"` // password in UsersStore == some_hash(password)
+	Password string `json:"password;omitempty"` // password in UsersStore == some_hash(password)
 }
 
 const (
