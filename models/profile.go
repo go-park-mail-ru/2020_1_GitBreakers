@@ -133,7 +133,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	webPath := "http://localhost:8080/static/image/" + header.Filename
+	webPath := "http://89.208.198.186:8080/static/image/" + header.Filename
 
 	elem, er := profilMap["antonelagin"]
 	if !er {
