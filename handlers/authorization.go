@@ -49,7 +49,8 @@ func (context *StoresContext) TryProcessUser(w http.ResponseWriter, r *http.Requ
 
 // Signup user
 func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
 
 	var err error
@@ -83,17 +84,18 @@ func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
 		Name:    "session_id",
 		Value:   sessionId.String(),
 		Expires: expiration,
-		Path: "/",
+		Path:    "/",
 	}
 	http.SetCookie(w, &cookie)
 
 	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
-		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+		http.Error(w, `cant encode user to json:`+encErr.Error(), http.StatusInternalServerError)
 	}
 }
 
 func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
 
 	var err error
@@ -134,12 +136,12 @@ func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
 		Name:    "session_id",
 		Value:   sessionId.String(),
 		Expires: expiration,
-		Path: "/",
+		Path:    "/",
 	}
 	http.SetCookie(w, &cookie)
 
 	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
-		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+		http.Error(w, `cant encode user to json:`+encErr.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -161,6 +163,6 @@ func (context *StoresContext) Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, sessionId)
 
 	if encErr := json.NewEncoder(w).Encode(&models.Result{Body: map[string]string{"status": "ok"}}); encErr != nil {
-		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+		http.Error(w, `cant encode user to json:`+encErr.Error(), http.StatusInternalServerError)
 	}
 }

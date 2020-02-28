@@ -1,6 +1,7 @@
 package models
 
 import (
+	// "../handlers"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -40,17 +41,9 @@ type Profile struct {
 	Following uint   `json:"following"`
 }
 
-func UpdateProfileOption(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Request-Headers", "Content-Type")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
-	w.Header().Set("Content-Type", "application/json")
-}
-
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Request-Headers", "Content-Type")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
 	prof := Profile{}
 	body, err := ioutil.ReadAll(r.Body)
@@ -80,8 +73,12 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+	item := profilMap[login]
 
-	profilMap[login] = prof
+	item.URL = prof.URL
+	item.Name = prof.Name
+	item.Bio = prof.Bio
+	profilMap[login] = item
 
 	json.NewEncoder(w).Encode(&Result{Body: "success"})
 }

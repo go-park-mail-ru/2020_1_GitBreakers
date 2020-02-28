@@ -12,7 +12,7 @@ import (
 var repMap = map[string][]RepositoryForList{
 	"antonelagin": []RepositoryForList{
 		RepositoryForList{
-			Name:        "rep1",
+			Name:        "kekmda",
 			Private:     false,
 			Description: "lolkekcheburek",
 			Stars:       50,

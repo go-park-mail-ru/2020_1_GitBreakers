@@ -8,6 +8,8 @@ import (
 )
 
 func (context *StoresContext) GetUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	var err models.CommonError
 	var sessionIdCookie *http.Cookie
 
@@ -16,7 +18,7 @@ func (context *StoresContext) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _:= context.SessionStore.GetSession(sessionIdCookie.Value)
+	session, _ := context.SessionStore.GetSession(sessionIdCookie.Value)
 	user, err := context.UsersStore.GetUser(session.UserLogin)
 	if err != nil {
 		log.Fatalf("[FATAL] %q\n", err)
@@ -25,6 +27,6 @@ func (context *StoresContext) GetUser(w http.ResponseWriter, r *http.Request) {
 	user.Password = ""
 
 	if encErr := json.NewEncoder(w).Encode(&user); encErr != nil {
-		http.Error(w, `cant encode user to json:` + encErr.Error(), http.StatusInternalServerError)
+		http.Error(w, `cant encode user to json:`+encErr.Error(), http.StatusInternalServerError)
 	}
 }
