@@ -28,6 +28,8 @@ func (context *StoresContext) TryProcessSessionId(r *http.Request) (*http.Cookie
 }
 
 func (context *StoresContext) TryProcessUser(w http.ResponseWriter, r *http.Request) (*models.User, error) {
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	receivedUser := new(models.User)
 	if err := json.NewDecoder(r.Body).Decode(receivedUser); err != nil {
 		http.Error(w, `Invalid data`, http.StatusNotAcceptable)
@@ -49,6 +51,10 @@ func (context *StoresContext) TryProcessUser(w http.ResponseWriter, r *http.Requ
 
 // Signup user
 func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Headers",
+		"Content-Type, User-Agent, Cache-Control, Accept, X-Requested-With, If-Modified-Since, Origin")
 	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
@@ -94,6 +100,11 @@ func (context *StoresContext) Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Headers",
+		"Content-Type, User-Agent, Cache-Control, Accept, X-Requested-With, If-Modified-Since, Origin")
+
 	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
@@ -146,7 +157,12 @@ func (context *StoresContext) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (context *StoresContext) Logout(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Headers",
+		"Content-Type, User-Agent, Cache-Control, Accept, X-Requested-With, If-Modified-Since, Origin")
+
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	w.Header().Set("Content-Type", "application/json")
 
 	var err error
