@@ -8,24 +8,27 @@ import (
 )
 
 type SessionHttpWork struct {
-	SessUC session.UCSession
+	SessUC     session.UCSession
+	ExpireTime time.Duration
 }
 
-func (UC *SessionHttpWork) Create(user *models.User) (*http.Cookie, error) {
-	//create session
-	timeCookie, _ := time.ParseDuration("1h")
-	return &http.Cookie{
+func (UC *SessionHttpWork) Create(user models.User) (http.Cookie, error) {
+	sid, err := UC.SessUC.Create(user, UC.ExpireTime)
+	if err != nil {
+		return http.Cookie{}, err
+	}
+	return http.Cookie{
 		Name:     "session_id",
-		Value:    "somesessionhash",
+		Value:    sid,
 		HttpOnly: true,
-		Expires:  time.Now().Add(timeCookie),
+		Expires:  time.Now().Add(UC.ExpireTime),
 	}, nil
 }
 
-func (UC *SessionHttpWork) Delete(user models.User) error {
-	return UC.SessUC.Delete(user)
+func (UC *SessionHttpWork) Delete(sessID string) error {
+	return UC.SessUC.Delete(sessID)
 }
 
 func (UC *SessionHttpWork) GetLoginBySessionID(sessionID string) (string, error) {
-	return UC.SessUC.GetLoginBySessId(sessionID)
+	return UC.SessUC.GetLoginBySessID(sessionID)
 }

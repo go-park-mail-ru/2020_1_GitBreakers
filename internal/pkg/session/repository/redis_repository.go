@@ -1,25 +1,46 @@
 package repository
 
 import (
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-redis/redis/v7"
+	"github.com/pkg/errors"
 	"time"
 )
 
 type SessionRedis struct {
-	redisDB *redis.Conn
+	RedisDB *redis.Conn
 }
 
-func (redisConn *SessionRedis) Create(id string, login string, expire time.Duration) error {
-	//insert to redis
-	return nil
+func (repo *SessionRedis) Create(sid string, login string, expire time.Duration) (string, error) {
+	if err := repo.RedisDB.Set(sid, login, expire).Err(); err != nil {
+		return "", errors.Wrap(err, "session_repository: redis Set failed for")
+	}
+	return sid, nil
 }
 
-func (redisConn *SessionRedis) Delete(id string) error {
-	//delete from redis
-	return nil
+func (repo *SessionRedis) GetLoginById(sessionId string) (string, error) {
+	login, err := repo.RedisDB.Get(sessionId).Result()
+
+	switch {
+	case err == redis.Nil:
+		return "", errors.WithMessagef(entityerrors.DoesNotExist(),
+			"session_repository: key does not exist, sessionId=%v", sessionId)
+	case err != nil:
+		return "", errors.Wrapf(err,
+			"session_repository: redis Get failed with sessionId=%v", sessionId)
+	}
+
+	return login, nil
 }
 
-func (redisConn *SessionRedis) GetLogin(id string) error {
-	//insert to redis
+func (repo *SessionRedis) DeleteById(sid string) error {
+	deletedKeysCount, err := repo.RedisDB.Del(sid).Result()
+	switch {
+	case err != nil:
+		return errors.Wrapf(err, "session_repository: redis Del failed with sid=%v", sid)
+	case deletedKeysCount != 1:
+		return errors.WithMessagef(entityerrors.DoesNotExist(),
+			"session_repository: key does not exist, sid=%v", sid)
+	}
 	return nil
 }

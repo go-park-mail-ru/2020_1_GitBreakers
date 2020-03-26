@@ -1,11 +1,9 @@
 package session
 
-import (
-	"time"
-)
+import "time"
 
 type SessRepo interface {
-	Create(id string, login string, expire time.Duration) error
-	GetLogin(sessionId string) error
-	Delete(sessionId string) error
+	Create(sid string, login string, expire time.Duration) (string, error)
+	GetLoginById(sessionId string) (string, error)
+	DeleteById(sid string) error
 }

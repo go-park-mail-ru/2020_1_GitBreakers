@@ -3,7 +3,12 @@ package codehub
 import (
 	"flag"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
+	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
+	sessRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository"
+	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
+	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
+	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository"
+	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -15,7 +20,7 @@ import (
 
 func StartNew() {
 	//TODO получать из конфига+создать схему бд
-	connStr := "user=andrey password=kekmda dbname=codehub"
+	connStr := "user=andrey password=167839 dbname=codehub"
 
 	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
@@ -33,32 +38,15 @@ func StartNew() {
 		Debug:            false,
 	})
 
-	redisAddr := flag.String("addr", "redis://user:@localhost:6379/0", "redis addr")
 	//TODO чекнуть про редис(как лучше коннектить)
-	redisConn := &redis.Pool{
-		MaxIdle:   80,
-		MaxActive: 12000,
-		Dial: func() (redis.Conn, error) {
-			conn, err := redis.DialURL(*redisAddr)
-			if err != nil {
-				log.Fatal("fail init redis pool: ", err)
-			}
-			return conn, err
-		},
+	redisAddr := flag.String("addr", "redis://user:@localhost:6379/0", "redis addr")
+	redisConn, err := redis.DialURL(*redisAddr)
+	if err != nil {
+		log.Fatalf("can't connect to redis")
+		return
 	}
-	defer redisConn.Close()
-	//TODO должен вернуть наши обработчики
-	initNewHandler(db, redisConn)
-	//TODO сжирать реальные коннекты к бд
-	m := middleware.Middleware{
-		SessDeliv: nil,
-		UCUser:    nil,
-	}
-	//TODO сжирать реальные данные а не nil
-	userSetHandler := delivery.UserHttp{
-		SessHttp: nil,
-		UserUC:   nil,
-	}
+
+	userSetHandler, m := initNewHandler(db, &redisConn)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
@@ -70,6 +58,21 @@ func StartNew() {
 		return
 	}
 }
-func initNewHandler(db *sqlx.DB, redis *redis.Pool) {
-	///проброс всех коннектов в структуры
+
+func initNewHandler(db *sqlx.DB, redis *redis.Conn) (*userDeliv.UserHttp, *middleware.Middleware) {
+	sessRepos := sessRepo.SessionRedis{redis}
+	userRepo := userRepo.DBWork{db}
+	sessUC := sessUC.SessionUCWork{&sessRepos}
+	sessDeliv := sessDeliv.SessionHttpWork{&sessUC}
+	userUCase := userUC.UCUserWork{&userRepo}
+	//TODO Интерфейсы поправить, чтобы сжирал реальные данные
+	userDeliv := userDeliv.UserHttp{
+		SessHttp: sessDeliv,
+		UserUC:   userUCase,
+	}
+	m := middleware.Middleware{
+		SessDeliv: sessDeliv,
+		UCUser:    userUCase,
+	}
+	return &userDeliv, &m
 }
