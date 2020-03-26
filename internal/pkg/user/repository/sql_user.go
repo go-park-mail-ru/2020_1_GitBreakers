@@ -12,11 +12,6 @@ type DBWork struct {
 	DefaultAvatar string
 }
 
-func (db *DBWork) SaveAvatar(user *models.User, filepath string) error {
-	//update to db User.email, user.password, user.nickname
-	return nil
-}
-
 func (repo DBWork) GetUserByIdWithPass(id int64) (models.User, error) {
 	User := models.User{}
 	row := repo.DB.QueryRow("SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", id)

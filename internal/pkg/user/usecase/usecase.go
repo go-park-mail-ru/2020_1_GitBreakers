@@ -10,7 +10,7 @@ type UCUserWork struct {
 }
 
 func (UC *UCUserWork) Create(user models.User) error {
-	//call RepUser.create()
+	UC.RepUser.DeleteById()
 	return nil
 }
 
