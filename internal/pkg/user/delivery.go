@@ -7,5 +7,4 @@ type UserDelivery interface {
 	Login(writer io.Writer, reader io.Reader)
 	Logout(writer io.Writer, reader io.Reader)
 	Getinfo(writer io.Writer, reader io.Reader)
-	UpdateAvatar(writer io.Writer, reader io.Reader)
 }

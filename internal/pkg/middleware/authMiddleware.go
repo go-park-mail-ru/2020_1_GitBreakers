@@ -30,7 +30,7 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		//TODO проверить то ли вернет метод
-		userLogin, err := Mdware.SessDeliv.GetLoginBySessionID(sid.String())
+		userLogin, err := Mdware.SessDeliv.GetLoginBySessID(sid.String())
 		if err != nil {
 			ctx = context.WithValue(ctx, "isAuth", false)
 			next.ServeHTTP(w, r.WithContext(ctx))

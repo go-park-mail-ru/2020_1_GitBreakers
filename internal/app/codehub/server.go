@@ -1,7 +1,8 @@
 package codehub
 
 import (
-	"flag"
+	"fmt"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/config"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
 	sessRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository"
@@ -9,51 +10,55 @@ import (
 	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
 	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 	"log"
 	"net/http"
+	"time"
 )
 
 func StartNew() {
-	//TODO получать из конфига+создать схему бд
-	connStr := "user=andrey password=167839 dbname=codehub"
+	conf := config.New()
+	//берутся из .env файла
+	connStr := "user=" + conf.POSTGRES_USER + "password=" +
+		conf.POSTGRES_PASS + "dbname=" + conf.POSTGRES_DBNAME
 
 	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		log.Fatal("Failed to start db: " + err.Error())
+		return
 	}
 	defer db.Close()
 
-	db.SetMaxOpenConns(10)
+	db.SetMaxOpenConns(conf.MAX_DB_OPEN_CONN) //10 по дефолту
 
 	r := mux.NewRouter()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://89.208.198.186:8080", "http://89.208.198.186:80"},
+		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		Debug:            false,
 	})
 
-	//TODO чекнуть про редис(как лучше коннектить)
-	redisAddr := flag.String("addr", "redis://user:@localhost:6379/0", "redis addr")
-	redisConn, err := redis.DialURL(*redisAddr)
-	if err != nil {
-		log.Fatalf("can't connect to redis")
-		return
-	}
+	redisConn := redis.NewClient(&redis.Options{
+		Addr:     conf.REDIS_ADDR, // use default Addr
+		Password: "",              // no password set
+		DB:       0,               // use default DB
+	}).Conn()
+	pong, err := redisConn.Ping().Result()
+	fmt.Println(pong, err)
 
-	userSetHandler, m := initNewHandler(db, &redisConn)
+	userSetHandler, m := initNewHandler(db, redisConn)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
-	r.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodPost)
+	r.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodGet)
 	r.HandleFunc("/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 
-	if err = http.ListenAndServe(":8080", c.Handler(m.AuthMiddleware(r))); err != nil {
+	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(m.AuthMiddleware(r))); err != nil {
 		log.Println(err)
 		return
 	}
@@ -61,18 +66,17 @@ func StartNew() {
 
 func initNewHandler(db *sqlx.DB, redis *redis.Conn) (*userDeliv.UserHttp, *middleware.Middleware) {
 	sessRepos := sessRepo.SessionRedis{redis}
-	userRepo := userRepo.DBWork{db}
+	userRepo := userRepo.DBWork{db, "/static/img/avatar/default.jpg"}
 	sessUC := sessUC.SessionUCWork{&sessRepos}
-	sessDeliv := sessDeliv.SessionHttpWork{&sessUC}
+	sessDeliv := sessDeliv.SessionHttpWork{&sessUC, 48 * time.Hour}
 	userUCase := userUC.UCUserWork{&userRepo}
-	//TODO Интерфейсы поправить, чтобы сжирал реальные данные
 	userDeliv := userDeliv.UserHttp{
-		SessHttp: sessDeliv,
-		UserUC:   userUCase,
+		SessHttp: &sessDeliv,
+		UserUC:   &userUCase,
 	}
 	m := middleware.Middleware{
-		SessDeliv: sessDeliv,
-		UCUser:    userUCase,
+		SessDeliv: &sessDeliv,
+		UCUser:    &userUCase,
 	}
 	return &userDeliv, &m
 }
