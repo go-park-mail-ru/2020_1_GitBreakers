@@ -24,13 +24,15 @@ login: string, password:string
 
 Запрос: `/signup` типа `POST`
 
-Тело запроса:
-
+Тело запроса:  
+required email, login, password
 ```json
 {
-    "login": "string",
-    "password": "string",
-    "email": "string"
+  "login": "string",
+  "email": "string",
+  "name": "string",
+  "image": "string",
+  "password": "string"
 }
 ```
 Ответ:  
@@ -61,13 +63,15 @@ login: string, password:string
 Запрос: `/profile` типа `GET`
 
 Ответ:
+1. 200 ok
 ```json
 {
     "username": "string",
     "email": "string",
     "firstname": "string",
     "lastname": "string",
-    "avatar": "string"
+    "avatar": "string",
+    "password": ""
 }
 ```
 | Ключ          | Значение                 |
@@ -77,48 +81,3 @@ login: string, password:string
 | `firstname`   | Имя                      |
 | `lastname`    | Фамилия                  |
 | `avatar`      | Ссылка на аватарку (url) |
-
-### 2.2 Изменение информации профиля
-
-Запрос: `/profile` типа `PUT`
-
-Тело запроса:
-```json
-{
-    "username": "string",
-    "email": "string",
-    "firstname": "string",
-    "lastname": "string"
-}
-```
-| Ключ          | Значение                 |
-| ------------- | ------------------------ |
-| `username`    | Логин                    |
-| `email`       | Адрес электронной почты  |
-| `firstname`   | Имя                      |
-| `lastname`    | Фамилия                  |
-
-### 2.3 Удаление профиля
-
-Запрос: `/profile` типа `DELETE`
-
-### 2.4 Изменение пароля
-
-Запрос: `/password` типа `PUT`
-
-Тело запроса:
-```json
-{
-    "old_password": "string",
-    "new_password": "string"
-}
-```
-| Ключ           | Значение      |
-| -------------- | ------------- |
-| `old_password` | Старый пароль |
-| `new_password` | Новый пароль  |
-
-### 2.5 Изменение аватарки
-
-Запрос: `/avatar` типа `PUT`
-         |

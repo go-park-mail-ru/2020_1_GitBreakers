@@ -1,0 +1,19 @@
+sudo docker exec -it rdb redis-cli запуск докер клиента в контейнере с сервером
+sudo docker start rdb запуск отсановленного контейнера с докером
+установка докера
+sudo docker run --name rdb -p 6379:6379 redis
+
+для редиски глобальной
+/etc/init.d/redis-server stop
+/etc/init.d/redis-server start
+
+чекнуть порты
+sudo netstat -ltup
+
+конфиг nginx
+/etc/nginx/sites-avaliable/default
+
+redis крутится в докере на 6379 порте
+postgres глобальный
+nginx глобальный, отдает статику(на 8080 не редиректит)
+статика берется из (файлы фронта) nginx root /var/ww/html/public

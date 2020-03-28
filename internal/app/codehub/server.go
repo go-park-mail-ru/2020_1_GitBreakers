@@ -1,7 +1,6 @@
 package codehub
 
 import (
-	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/config"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
@@ -48,8 +47,6 @@ func StartNew() {
 		Password: "",              // no password set
 		DB:       0,               // use default DB
 	}).Conn()
-	pong, err := redisConn.Ping().Result()
-	fmt.Println(pong, err)
 
 	userSetHandler, m := initNewHandler(db, redisConn)
 
