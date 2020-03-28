@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type DBWork struct {
@@ -12,7 +13,7 @@ type DBWork struct {
 	DefaultAvatar string
 }
 
-func (repo DBWork) GetUserByIdWithPass(id int64) (models.User, error) {
+func (repo DBWork) GetUserByIdWithPass(id int) (models.User, error) {
 	User := models.User{}
 	row := repo.DB.QueryRow("SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", id)
 
@@ -22,7 +23,7 @@ func (repo DBWork) GetUserByIdWithPass(id int64) (models.User, error) {
 	}
 	return User, nil
 }
-func (repo DBWork) GetUserByIdWithoutPass(id int64) (models.User, error) {
+func (repo DBWork) GetUserByIdWithoutPass(id int) (models.User, error) {
 	storedUser, err := repo.GetUserByIdWithoutPass(id)
 	if err != nil {
 		return models.User{}, errors.Wrapf(err, "error in user GetById with id=%v", id)
@@ -100,7 +101,7 @@ func (repo DBWork) IsExists(user models.User) (bool, error) {
 	return isExists, nil
 }
 
-func (repo DBWork) DeleteById(id int64) error {
+func (repo DBWork) DeleteById(id int) error {
 	result, err := repo.DB.Exec("DELETE FROM users WHERE id = $1", id)
 	if err != nil {
 		return errors.Wrapf(err, "error in user DeleteById with id=%v", id)
@@ -135,4 +136,11 @@ func (repo DBWork) DeleteByLogin(login string) error {
 	}
 
 	return nil
+}
+func (repo DBWork) CheckPass(oldpass string, newpass string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(oldpass), []byte(newpass))
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

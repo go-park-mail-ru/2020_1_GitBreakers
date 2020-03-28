@@ -29,6 +29,6 @@ func (UC *SessionHttpWork) Delete(sessID string) error {
 	return UC.SessUC.Delete(sessID)
 }
 
-func (UC *SessionHttpWork) GetLoginBySessionID(sessionID string) (string, error) {
+func (UC *SessionHttpWork) GetLoginBySessID(sessionID string) (string, error) {
 	return UC.SessUC.GetLoginBySessID(sessionID)
 }
