@@ -1,6 +1,7 @@
 package codehub
 
 import (
+	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/config"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
@@ -29,6 +30,8 @@ func StartNew() {
 	if err != nil {
 		log.Fatal("Failed to start db: " + err.Error())
 		return
+	} else {
+		fmt.Println("cooencted to postgres ", err)
 	}
 	defer db.Close()
 
@@ -47,6 +50,13 @@ func StartNew() {
 		Password: conf.REDIS_PASS, // no password set
 		DB:       0,               // use default DB
 	}).Conn()
+	res, err := redisConn.Ping().Result()
+	if res != "PONG" {
+		log.Fatal("error with redis")
+		return
+	} else {
+		fmt.Println("connected to redis ", res, err)
+	}
 
 	userSetHandler, m := initNewHandler(db, redisConn)
 
