@@ -66,6 +66,9 @@ func StartNew() {
 	r.HandleFunc("/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPost)
 
+	staticHandler := http.FileServer(http.Dir("./static"))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
+
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(m.AuthMiddleware(r))); err != nil {
 		log.Println(err)
 		return
