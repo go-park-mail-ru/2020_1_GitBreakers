@@ -44,6 +44,7 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		ctx = context.WithValue(ctx, "isAuth", true)
+		//ctx.Value("user", user)
 		ctx = context.WithValue(ctx, "user", user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

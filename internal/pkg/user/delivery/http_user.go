@@ -5,7 +5,6 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -127,7 +126,8 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	if err := r.ParseMultipartForm(5 * 1024 * 1025); err != nil {
+	//6MB max
+	if err := r.ParseMultipartForm(6 << 20); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -138,21 +138,10 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	defer image.Close()
 
-	byteImage, err := ioutil.ReadAll(image)
-	if err != nil {
+	currUser := r.Context().Value("user").(models.User)
+
+	if err := UsHttp.UserUC.UploadAvatar(currUser, header, image); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	filePath := "./static/image/avatar/" + header.Filename
-	err = ioutil.WriteFile(filePath, byteImage, 0644)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	currUser := r.Context().Value("User").(models.User)
-	currUser.Image = "/static/image/avatar/" + header.Filename
-	json.NewEncoder(w).Encode(currUser)
-
 }

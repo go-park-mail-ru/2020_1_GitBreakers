@@ -74,7 +74,7 @@ func StartNew() {
 
 func initNewHandler(db *sqlx.DB, redis *redis.Conn) (*userDeliv.UserHttp, *middleware.Middleware) {
 	sessRepos := sessRepo.SessionRedis{redis}
-	userRepo := userRepo.DBWork{db, "/static/img/avatar/default.jpg"}
+	userRepo := userRepo.DBWork{db, "default.jpg", "./static/image/avatar/"}
 	sessUC := sessUC.SessionUCWork{&sessRepos}
 	sessDeliv := sessDeliv.SessionHttpWork{&sessUC, 48 * time.Hour}
 	userUCase := userUC.UCUserWork{&userRepo}

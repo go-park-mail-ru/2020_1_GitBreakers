@@ -5,6 +5,10 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
 )
 
 type UCUserWork struct {
@@ -50,4 +54,49 @@ func (UC *UCUserWork) GetByLogin(login string) (models.User, error) {
 }
 func (UC *UCUserWork) CheckPass(User models.User, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(User.Password, pass)
+}
+func (UC *UCUserWork) UploadAvatar(User models.User, fileName *multipart.FileHeader, image multipart.File) error {
+	byteImage, err := ioutil.ReadAll(image)
+	if err != nil {
+		return errors.Wrap(err, "err in uploadImage Usercase")
+	}
+	file, err := fileName.Open()
+	if err != nil {
+		return err
+	}
+	if err := checkFileContentType(file); err != nil {
+		return err
+	}
+
+	if err := UC.RepUser.UploadAvatar(fileName.Filename, byteImage); err != nil {
+		return errors.Wrap(err, "err in repo UploadAvatar")
+	}
+
+	if err := UC.RepUser.UpdateAvatarPath(User, fileName.Filename); err != nil {
+		return errors.Wrap(err, "err in repo UpdateAvatarPath")
+	}
+	return nil
+}
+
+func checkFileContentType(file multipart.File) error {
+	buffer := make([]byte, 512)
+
+	_, err := file.Read(buffer)
+	if err != nil || err == io.EOF {
+		return err
+	}
+
+	contentType := http.DetectContentType(buffer)
+
+	for _, r := range allowedContentType {
+		if contentType == r {
+			return nil
+		}
+	}
+	return errors.New("this content type is not allowed")
+}
+
+var allowedContentType = []string{
+	"image/png",
+	"image/jpeg",
 }

@@ -1,6 +1,8 @@
 package user
 
-import "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+import (
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+)
 
 type RepoUser interface {
 	GetUserByIdWithPass(id int) (models.User, error)
@@ -12,4 +14,6 @@ type RepoUser interface {
 	IsExists(user models.User) (bool, error)
 	DeleteById(id int) error
 	CheckPass(oldpass string, newpass string) (bool, error)
+	UploadAvatar(Name string, Content []byte) error
+	UpdateAvatarPath(User models.User, Name string) error
 }

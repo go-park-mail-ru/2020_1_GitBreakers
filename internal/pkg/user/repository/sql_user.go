@@ -6,11 +6,13 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"io/ioutil"
 )
 
 type DBWork struct {
-	DB            *sqlx.DB
-	DefaultAvatar string
+	DB               *sqlx.DB
+	DefaultAvatar    string
+	DefaultImagePath string
 }
 
 func (repo DBWork) GetUserByIdWithPass(id int) (models.User, error) {
@@ -64,7 +66,8 @@ func (repo DBWork) Create(newUser models.User) error {
 		return entityerrors.AlreadyExist()
 	}
 	userQuery := `INSERT INTO users (login, email, password, name, avatar_path) VALUES ($1, $2, $3, $4,$5);`
-	_, err := repo.DB.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password, newUser.Name, repo.DefaultAvatar)
+	_, err := repo.DB.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password,
+		newUser.Name, repo.DefaultImagePath+repo.DefaultAvatar)
 
 	if err != nil {
 		return errors.Wrap(err, "error in user Create ")
@@ -143,4 +146,17 @@ func (repo DBWork) CheckPass(oldpass string, newpass string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+func (repo DBWork) UpdateAvatarPath(User models.User, Name string) error {
+	User.Image = repo.DefaultImagePath + Name
+	if err := repo.Update(User); err != nil {
+		return errors.Wrap(err, "error in db")
+	}
+	return nil
+}
+func (repo DBWork) UploadAvatar(Name string, Content []byte) error {
+	if err := ioutil.WriteFile(repo.DefaultImagePath+Name, Content, 0644); err != nil {
+		return errors.Wrap(err, " in repo user upload avatar")
+	}
+	return nil
 }
