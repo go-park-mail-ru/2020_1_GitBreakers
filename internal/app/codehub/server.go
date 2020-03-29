@@ -44,7 +44,7 @@ func StartNew() {
 
 	redisConn := redis.NewClient(&redis.Options{
 		Addr:     conf.REDIS_ADDR, // use default Addr
-		Password: "",              // no password set
+		Password: conf.REDIS_PASS, // no password set
 		DB:       0,               // use default DB
 	}).Conn()
 
@@ -54,6 +54,7 @@ func StartNew() {
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
 	r.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodGet)
 	r.HandleFunc("/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
+	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPost)
 
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(m.AuthMiddleware(r))); err != nil {
 		log.Println(err)

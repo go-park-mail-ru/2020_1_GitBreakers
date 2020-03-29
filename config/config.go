@@ -14,6 +14,7 @@ type Config struct {
 	MAX_DB_OPEN_CONN int
 	MAIN_LISTEN_PORT string
 	ALLOWED_ORIGINS  []string
+	REDIS_PASS       string
 }
 
 // New returns a new Config struct(!!!пароль не задан по дефолту)
@@ -25,6 +26,7 @@ func New() *Config {
 		POSTGRES_DBNAME:  getEnv("POSTGRES_DBNAME", "codehub_dev"),
 		MAX_DB_OPEN_CONN: getEnvAsInt("MAX_DB_OPEN_CONN", 10),
 		MAIN_LISTEN_PORT: getEnv("MAIN_LISTEN_PORT", ":8080"),
+		REDIS_PASS:       getEnv("REDIS_PASS", ""),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://89.208.198.186:8080", "http://89.208.198.186:80"}, ","),
 	}
