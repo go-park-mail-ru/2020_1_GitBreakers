@@ -64,7 +64,7 @@ func StartNew() {
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
 	r.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodGet)
 	r.HandleFunc("/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
-	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPost)
+	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))

@@ -31,7 +31,6 @@ required email, login, password
   "login": "string",
   "email": "string",
   "name": "string",
-  "image": "string",
   "password": "string"
 }
 ```
@@ -81,3 +80,16 @@ required email, login, password
 | `firstname`   | Имя                      |
 | `lastname`    | Фамилия                  |
 | `avatar`      | Ссылка на аватарку (url) |
+2. 401 unauthorized
+### 2.2 Загрузить аватарку
+
+Запрос: `/avatar` типа `PUT`
+
+Ответ:
+1. 200 ok
+```html
+<form enctype="multipart/form-data">
+    <input name="avatar" type="file" />
+</form>
+```
+2. 401 unauthorized
