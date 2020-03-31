@@ -17,6 +17,7 @@ type Logger interface {
 	HttpInfo(ctx context.Context, msg string, status int)
 	HttpLogWarning(ctx context.Context, pkg string, funcName string, warn string)
 	HttpLogError(ctx context.Context, pkg string, funcName string, err error)
+	HttpLogInfo(ctx context.Context, msg string)
 }
 
 const requestIdKey int = 1
@@ -100,4 +101,10 @@ func (logger SimpleLogger) HttpLogError(ctx context.Context, pkg string, funcNam
 		"package":  pkg,
 		"function": funcName,
 	}).Error(err)
+}
+
+func (logger SimpleLogger) HttpLogInfo(ctx context.Context, msg string) {
+	logger.WithFields(logrus.Fields{
+		"id": logger.GetRequestIdFromContext(ctx),
+	}).Info(msg)
 }

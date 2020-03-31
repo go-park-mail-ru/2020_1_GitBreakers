@@ -11,6 +11,7 @@ import (
 	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/repository"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
+	middleareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -94,8 +95,8 @@ func StartNew() {
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
-
-	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(panicMiddleware)); err != nil {
+	loggerMWare := middleareCommon.CreateAccessLogMiddleware(1, customLogger)
+	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
 		log.Println(err)
 		return
 	}
@@ -110,6 +111,7 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger) 
 	userDelivery := userDeliv.UserHttp{
 		SessHttp: &sessDelivery,
 		UserUC:   &userUCase,
+		Logger:   &logger,
 	}
 	m := middleware.Middleware{
 		SessDeliv: &sessDelivery,

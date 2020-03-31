@@ -29,16 +29,22 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := UsHttp.UserUC.Create(*User); err != nil {
+		UsHttp.Logger.HttpLogWarning(r.Context(), "", "", "не создали юзера")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	UsHttp.Logger.HttpLogInfo(r.Context(), "создали юзера в постгресе")
+
 	cookie, err := UsHttp.SessHttp.Create(*User)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		UsHttp.Logger.HttpInfo(r.Context(), "не создали сессию", http.StatusInternalServerError)
 		return
 	}
 
 	http.SetCookie(w, &cookie)
+	UsHttp.Logger.HttpInfo(r.Context(), "создали юзера", http.StatusCreated)
 }
 
 //todo not work update
@@ -64,23 +70,27 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 
 func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Value("isAuth").(bool) {
+		UsHttp.Logger.HttpInfo(r.Context(), "уже авторизован", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	input := &models.SignInForm{}
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
+		UsHttp.Logger.HttpInfo(r.Context(), "невалидный json", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	User, err := UsHttp.UserUC.GetByLogin(input.Login)
 	if err != nil {
+		UsHttp.Logger.HttpInfo(r.Context(), "не нашли такой логин", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	isUser, err := UsHttp.UserUC.CheckPass(User, input.Password)
 	//выйдем если хреновый пароль
 	if err != nil || !isUser {
+		UsHttp.Logger.HttpInfo(r.Context(), "неверный пароль ", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -92,6 +102,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &cookie)
+	UsHttp.Logger.HttpInfo(r.Context(), "авторизовали юзера", http.StatusOK)
 }
 
 func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
