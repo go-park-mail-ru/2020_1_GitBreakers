@@ -43,6 +43,7 @@ func StartNew() {
 
 	r := mux.NewRouter()
 	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000", "http://89.208.198.186:80", "http://89.208.198.186:3000"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            false,
@@ -71,7 +72,7 @@ func StartNew() {
 	//	logrus.Error("Failed to open logfile:", err)
 	//	customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
 	//} else {
-	//	customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
+	//	customLogger = logger.NewTextFormatSimpleLogger(f)
 	//}
 	//defer func() {
 	//	if err := f.Close(); err != nil {
@@ -89,8 +90,8 @@ func StartNew() {
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
-	corsMiddleware := middleware.CorsMiddleware(m.AuthMiddleware(r))
-	panicMiddleware := middleware.PanicMiddleware(corsMiddleware)
+	//corsMiddleware := middleware.CorsMiddleware(m.AuthMiddleware(r))
+	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
 
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(panicMiddleware)); err != nil {
 		log.Println(err)
