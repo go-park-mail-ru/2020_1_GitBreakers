@@ -10,13 +10,16 @@ import (
 	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/delivery"
 	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/repository"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/usecase"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -65,22 +68,22 @@ func StartNew() {
 		fmt.Println("Connected to redis ", res, err)
 	}
 
-	//customLogger := logger.SimpleLogger{}
-	//filename := "logfile.log"
-	//f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-	//if err != nil {
-	//	logrus.Error("Failed to open logfile:", err)
-	//	customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
-	//} else {
-	//	customLogger = logger.NewTextFormatSimpleLogger(f)
-	//}
-	//defer func() {
-	//	if err := f.Close(); err != nil {
-	//		return
-	//	}
-	//}()
+	customLogger := logger.SimpleLogger{}
+	filename := "logfile.log"
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		logrus.Error("Failed to open logfile:", err)
+		customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
+	} else {
+		customLogger = logger.NewTextFormatSimpleLogger(f)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			return
+		}
+	}()
 
-	userSetHandler, m := initNewHandler(db, redisConn)
+	userSetHandler, m := initNewHandler(db, redisConn, customLogger)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
@@ -90,7 +93,6 @@ func StartNew() {
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
-	//corsMiddleware := middleware.CorsMiddleware(m.AuthMiddleware(r))
 	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
 
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(panicMiddleware)); err != nil {
@@ -99,7 +101,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Conn) (*userDeliv.UserHttp, *middleware.Middleware) {
+func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger) (*userDeliv.UserHttp, *middleware.Middleware) {
 	sessRepos := sessRepo.NewSessionRedis(redis)
 	userRepos := userRepo.NewUserRepo(db, "default.jpg", "./static/image/avatar/")
 	sessUCase := sessUC.SessionUC{&sessRepos}

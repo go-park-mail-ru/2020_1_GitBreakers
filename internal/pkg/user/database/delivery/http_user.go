@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"net/http"
 	"time"
 )
@@ -12,10 +13,12 @@ import (
 type UserHttp struct {
 	SessHttp session.SessDelivery
 	UserUC   user.UCUser
+	Logger   *logger.SimpleLogger
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Value("isAuth").(bool) {
+		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -72,13 +75,13 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	User, err := UsHttp.UserUC.GetByLogin(input.Login)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	isUser, err := UsHttp.UserUC.CheckPass(User, input.Password)
 	//выйдем если хреновый пароль
 	if err != nil || !isUser {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	//создали сессию челику
