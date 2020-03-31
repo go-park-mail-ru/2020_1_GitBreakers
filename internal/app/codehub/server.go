@@ -43,10 +43,11 @@ func StartNew() {
 
 	r := mux.NewRouter()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            false,
+		AllowedHeaders: []string{"Content-Type", "User-Agent",
+			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin"},
 	})
 
 	redisConn := redis.NewClient(&redis.Options{
@@ -54,6 +55,7 @@ func StartNew() {
 		Password: conf.REDIS_PASS, // no password set
 		DB:       0,               // use default db
 	}).Conn()
+
 	res, err := redisConn.Ping().Result()
 	if res != "PONG" {
 		log.Fatal("error with redis")
@@ -61,6 +63,21 @@ func StartNew() {
 	} else {
 		fmt.Println("Connected to redis ", res, err)
 	}
+
+	//customLogger := logger.SimpleLogger{}
+	//filename := "logfile.log"
+	//f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	//if err != nil {
+	//	logrus.Error("Failed to open logfile:", err)
+	//	customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
+	//} else {
+	//	customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
+	//}
+	//defer func() {
+	//	if err := f.Close(); err != nil {
+	//		return
+	//	}
+	//}()
 
 	userSetHandler, m := initNewHandler(db, redisConn)
 
@@ -72,7 +89,8 @@ func StartNew() {
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
-	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
+	corsMiddleware := middleware.CorsMiddleware(m.AuthMiddleware(r))
+	panicMiddleware := middleware.PanicMiddleware(corsMiddleware)
 
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(panicMiddleware)); err != nil {
 		log.Println(err)
