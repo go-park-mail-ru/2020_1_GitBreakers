@@ -2,14 +2,14 @@ package codehub
 
 import (
 	"fmt"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/config"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
-	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
-	sessRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository"
-	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
-	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
-	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository"
-	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
+	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/delivery"
+	sessRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/repository"
+	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/usecase"
+	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/delivery"
+	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/repository"
+	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/usecase"
 	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -31,9 +31,13 @@ func StartNew() {
 		log.Fatal("Failed to start db: " + err.Error())
 		return
 	} else {
-		fmt.Println("cooencted to postgres ", err)
+		fmt.Println("Connected to postgres ", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			return
+		}
+	}()
 
 	db.SetMaxOpenConns(conf.MAX_DB_OPEN_CONN) //10 по дефолту
 
@@ -48,14 +52,14 @@ func StartNew() {
 	redisConn := redis.NewClient(&redis.Options{
 		Addr:     conf.REDIS_ADDR, // use default Addr
 		Password: conf.REDIS_PASS, // no password set
-		DB:       0,               // use default DB
+		DB:       0,               // use default db
 	}).Conn()
 	res, err := redisConn.Ping().Result()
 	if res != "PONG" {
 		log.Fatal("error with redis")
 		return
 	} else {
-		fmt.Println("connected to redis ", res, err)
+		fmt.Println("Connected to redis ", res, err)
 	}
 
 	userSetHandler, m := initNewHandler(db, redisConn)
@@ -76,18 +80,18 @@ func StartNew() {
 }
 
 func initNewHandler(db *sqlx.DB, redis *redis.Conn) (*userDeliv.UserHttp, *middleware.Middleware) {
-	sessRepos := sessRepo.SessionRedis{redis}
-	userRepo := userRepo.DBWork{db, "default.jpg", "./static/image/avatar/"}
-	sessUC := sessUC.SessionUCWork{&sessRepos}
-	sessDeliv := sessDeliv.SessionHttpWork{&sessUC, 48 * time.Hour}
-	userUCase := userUC.UCUserWork{&userRepo}
-	userDeliv := userDeliv.UserHttp{
-		SessHttp: &sessDeliv,
+	sessRepos := sessRepo.NewSessionRedis(redis)
+	userRepos := userRepo.NewUserRepo(db, "default.jpg", "./static/image/avatar/")
+	sessUCase := sessUC.SessionUC{&sessRepos}
+	sessDelivery := sessDeliv.SessionHttp{&sessUCase, 48 * time.Hour}
+	userUCase := userUC.UCUser{&userRepos}
+	userDelivery := userDeliv.UserHttp{
+		SessHttp: &sessDelivery,
 		UserUC:   &userUCase,
 	}
 	m := middleware.Middleware{
-		SessDeliv: &sessDeliv,
+		SessDeliv: &sessDelivery,
 		UCUser:    &userUCase,
 	}
-	return &userDeliv, &m
+	return &userDelivery, &m
 }

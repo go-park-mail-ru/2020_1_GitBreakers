@@ -11,11 +11,11 @@ import (
 	"net/http"
 )
 
-type UCUserWork struct {
+type UCUser struct {
 	RepUser user.RepoUser
 }
 
-func (UC *UCUserWork) Create(user models.User) error {
+func (UC *UCUser) Create(user models.User) error {
 	isExsist, err := UC.RepUser.IsExists(user)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
@@ -32,12 +32,14 @@ func (UC *UCUserWork) Create(user models.User) error {
 	return nil
 }
 
-func (UC *UCUserWork) Delete(user models.User) error {
-	UC.RepUser.DeleteById(user.Id)
+func (UC *UCUser) Delete(user models.User) error {
+	if err := UC.RepUser.DeleteById(user.Id); err != nil {
+		return errors.Wrap(err, "can't delete user")
+	}
 	return nil
 }
 
-func (UC *UCUserWork) Update(user models.User) error {
+func (UC *UCUser) Update(user models.User) error {
 	isExsist, err := UC.RepUser.IsExists(user)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
@@ -46,16 +48,18 @@ func (UC *UCUserWork) Update(user models.User) error {
 		return errors.New("user with this login or email is already exists")
 	}
 	//todo может быть перехеширование хеша пароля
-	UC.RepUser.Update(user)
+	if err := UC.RepUser.Update(user); err != nil {
+		return err
+	}
 	return nil
 }
-func (UC *UCUserWork) GetByLogin(login string) (models.User, error) {
+func (UC *UCUser) GetByLogin(login string) (models.User, error) {
 	return UC.RepUser.GetUserByLoginWithPass(login)
 }
-func (UC *UCUserWork) CheckPass(User models.User, pass string) (bool, error) {
+func (UC *UCUser) CheckPass(User models.User, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(User.Password, pass)
 }
-func (UC *UCUserWork) UploadAvatar(User models.User, fileName *multipart.FileHeader, image multipart.File) error {
+func (UC *UCUser) UploadAvatar(User models.User, fileName *multipart.FileHeader, image multipart.File) error {
 	byteImage, err := ioutil.ReadAll(image)
 	if err != nil {
 		return errors.Wrap(err, "err in uploadImage Usercase")

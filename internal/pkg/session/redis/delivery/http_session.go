@@ -7,12 +7,12 @@ import (
 	"time"
 )
 
-type SessionHttpWork struct {
+type SessionHttp struct {
 	SessUC     session.UCSession
 	ExpireTime time.Duration
 }
 
-func (UC *SessionHttpWork) Create(user models.User) (http.Cookie, error) {
+func (UC *SessionHttp) Create(user models.User) (http.Cookie, error) {
 	sid, err := UC.SessUC.Create(user, UC.ExpireTime)
 	if err != nil {
 		return http.Cookie{}, err
@@ -25,10 +25,10 @@ func (UC *SessionHttpWork) Create(user models.User) (http.Cookie, error) {
 	}, nil
 }
 
-func (UC *SessionHttpWork) Delete(sessID string) error {
+func (UC *SessionHttp) Delete(sessID string) error {
 	return UC.SessUC.Delete(sessID)
 }
 
-func (UC *SessionHttpWork) GetLoginBySessID(sessionID string) (string, error) {
+func (UC *SessionHttp) GetLoginBySessID(sessionID string) (string, error) {
 	return UC.SessUC.GetLoginBySessID(sessionID)
 }

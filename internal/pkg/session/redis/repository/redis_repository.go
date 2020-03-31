@@ -8,18 +8,22 @@ import (
 )
 
 type SessionRedis struct {
-	RedisDB *redis.Conn
+	redisDb *redis.Conn
+}
+
+func NewSessionRedis(conn *redis.Conn) SessionRedis {
+	return SessionRedis{conn}
 }
 
 func (repo *SessionRedis) Create(sid string, login string, expire time.Duration) (string, error) {
-	if err := repo.RedisDB.Set(sid, login, expire).Err(); err != nil {
+	if err := repo.redisDb.Set(sid, login, expire).Err(); err != nil {
 		return "", errors.Wrap(err, "session_repository: redis Set failed for")
 	}
 	return sid, nil
 }
 
 func (repo *SessionRedis) GetLoginById(sessionId string) (string, error) {
-	login, err := repo.RedisDB.Get(sessionId).Result()
+	login, err := repo.redisDb.Get(sessionId).Result()
 
 	switch {
 	case err == redis.Nil:
@@ -34,7 +38,7 @@ func (repo *SessionRedis) GetLoginById(sessionId string) (string, error) {
 }
 
 func (repo *SessionRedis) DeleteById(sid string) error {
-	deletedKeysCount, err := repo.RedisDB.Del(sid).Result()
+	deletedKeysCount, err := repo.redisDb.Del(sid).Result()
 	switch {
 	case err != nil:
 		return errors.Wrapf(err, "session_repository: redis Del failed with sid=%v", sid)

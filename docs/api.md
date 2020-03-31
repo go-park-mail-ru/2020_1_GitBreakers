@@ -14,11 +14,6 @@ login: string, password:string
 Ответ:  
 1. 200 OK+поставит куки session_id
 2. 403 не прошел авторизацию
-```json
-{
-    "message": "sometext"
-}
-```
 
 ### 1.2 Регистрация
 
@@ -37,11 +32,6 @@ required email, login, password
 Ответ:  
 1. 200 OK+поставит куки session_id
 2. 409 Conflict(уже есть такой юзер)
-```json
-{
-    "message": "already exsist user with"
-}
-```
 
 ### 1.3 Логаут
 
@@ -50,11 +40,6 @@ required email, login, password
 Ответ:  
 1. 200 OK+уберет куки session_id
 2. 403 Unauthorized
-```json
-{
-    "message": "you must to be logged in"
-}
-```
 
 ## 2. Профиль
 ### 2.1 Получение информации профиля

@@ -27,7 +27,6 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := UsHttp.UserUC.Create(*User); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"message": err.Error()})
 		return
 	}
 	cookie, err := UsHttp.SessHttp.Create(*User)
@@ -118,7 +117,9 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	User := r.Context().Value("user").(models.User)
 	User.Password = ""
-	json.NewEncoder(w).Encode(User)
+	if err := json.NewEncoder(w).Encode(User); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
 }
 func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +137,11 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer image.Close()
+	defer func() {
+		if err := image.Close(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}()
 
 	currUser := r.Context().Value("user").(models.User)
 

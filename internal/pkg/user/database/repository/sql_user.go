@@ -9,15 +9,22 @@ import (
 	"io/ioutil"
 )
 
-type DBWork struct {
-	DB               *sqlx.DB
-	DefaultAvatar    string
-	DefaultImagePath string
+type UserRepo struct {
+	db               *sqlx.DB
+	defaultAvatar    string
+	defaultImagePath string
 }
 
-func (repo DBWork) GetUserByIdWithPass(id int) (models.User, error) {
+func NewUserRepo(conn *sqlx.DB, defAva string, defPath string) UserRepo {
+	return UserRepo{
+		db:               conn,
+		defaultAvatar:    defAva,
+		defaultImagePath: defPath,
+	}
+}
+func (repo UserRepo) GetUserByIdWithPass(id int) (models.User, error) {
 	User := models.User{}
-	row := repo.DB.QueryRow("SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", id)
+	row := repo.db.QueryRow("SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", id)
 
 	err := row.Scan(&User.Id, &User.Login, &User.Email, &User.Password, &User.Name, &User.Image)
 	if err != nil {
@@ -25,8 +32,8 @@ func (repo DBWork) GetUserByIdWithPass(id int) (models.User, error) {
 	}
 	return User, nil
 }
-func (repo DBWork) GetUserByIdWithoutPass(id int) (models.User, error) {
-	storedUser, err := repo.GetUserByIdWithoutPass(id)
+func (repo UserRepo) GetUserByIdWithoutPass(id int) (models.User, error) {
+	storedUser, err := repo.GetUserByIdWithPass(id)
 	if err != nil {
 		return models.User{}, errors.Wrapf(err, "error in user GetById with id=%v", id)
 	}
@@ -34,9 +41,9 @@ func (repo DBWork) GetUserByIdWithoutPass(id int) (models.User, error) {
 	return storedUser, nil
 }
 
-func (repo DBWork) GetUserByLoginWithPass(login string) (models.User, error) {
+func (repo UserRepo) GetUserByLoginWithPass(login string) (models.User, error) {
 	storedUser := models.User{}
-	row := repo.DB.QueryRow("SELECT id, login, email, password,name, avatar_path FROM users WHERE login = $1", login)
+	row := repo.db.QueryRow("SELECT id, login, email, password,name, avatar_path FROM users WHERE login = $1", login)
 
 	err := row.Scan(&storedUser.Id, &storedUser.Login, &storedUser.Email, &storedUser.Password, &storedUser.Name, &storedUser.Image)
 
@@ -47,7 +54,7 @@ func (repo DBWork) GetUserByLoginWithPass(login string) (models.User, error) {
 	return storedUser, nil
 }
 
-func (repo DBWork) GetByLoginWithoutPass(login string) (models.User, error) {
+func (repo UserRepo) GetByLoginWithoutPass(login string) (models.User, error) {
 	//todo может быть можно какой-либо метод сделать приватным
 	storedUser, err := repo.GetUserByLoginWithPass(login)
 	if err != nil {
@@ -57,7 +64,7 @@ func (repo DBWork) GetByLoginWithoutPass(login string) (models.User, error) {
 	return storedUser, nil
 }
 
-func (repo DBWork) Create(newUser models.User) error {
+func (repo UserRepo) Create(newUser models.User) error {
 	if isExists, err := repo.IsExists(newUser); isExists || err != nil {
 		if err != nil {
 			newUser.Password = ""
@@ -66,8 +73,8 @@ func (repo DBWork) Create(newUser models.User) error {
 		return entityerrors.AlreadyExist()
 	}
 	userQuery := `INSERT INTO users (login, email, password, name, avatar_path) VALUES ($1, $2, $3, $4,$5);`
-	_, err := repo.DB.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password,
-		newUser.Name, repo.DefaultImagePath+repo.DefaultAvatar)
+	_, err := repo.db.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password,
+		newUser.Name, repo.defaultImagePath+repo.defaultAvatar)
 
 	if err != nil {
 		return errors.Wrap(err, "error in user Create ")
@@ -77,8 +84,8 @@ func (repo DBWork) Create(newUser models.User) error {
 }
 
 //id юзера не меняется, достаточно скинуть в него новые данные
-func (repo DBWork) Update(usrUpd models.User) error {
-	result, err := repo.DB.Exec(
+func (repo UserRepo) Update(usrUpd models.User) error {
+	result, err := repo.db.Exec(
 		"UPDATE users SET login = $2, email = $3,name=$4,avatar_path=$5,password=$6 WHERE id = $1",
 		usrUpd.Id, usrUpd.Login, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
 	if err != nil {
@@ -92,9 +99,9 @@ func (repo DBWork) Update(usrUpd models.User) error {
 	return nil
 }
 
-func (repo DBWork) IsExists(user models.User) (bool, error) {
+func (repo UserRepo) IsExists(user models.User) (bool, error) {
 	isExists := false
-	err := repo.DB.QueryRow(
+	err := repo.db.QueryRow(
 		"SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 OR login = $2 OR email = $3) as is_exists",
 		user.Id, user.Login, user.Email).Scan(&isExists)
 	if err != nil {
@@ -104,8 +111,8 @@ func (repo DBWork) IsExists(user models.User) (bool, error) {
 	return isExists, nil
 }
 
-func (repo DBWork) DeleteById(id int) error {
-	result, err := repo.DB.Exec("DELETE FROM users WHERE id = $1", id)
+func (repo UserRepo) DeleteById(id int) error {
+	result, err := repo.db.Exec("DELETE FROM users WHERE id = $1", id)
 	if err != nil {
 		return errors.Wrapf(err, "error in user DeleteById with id=%v", id)
 	}
@@ -123,8 +130,8 @@ func (repo DBWork) DeleteById(id int) error {
 }
 
 //todo дублирование deleteByLogin and deleteById
-func (repo DBWork) DeleteByLogin(login string) error {
-	result, err := repo.DB.Exec("DELETE FROM users WHERE login = $1", login)
+func (repo UserRepo) DeleteByLogin(login string) error {
+	result, err := repo.db.Exec("DELETE FROM users WHERE login = $1", login)
 	if err != nil {
 		return errors.Wrapf(err, "error in user DeleteByLogin with login=%v", login)
 	}
@@ -140,22 +147,22 @@ func (repo DBWork) DeleteByLogin(login string) error {
 
 	return nil
 }
-func (repo DBWork) CheckPass(oldpass string, newpass string) (bool, error) {
+func (repo UserRepo) CheckPass(oldpass string, newpass string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(oldpass), []byte(newpass))
 	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
-func (repo DBWork) UpdateAvatarPath(User models.User, Name string) error {
-	User.Image = repo.DefaultImagePath + Name
+func (repo UserRepo) UpdateAvatarPath(User models.User, Name string) error {
+	User.Image = repo.defaultImagePath + Name
 	if err := repo.Update(User); err != nil {
 		return errors.Wrap(err, "error in db")
 	}
 	return nil
 }
-func (repo DBWork) UploadAvatar(Name string, Content []byte) error {
-	if err := ioutil.WriteFile(repo.DefaultImagePath+Name, Content, 0644); err != nil {
+func (repo UserRepo) UploadAvatar(Name string, Content []byte) error {
+	if err := ioutil.WriteFile(repo.defaultImagePath+Name, Content, 0644); err != nil {
 		return errors.Wrap(err, " in repo user upload avatar")
 	}
 	return nil

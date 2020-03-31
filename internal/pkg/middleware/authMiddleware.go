@@ -37,15 +37,15 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		//TODO аналогично, сделать чек того что возвращает
-		user, err := Mdware.UCUser.GetByLogin(userLogin)
+		User, err := Mdware.UCUser.GetByLogin(userLogin)
 		if err != nil {
 			ctx = context.WithValue(ctx, "isAuth", false)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		ctx = context.WithValue(ctx, "isAuth", true)
-		//ctx.Value("user", user)
-		ctx = context.WithValue(ctx, "user", user)
+		//ctx.Value("User", User)
+		ctx = context.WithValue(ctx, "User", User)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

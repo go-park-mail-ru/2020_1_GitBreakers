@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-type SessionUCWork struct {
+type SessionUC struct {
 	RepoSession session.SessRepo //содержит в себе класс репо+его методы
 }
 
-func (sessUC *SessionUCWork) Create(user models.User, expires time.Duration) (string, error) {
+func (sessUC *SessionUC) Create(user models.User, expires time.Duration) (string, error) {
 	sid := uuid.NewV4().String()
 	_, err := sessUC.RepoSession.Create(sid, user.Login, expires)
 	if err != nil {
@@ -21,7 +21,7 @@ func (sessUC *SessionUCWork) Create(user models.User, expires time.Duration) (st
 	return sid, nil
 }
 
-func (sessUC *SessionUCWork) Delete(sessionID string) error {
+func (sessUC *SessionUC) Delete(sessionID string) error {
 	err := sessUC.RepoSession.DeleteById(sessionID)
 	if err != nil {
 		return errors.New("error with delete session")
@@ -29,10 +29,10 @@ func (sessUC *SessionUCWork) Delete(sessionID string) error {
 	return nil
 }
 
-func (sessUC *SessionUCWork) GetLoginBySessID(sid string) (string, error) {
+func (sessUC *SessionUC) GetLoginBySessID(sid string) (string, error) {
 	login, err := sessUC.RepoSession.GetLoginById(sid)
 	if err != nil {
-
+		return "", nil
 	}
 	return login, nil
 }
