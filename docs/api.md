@@ -39,7 +39,7 @@ required email, login, password
 
 Ответ:  
 1. 200 OK+уберет куки session_id
-2. 403 Unauthorized
+2. 401 Unauthorized
 
 ## 2. Профиль
 ### 2.1 Получение информации профиля
