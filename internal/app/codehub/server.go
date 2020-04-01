@@ -26,20 +26,33 @@ import (
 
 func StartNew() {
 	conf := config.New()
+	customLogger := logger.SimpleLogger{}
+	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		logrus.Error("Failed to open logfile:", err)
+		customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
+	} else {
+		customLogger = logger.NewTextFormatSimpleLogger(f)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			customLogger.Info("Failed to close logger: " + err.Error())
+		}
+	}()
+
 	//берутся из .env файла
 	connStr := "user=" + conf.POSTGRES_USER + " password=" +
 		conf.POSTGRES_PASS + " dbname=" + conf.POSTGRES_DBNAME
 
 	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
-		log.Fatal("Failed to start db: " + err.Error())
-		return
+		customLogger.Info("Failed to start db: " + err.Error())
 	} else {
 		fmt.Println("Connected to postgres ", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
-			return
+			customLogger.Info("Failed to close db: " + err.Error())
 		}
 	}()
 
@@ -64,24 +77,9 @@ func StartNew() {
 	res, err := redisConn.Ping().Result()
 	if res != "PONG" {
 		log.Fatal("error with redis")
-		return
 	} else {
 		fmt.Println("Connected to redis ", res, err)
 	}
-
-	customLogger := logger.SimpleLogger{}
-	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-	if err != nil {
-		logrus.Error("Failed to open logfile:", err)
-		customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
-	} else {
-		customLogger = logger.NewTextFormatSimpleLogger(f)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			return
-		}
-	}()
 
 	userSetHandler, m := initNewHandler(db, redisConn, customLogger)
 
@@ -96,8 +94,7 @@ func StartNew() {
 	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
 	loggerMWare := middleareCommon.CreateAccessLogMiddleware(1, customLogger)
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 }
 
@@ -105,6 +102,7 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger) 
 	sessRepos := sessRepo.NewSessionRedis(redis)
 	userRepos := userRepo.NewUserRepo(db, "default.jpg", "./static/image/avatar/")
 	sessUCase := sessUC.SessionUC{&sessRepos}
+	//todo expiretime в конфиге
 	sessDelivery := sessDeliv.SessionHttp{&sessUCase, 48 * time.Hour}
 	userUCase := userUC.UCUser{&userRepos}
 	userDelivery := userDeliv.UserHttp{

@@ -22,6 +22,7 @@ func (UC *SessionHttp) Create(user models.User) (http.Cookie, error) {
 		Value:    sid,
 		HttpOnly: true,
 		Expires:  time.Now().Add(UC.ExpireTime),
+		Path:     "/",
 	}, nil
 }
 
