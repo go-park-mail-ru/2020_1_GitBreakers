@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
@@ -27,6 +28,11 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+	_, err = govalidator.ValidateStruct(User)
+	if err != nil {
+		UsHttp.Logger.HttpLogWarning(r.Context(), "validator", "", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
 	}
 	if err := UsHttp.UserUC.Create(*User); err != nil {
 		UsHttp.Logger.HttpLogWarning(r.Context(), "", "", "не создали юзера")
@@ -81,6 +87,13 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	if _, err := govalidator.ValidateStruct(input); err != nil {
+		UsHttp.Logger.HttpInfo(r.Context(), err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	User, err := UsHttp.UserUC.GetByLogin(input.Login)
 	if err != nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "не нашли такой логин", http.StatusUnauthorized)

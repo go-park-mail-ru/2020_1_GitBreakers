@@ -47,7 +47,7 @@ func StartNew() {
 
 	r := mux.NewRouter()
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://89.208.198.186:80", "http://89.208.198.186:3000"},
+		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            false,
@@ -70,8 +70,7 @@ func StartNew() {
 	}
 
 	customLogger := logger.SimpleLogger{}
-	filename := "logfile.log"
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		logrus.Error("Failed to open logfile:", err)
 		customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
