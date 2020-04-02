@@ -16,6 +16,7 @@ type Config struct {
 	ALLOWED_ORIGINS  []string
 	REDIS_PASS       string
 	LOGFILE          string
+	HOST_TO_SAVE     string
 }
 
 // New returns a new Config struct(!!!пароль не задан по дефолту)
@@ -28,6 +29,7 @@ func New() *Config {
 		MAX_DB_OPEN_CONN: getEnvAsInt("MAX_DB_OPEN_CONN", 10),
 		MAIN_LISTEN_PORT: getEnv("MAIN_LISTEN_PORT", ":8080"),
 		REDIS_PASS:       getEnv("REDIS_PASS", ""),
+		HOST_TO_SAVE:     getEnv("HOST_TO_SAVE", "http://89.208.198.186:8080"),
 		LOGFILE:          getEnv("LOGFILE", "logfile.log"),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://localhost:3000", "http://89.208.198.186:80", "http://89.208.198.186:3000"}, ","),

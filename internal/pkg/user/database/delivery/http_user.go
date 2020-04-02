@@ -42,8 +42,12 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	UsHttp.Logger.HttpLogInfo(r.Context(), "создали юзера в постгресе")
-
-	cookie, err := UsHttp.SessHttp.Create(User.Id)
+	UserFromDB, err := UsHttp.UserUC.GetByLogin(User.Login)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	cookie, err := UsHttp.SessHttp.Create(UserFromDB.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		UsHttp.Logger.HttpInfo(r.Context(), "не создали сессию", http.StatusInternalServerError)
@@ -173,9 +177,14 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	currUser := r.Context().Value("user").(models.User)
+	currUser := r.Context().Value("UserID")
+	User, err := UsHttp.UserUC.GetByID(currUser.(int))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	if err := UsHttp.UserUC.UploadAvatar(currUser, header, image); err != nil {
+	if err := UsHttp.UserUC.UploadAvatar(User, header, image); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

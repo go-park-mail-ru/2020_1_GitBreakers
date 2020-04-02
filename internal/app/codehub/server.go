@@ -81,7 +81,7 @@ func StartNew() {
 		fmt.Println("Connected to redis ", res, err)
 	}
 
-	userSetHandler, m := initNewHandler(db, redisConn, customLogger)
+	userSetHandler, m := initNewHandler(db, redisConn, customLogger, conf)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
@@ -100,9 +100,9 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger) (*userDeliv.UserHttp, *middleware.Middleware) {
+func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware) {
 	sessRepos := sessRepo.NewSessionRedis(redis, "codehub/session/")
-	userRepos := userRepo.NewUserRepo(db, "default.jpg", "./static/image/avatar/")
+	userRepos := userRepo.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessUCase := sessUC.SessionUC{&sessRepos}
 	//todo expiretime в конфиге
 	sessDelivery := sessDeliv.SessionHttp{&sessUCase, 48 * time.Hour}
