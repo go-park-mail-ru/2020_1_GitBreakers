@@ -184,7 +184,7 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 	slug := mux.Vars(r)["login"]
 	userData, err := UsHttp.UserUC.GetByLogin(slug)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	//todo не очень круто
