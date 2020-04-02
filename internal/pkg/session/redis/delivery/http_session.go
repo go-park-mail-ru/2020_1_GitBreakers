@@ -12,14 +12,15 @@ type SessionHttp struct {
 	ExpireTime time.Duration
 }
 
-func (UC *SessionHttp) Create(user models.User) (http.Cookie, error) {
-	sid, err := UC.SessUC.Create(user, UC.ExpireTime)
+func (UC *SessionHttp) Create(userID int) (http.Cookie, error) {
+	baseSess := models.Session{UserId: userID}
+	cretedSess, err := UC.SessUC.Create(baseSess, UC.ExpireTime)
 	if err != nil {
 		return http.Cookie{}, err
 	}
 	return http.Cookie{
 		Name:     "session_id",
-		Value:    sid,
+		Value:    cretedSess,
 		HttpOnly: true,
 		Expires:  time.Now().Add(UC.ExpireTime),
 		Path:     "/",
@@ -30,6 +31,6 @@ func (UC *SessionHttp) Delete(sessID string) error {
 	return UC.SessUC.Delete(sessID)
 }
 
-func (UC *SessionHttp) GetLoginBySessID(sessionID string) (string, error) {
-	return UC.SessUC.GetLoginBySessID(sessionID)
+func (UC *SessionHttp) GetBySessID(sessionID string) (models.Session, error) {
+	return UC.SessUC.GetByID(sessionID)
 }

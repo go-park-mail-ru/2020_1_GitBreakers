@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
+	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 )
@@ -18,9 +19,9 @@ type UserHttp struct {
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
-	if r.Context().Value("isAuth").(bool) {
-		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusUnauthorized)
-		w.WriteHeader(http.StatusUnauthorized)
+	if res := r.Context().Value("UserID"); res != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusBadRequest)
 		return
 	}
 	User := &models.User{}
@@ -42,7 +43,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 
 	UsHttp.Logger.HttpLogInfo(r.Context(), "создали юзера в постгресе")
 
-	cookie, err := UsHttp.SessHttp.Create(*User)
+	cookie, err := UsHttp.SessHttp.Create(User.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		UsHttp.Logger.HttpInfo(r.Context(), "не создали сессию", http.StatusInternalServerError)
@@ -53,29 +54,26 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	UsHttp.Logger.HttpInfo(r.Context(), "создали юзера", http.StatusCreated)
 }
 
-//todo not work update
 func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
-	if !r.Context().Value("isAuth").(bool) {
+	res := r.Context().Value("UserID")
+	if res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	//олд юзер
-	//User := r.Context().Value("user").(models.User)
-	//new user
+	userId := res.(int)
 	newUserData := models.User{}
-	//todo переопределить поля, тк передаваться хрень будет
 	if err := json.NewDecoder(r.Body).Decode(&newUserData); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if err := UsHttp.UserUC.Update(newUserData); err != nil {
-		w.WriteHeader(http.StatusForbidden)
+	if err := UsHttp.UserUC.Update(userId, newUserData); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
 func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Context().Value("isAuth").(bool) {
+	if res := r.Context().Value("UserID"); res != nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "уже авторизован", http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -108,7 +106,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//создали сессию челику
-	cookie, err := UsHttp.SessHttp.Create(User)
+	cookie, err := UsHttp.SessHttp.Create(User.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -119,18 +117,17 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
-	if !r.Context().Value("isAuth").(bool) {
+	if res := r.Context().Value("UserID"); res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	cookie, err := r.Cookie("session_id")
 	if err == http.ErrNoCookie || cookie == nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	sid := cookie.Value
-	err = UsHttp.SessHttp.Delete(sid)
-	if err != nil {
+
+	if err := UsHttp.SessHttp.Delete(cookie.Value); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
@@ -138,19 +135,25 @@ func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
-	if !r.Context().Value("isAuth").(bool) {
+	res := r.Context().Value("UserID")
+	if res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	User := r.Context().Value("user").(models.User)
-	User.Password = ""
+	userID := res.(int)
+	User, err := UsHttp.UserUC.GetByID(userID)
+	if err != nil {
+		UsHttp.Logger.HttpInfo(r.Context(), "ошибка при получении id юзера", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if err := json.NewEncoder(w).Encode(User); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 }
 func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
-	if !r.Context().Value("isAuth").(bool) {
+	if res := r.Context().Value("UserID"); res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -173,6 +176,20 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	currUser := r.Context().Value("user").(models.User)
 
 	if err := UsHttp.UserUC.UploadAvatar(currUser, header, image); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
+	slug := mux.Vars(r)["login"]
+	userData, err := UsHttp.UserUC.GetByLogin(slug)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	//todo не очень круто
+	userData.Password = ""
+	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

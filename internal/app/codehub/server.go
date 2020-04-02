@@ -86,7 +86,9 @@ func StartNew() {
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
 	r.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodGet)
-	r.HandleFunc("/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
+	r.HandleFunc("/whoami", userSetHandler.GetInfo).Methods(http.MethodGet)
+	r.HandleFunc("/profile", userSetHandler.Update).Methods(http.MethodPut)
+	r.HandleFunc("/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
 	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 
 	staticHandler := http.FileServer(http.Dir("./static"))
@@ -99,7 +101,7 @@ func StartNew() {
 }
 
 func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger) (*userDeliv.UserHttp, *middleware.Middleware) {
-	sessRepos := sessRepo.NewSessionRedis(redis)
+	sessRepos := sessRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := userRepo.NewUserRepo(db, "default.jpg", "./static/image/avatar/")
 	sessUCase := sessUC.SessionUC{&sessRepos}
 	//todo expiretime в конфиге

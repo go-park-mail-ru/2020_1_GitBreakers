@@ -6,7 +6,7 @@ import (
 )
 
 type UCSession interface {
-	Create(user models.User, expires time.Duration) (string, error)
+	Create(session models.Session, expire time.Duration) (string, error)
 	Delete(sessionID string) error
-	GetLoginBySessID(sid string) (string, error)
+	GetByID(sid string) (models.Session, error)
 }

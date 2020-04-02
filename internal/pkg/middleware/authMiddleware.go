@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
-	uuid "github.com/satori/go.uuid"
 	"net/http"
 )
 
@@ -19,33 +18,16 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			ctx = context.WithValue(ctx, "isAuth", false)
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
-		sid, err := uuid.FromString(cookie.Value)
-		if err != nil {
-			ctx = context.WithValue(ctx, "isAuth", false)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, r)
 			return
 		}
 		//TODO проверить то ли вернет метод
-		userLogin, err := Mdware.SessDeliv.GetLoginBySessID(sid.String())
+		sessModel, err := Mdware.SessDeliv.GetBySessID(cookie.Value)
 		if err != nil {
-			ctx = context.WithValue(ctx, "isAuth", false)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, r)
 			return
 		}
-		//TODO аналогично, сделать чек того что возвращает
-		User, err := Mdware.UCUser.GetByLogin(userLogin)
-		if err != nil {
-			ctx = context.WithValue(ctx, "isAuth", false)
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
-		ctx = context.WithValue(ctx, "isAuth", true)
-		//ctx.Value("User", User)
-		ctx = context.WithValue(ctx, "User", User)
+		ctx = context.WithValue(ctx, "UserID", sessModel.UserId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

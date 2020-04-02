@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/pkg/errors"
@@ -39,22 +40,38 @@ func (UC *UCUser) Delete(user models.User) error {
 	return nil
 }
 
-func (UC *UCUser) Update(user models.User) error {
-	isExsist, err := UC.RepUser.IsExists(user)
+func (UC *UCUser) Update(userid int, newUserData models.User) error {
+	oldUserData, err := UC.RepUser.GetUserByIdWithoutPass(userid)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
-	if isExsist {
-		return errors.New("user with this login or email is already exists")
+	if govalidator.IsByteLength(newUserData.Name, 5, 128) {
+		oldUserData.Name = newUserData.Name
 	}
-	//todo может быть перехеширование хеша пароля
-	if err := UC.RepUser.Update(user); err != nil {
+	if govalidator.IsEmail(newUserData.Email) {
+		oldUserData.Email = newUserData.Email
+	}
+	if govalidator.IsByteLength(newUserData.Password, 5, 128) {
+		pass, err := bcrypt.GenerateFromPassword([]byte(newUserData.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return errors.Wrap(err, "error in bcrypt")
+		}
+		oldUserData.Password = string(pass[:])
+	}
+	if canUpdate, err := UC.RepUser.UserCanUpdate(oldUserData); !canUpdate || err != nil {
+		return err
+	}
+	if err := UC.RepUser.Update(oldUserData); err != nil {
 		return err
 	}
 	return nil
 }
+
 func (UC *UCUser) GetByLogin(login string) (models.User, error) {
 	return UC.RepUser.GetUserByLoginWithPass(login)
+}
+func (UC *UCUser) GetByID(userId int) (models.User, error) {
+	return UC.RepUser.GetUserByIdWithoutPass(userId)
 }
 func (UC *UCUser) CheckPass(User models.User, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(User.Password, pass)

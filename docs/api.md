@@ -45,29 +45,55 @@ required email, login, password
 ## 2. Профиль
 ### 2.1 Получение информации профиля
 
-Запрос: `/profile` типа `GET`
+Запрос: `/whoami` типа `GET`
 
 Ответ:
 1. 200 ok
 ```json
 {
-    "username": "string",
+    "id": "int",
+    "login": "string",
     "email": "string",
-    "firstname": "string",
-    "lastname": "string",
-    "avatar": "string",
-    "password": ""
+    "name": "string",
+    "avatar": "string"
 }
 ```
 | Ключ          | Значение                 |
 | ------------- | ------------------------ |
-| `username`    | Логин                    |
+| `login`       | Логин                    |
 | `email`       | Адрес электронной почты  |
-| `firstname`   | Имя                      |
-| `lastname`    | Фамилия                  |
+| `name`        | Имя+Фамилия              |
 | `avatar`      | Ссылка на аватарку (url) |
+2. 401 unauthorized  
+### 2.2 Обновить данные юзера
+Запрос: `/profile` типа `PUT`
+```json
+{
+    "email": "string",
+    "name": "string",
+    "password": "string"
+}
+```
+Ответ:
+1. 200 ok
 2. 401 unauthorized
-### 2.2 Загрузить аватарку
+3. 400 json невалидный
+### 2.3 Получить инфу по логину
+Запрос: `/profile/{login}` типа `GET`
+
+Ответ:
+1. 200 ok
+```json
+{
+    "id": "int",
+    "name": "string",
+    "login": "string",
+    "image": "./static/image/avatar/default.jpg",
+    "email": "string"
+}
+```
+2. 404 не найден такой юзер
+### 2.4 Загрузить аватарку
 
 Запрос: `/avatar` типа `PUT`
 

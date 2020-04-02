@@ -1,9 +1,12 @@
 package session
 
-import "time"
+import (
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	"time"
+)
 
 type SessRepo interface {
-	Create(sid string, login string, expire time.Duration) (string, error)
-	GetLoginById(sessionId string) (string, error)
+	Create(session models.Session, expire time.Duration) (string, error)
+	GetSessById(sessionId string) (models.Session, error)
 	DeleteById(sid string) error
 }

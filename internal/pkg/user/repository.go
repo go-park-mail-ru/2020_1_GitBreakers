@@ -16,4 +16,5 @@ type RepoUser interface {
 	CheckPass(oldpass string, newpass string) (bool, error)
 	UploadAvatar(Name string, Content []byte) error
 	UpdateAvatarPath(User models.User, Name string) error
+	UserCanUpdate(user models.User) (bool, error)
 }

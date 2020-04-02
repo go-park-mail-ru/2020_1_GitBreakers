@@ -102,13 +102,26 @@ func (repo UserRepo) Update(usrUpd models.User) error {
 func (repo UserRepo) IsExists(user models.User) (bool, error) {
 	isExists := false
 	err := repo.db.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 OR login = $2 OR email = $3) as is_exists",
-		user.Id, user.Login, user.Email).Scan(&isExists)
+		"SELECT EXISTS(SELECT 1 FROM users WHERE login = $1 OR email = $2) as is_exists",
+		user.Login, user.Email).Scan(&isExists)
 	if err != nil {
 		//user.Password = ""
 		return isExists, errors.Wrapf(err, "error in user IsExists with user=%+v", user)
 	}
 	return isExists, nil
+}
+func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
+	usercount := 0
+	err := repo.db.Get(&usercount,
+		`select count(*) from users where login = $1 OR email = $2`, user.Login, user.Email)
+	if err != nil {
+		return false, err
+	}
+	if usercount > 1 {
+		return false, nil
+	} else {
+		return true, nil
+	}
 }
 
 func (repo UserRepo) DeleteById(id int) error {
