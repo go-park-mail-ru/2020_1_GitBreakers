@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS git_repository
     owner_id    INTEGER                                            NOT NULL,
     name        VARCHAR(512)                                       NOT NULL,
     description VARCHAR(2048)                                      NOT NULL,
-    is_fork     BOOLEAN                  DEFAULT FALSE             NOT NULL,
+    is_public   BOOLEAN                                            NOT NULL,
+    is_fork     BOOLEAN                                            NOT NULL,
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (owner_id) REFERENCES users (id),
