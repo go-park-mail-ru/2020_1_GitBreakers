@@ -14,8 +14,8 @@ import (
 	middleareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -30,25 +30,31 @@ func StartNew() {
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		logrus.Error("Failed to open logfile:", err)
-		customLogger = logger.NewTextFormatSimpleLogger(os.Stdout)
-	} else {
-		customLogger = logger.NewTextFormatSimpleLogger(f)
+		f = os.Stdout
 	}
+	customLogger = logger.NewTextFormatSimpleLogger(f)
 	defer func() {
-		if err := f.Close(); err != nil {
-			customLogger.Info("Failed to close logger: " + err.Error())
+		if f != os.Stdout {
+			if err := f.Close(); err != nil {
+				customLogger.Info("Failed to close logger: " + err.Error())
+			}
 		}
 	}()
+	if _, err = fmt.Fprintf(f, ">>>>>>>>>>>>%v<<<<<<<<<<<<\n", time.Now()); err != nil {
+		customLogger.Error("Failed to write server start timestamp in log output: " + err.Error())
+		return
+	}
 
 	//берутся из .env файла
 	connStr := "user=" + conf.POSTGRES_USER + " password=" +
 		conf.POSTGRES_PASS + " dbname=" + conf.POSTGRES_DBNAME
 
-	db, err := sqlx.Connect("postgres", connStr)
+	db, err := sqlx.Connect("pgx", connStr)
 	if err != nil {
-		customLogger.Info("Failed to start db: " + err.Error())
+		customLogger.Error("Failed to start db: " + err.Error())
+		return
 	} else {
-		fmt.Println("Connected to postgres ", err)
+		customLogger.Println("Connected to postgres ", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
@@ -76,9 +82,10 @@ func StartNew() {
 
 	res, err := redisConn.Ping().Result()
 	if res != "PONG" {
-		log.Fatal("error with redis")
+		customLogger.Error("error with redis")
+		return
 	} else {
-		fmt.Println("Connected to redis ", res, err)
+		customLogger.Println("Connected to redis ", res, err)
 	}
 
 	userSetHandler, m := initNewHandler(db, redisConn, customLogger)
