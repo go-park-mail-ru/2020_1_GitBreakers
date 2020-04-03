@@ -132,7 +132,7 @@ func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := UsHttp.SessHttp.Delete(cookie.Value); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		UsHttp.Logger.HttpInfo(r.Context(), "ошибка с удалением куки", http.StatusInternalServerError)
 	}
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	http.SetCookie(w, cookie)

@@ -110,7 +110,7 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 	userDelivery := userDeliv.UserHttp{
 		SessHttp: &sessDelivery,
 		UserUC:   &userUCase,
-		Logger:   &logger,
+		Logger:   &logger, 
 	}
 	//todo создать репо для гита
 	//gitUseCase := usecase.GitUseCase{}
