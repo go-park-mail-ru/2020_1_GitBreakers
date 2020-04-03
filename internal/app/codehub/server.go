@@ -112,6 +112,9 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 		UserUC:   &userUCase,
 		Logger:   &logger,
 	}
+	//todo создать репо для гита
+	//gitUseCase := usecase.GitUseCase{}
+	//gitDelivery := gitDeliv.GitDelivery{gitUseCase}
 	m := middleware.Middleware{
 		SessDeliv: &sessDelivery,
 		UCUser:    &userUCase,
