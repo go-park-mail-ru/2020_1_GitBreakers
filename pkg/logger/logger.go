@@ -36,13 +36,14 @@ func NewSimpleLogger(writer io.Writer, formatter logrus.Formatter) SimpleLogger 
 
 func NewJsonFormatSimpleLogger(writer io.Writer) SimpleLogger {
 	formatter := new(logrus.JSONFormatter)
-	formatter.TimestampFormat = "03-05-2012 13:56:33"
+	formatter.TimestampFormat = "2006-01-02 15:04:05"
 	return NewSimpleLogger(writer, formatter)
 }
 
 func NewTextFormatSimpleLogger(writer io.Writer) SimpleLogger {
 	formatter := new(logrus.TextFormatter)
-	formatter.TimestampFormat = "03-05-2012 13:56:33"
+	formatter.TimestampFormat = "2006-01-02 15:04:05"
+	formatter.FullTimestamp = true
 	return NewSimpleLogger(writer, formatter)
 }
 
