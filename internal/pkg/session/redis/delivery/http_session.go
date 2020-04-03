@@ -24,6 +24,7 @@ func (UC *SessionHttp) Create(userID int) (http.Cookie, error) {
 		HttpOnly: true,
 		Expires:  time.Now().Add(UC.ExpireTime),
 		Path:     "/",
+		SameSite: http.SameSiteNoneMode,
 	}, nil
 }
 

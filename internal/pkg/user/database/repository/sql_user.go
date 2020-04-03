@@ -13,13 +13,15 @@ type UserRepo struct {
 	db               *sqlx.DB
 	defaultAvatar    string
 	defaultImagePath string
+	hostToSave       string
 }
 
-func NewUserRepo(conn *sqlx.DB, defAva string, defPath string) UserRepo {
+func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, defHost string) UserRepo {
 	return UserRepo{
 		db:               conn,
 		defaultAvatar:    defAva,
 		defaultImagePath: defPath,
+		hostToSave:       defHost,
 	}
 }
 func (repo UserRepo) GetUserByIdWithPass(id int) (models.User, error) {
@@ -74,7 +76,7 @@ func (repo UserRepo) Create(newUser models.User) error {
 	}
 	userQuery := `INSERT INTO users (login, email, password, name, avatar_path) VALUES ($1, $2, $3, $4,$5);`
 	_, err := repo.db.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password,
-		newUser.Name, repo.defaultImagePath+repo.defaultAvatar)
+		newUser.Name, repo.hostToSave+repo.defaultImagePath+repo.defaultAvatar)
 
 	if err != nil {
 		return errors.Wrap(err, "error in user Create ")
@@ -168,14 +170,14 @@ func (repo UserRepo) CheckPass(oldpass string, newpass string) (bool, error) {
 	return true, nil
 }
 func (repo UserRepo) UpdateAvatarPath(User models.User, Name string) error {
-	User.Image = repo.defaultImagePath + Name
+	User.Image = repo.hostToSave + repo.defaultImagePath + Name
 	if err := repo.Update(User); err != nil {
 		return errors.Wrap(err, "error in db")
 	}
 	return nil
 }
 func (repo UserRepo) UploadAvatar(Name string, Content []byte) error {
-	if err := ioutil.WriteFile(repo.defaultImagePath+Name, Content, 0644); err != nil {
+	if err := ioutil.WriteFile(`.`+repo.defaultImagePath+Name, Content, 0644); err != nil {
 		return errors.Wrap(err, " in repo user upload avatar")
 	}
 	return nil
