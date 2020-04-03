@@ -1,7 +1,8 @@
 -- Main
 
-DROP TABLE IF EXISTS git_repository;
-DROP TABLE IF EXISTS users;
+-- DROP TABLE IF EXISTS git_repository_users;
+-- DROP TABLE IF EXISTS git_repository;
+-- DROP TABLE IF EXISTS users;
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -26,4 +27,18 @@ CREATE TABLE IF NOT EXISTS git_repository
 
     FOREIGN KEY (owner_id) REFERENCES users (id),
     UNIQUE (id, owner_id)
+);
+
+
+CREATE TABLE IF NOT EXISTS git_repository_users
+(
+    repository_id INTEGER                                            NOT NULL,
+    user_id       INTEGER                                            NOT NULL,
+    role          VARCHAR(64)              DEFAULT ''                NOT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    FOREIGN KEY (repository_id) REFERENCES git_repository (id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    UNIQUE (repository_id, user_id),
+    CONSTRAINT git_repository_users_pk PRIMARY KEY (repository_id, user_id)
 );
