@@ -15,11 +15,12 @@ const (
 )
 
 type Repository struct {
-	db *sqlx.DB
+	db       *sqlx.DB
+	reposDir string
 }
 
-func NewRepository(db *sqlx.DB) Repository {
-	return Repository{db: db}
+func NewRepository(db *sqlx.DB, reposDirs string) Repository {
+	return Repository{db: db, reposDir: reposDirs}
 }
 
 func createRepoPath(tx *sql.Tx, ownerId int, repoName string) (string, error) {
@@ -83,7 +84,7 @@ func (repo Repository) Create(newRepo git.Repository) (err error) {
 	}
 
 	// Create new bare repository aka 'git init --bare' on repoPath
-	_, err = gogit.PlainInit(repoPath, true)
+	_, err = gogit.PlainInit(repo.reposDir + "/" + repoPath, true)
 	if err == gogit.ErrRepositoryAlreadyExists {
 		return entityerrors.AlreadyExist()
 	}
