@@ -1,8 +1,8 @@
-package models
+package git
 
 import "time"
 
-type GitCommit struct {
+type Commit struct {
 	CommitHash        string    `json:"commit_hash" valid:"-"`
 	CommitAuthorName  string    `json:"commit_author_name" valid:"-"`
 	CommitAuthorEmail string    `json:"commit_author_email" valid:"-"`
