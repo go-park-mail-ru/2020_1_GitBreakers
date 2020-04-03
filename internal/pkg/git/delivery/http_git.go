@@ -36,9 +36,9 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 
 //данные репока(модельку скинуть(id,name,private,owner)
 func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
-	// get name reponame
 	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
 	Repo := &gitmodels.Repository{}
+	// get name reponame
 	Repo = GD.UC.GetRepo(userName, repoName)
 }
 
@@ -49,9 +49,10 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 	Repo := GD.UC.GetRepoList(userName)
 }
 
-//ветки репака
+//ветки репака(просто названия и ссылки)
 func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
-
+	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
+	GD.UC.
 }
 
 //cписок коммитов для ветки
