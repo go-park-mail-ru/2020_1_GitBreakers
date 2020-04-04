@@ -6,18 +6,25 @@ import (
 )
 
 type GitUseCase struct {
-	repo git.Repository
+	Repo git.Repository
 }
 
-func (GU *GitUseCase) GetBranchList(repoName string, userName string) {
-
-}
-func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) {
+//func (GU *GitUseCase) GetBranchList(repoName string, userName string) {
+//
+//}
+func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
 	//todo лучше бы по указателю принимал
 	repos.OwnerId = userid
-	GU.repo.Create(*repos)
+	if err := GU.Repo.Create(*repos); err != nil {
+		return err
+	}
+	return nil
+}
 
-}
-func (GU *GitUseCase) GetRepoByName(repoName string, userName string) {
-	GU.repo.GetByName(userName, repoName)
-}
+//func (GU *GitUseCase) GetRepo(userName string, repoName string) (gitmodels.Repository, error) {
+//	return GU.Repo.GetByName(userName, repoName)
+//}
+//func (GU *GitUseCase) GetRepoList(userName string) (*[]gitmodels.Repository, error) {
+//	//todo repolist
+//	return GU.Repo.GetByName(userName, userName)
+//}

@@ -3,6 +3,9 @@ package codehub
 import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	gitDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/delivery"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/delivery"
 	sessRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/repository"
@@ -88,7 +91,7 @@ func StartNew() {
 		customLogger.Println("Connected to redis ", res, err)
 	}
 
-	userSetHandler, m := initNewHandler(db, redisConn, customLogger, conf)
+	userSetHandler, m, repoHandler := initNewHandler(db, redisConn, customLogger, conf)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
@@ -99,6 +102,7 @@ func StartNew() {
 	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 
 	////todo handler от репозитория
+	r.HandleFunc("/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 	//r.HandleFunc("/{user}/{repa}/branch/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
 	//r.HandleFunc("/{user}/{repa}/branches", userSetHandler.Login).Methods(http.MethodGet)
 	//r.HandleFunc("/{user}/{repa}/commits/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
@@ -112,7 +116,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware) {
+func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
 	sessRepos := sessRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := userRepo.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessUCase := sessUC.SessionUC{&sessRepos}
@@ -125,12 +129,12 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 		Logger:   &logger,
 	}
 	//todo создать репо для гита
-	//repogit := repository.NewRepository(db, "..")
-	//gitUseCase := usecase.GitUseCase{repogit}
-	//gitDelivery := gitDeliv.GitDelivery{gitUseCase}
+	repogit := repository.NewRepository(db, "..")
+	gitUseCase := usecase.GitUseCase{&repogit}
+	gitDelivery := gitDeliv.GitDelivery{&gitUseCase, &logger}
 	m := middleware.Middleware{
 		SessDeliv: &sessDelivery,
 		UCUser:    &userUCase,
 	}
-	return &userDelivery, &m
+	return &userDelivery, &m, &gitDelivery
 }
