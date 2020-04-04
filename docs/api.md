@@ -104,4 +104,61 @@ required email, login, password
     <input name="avatar" type="file" />
 </form>
 ```
+2. 401 unauthorized  
+## 3. Репозиторий
+### 3.1 Создать новый репозиторий
+Запрос: `/repo` типа `POST`
+```json
+{
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool"
+}
+```
+Ответ:
+1. 201 created  
 2. 401 unauthorized
+3. 400 невалидный json 
+### 3.2 Получить репозиторий по имени юзера и названию
+Запрос: `/{username}/{reponame}` типа `GET`
+Ответ:
+1. 200 ok  
+```json
+{
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date"
+}
+```
+2. 401 unauthorized
+### 3.3 Получить список репозиториев юзера
+Запрос: `/{username}/repolist` типа `GET`
+Ответ:
+1. 200 ok  
+```json
+   [{
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date"
+},
+    {
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date"
+}...
+]
+
+```
