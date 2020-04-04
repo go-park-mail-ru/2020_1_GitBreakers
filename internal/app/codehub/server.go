@@ -98,6 +98,11 @@ func StartNew() {
 	r.HandleFunc("/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
 	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 
+	////todo handler от репозитория
+	//r.HandleFunc("/{user}/{repa}/branch/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
+	//r.HandleFunc("/{user}/{repa}/branches", userSetHandler.Login).Methods(http.MethodGet)
+	//r.HandleFunc("/{user}/{repa}/commits/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
+
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
@@ -117,10 +122,11 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 	userDelivery := userDeliv.UserHttp{
 		SessHttp: &sessDelivery,
 		UserUC:   &userUCase,
-		Logger:   &logger, 
+		Logger:   &logger,
 	}
 	//todo создать репо для гита
-	//gitUseCase := usecase.GitUseCase{}
+	//repogit := repository.NewRepository(db, "..")
+	//gitUseCase := usecase.GitUseCase{repogit}
 	//gitDelivery := gitDeliv.GitDelivery{gitUseCase}
 	m := middleware.Middleware{
 		SessDeliv: &sessDelivery,
