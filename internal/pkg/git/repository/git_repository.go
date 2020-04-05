@@ -11,10 +11,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
+	"strings"
 )
 
 const (
-	gitPostfix = ".git"
+	gitRepoPostfix = ".git"
 )
 
 type Repository struct {
@@ -82,7 +83,7 @@ func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, erro
 }
 
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
-	return repo.reposDir + "/" + userLogin + "/" + repoName + gitPostfix
+	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepoPostfix
 }
 
 func (repo Repository) createRepoPath(queryer queryer, ownerId int, repoName string) (string, error) {
@@ -330,7 +331,7 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 
 		gitRepoBranches = append(gitRepoBranches,
 			git.Branch{
-				Name:   reference.Name().String(),
+				Name:   strings.TrimLeft(reference.Name().String(), gogitPlumbing.NewBranchReferenceName("").String()),
 				Commit: convertToGitCommitModel(gogitCommit),
 			},
 		)
@@ -386,8 +387,11 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 			"with userLogin=%s, repoName=%s", userLogin, repoName)
 	}
 
-	gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, gogitPlumbing.NewHash(commitHash))
-	if err != nil {
+	gogitCommit, err := gogitRepo.CommitObject(gogitPlumbing.NewHash(commitHash))
+	switch {
+	case err == gogitPlumbing.ErrObjectNotFound:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
 		return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
 			"with userLogin=%s, repoName=%s, commitHash=%s",
 			userLogin, repoName, commitHash)
@@ -400,9 +404,14 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 			userLogin, repoName, commitHash)
 	}
 
-	treeByPath, err := rootTree.Tree(path)
-	if err != nil {
-		return nil, entityerrors.DoesNotExist()
+	var treeByPath *gogitPlumbingObj.Tree
+	if path != "" && path != "/" && path != "./" { // TODO
+		treeByPath, err = rootTree.Tree(path)
+		if err != nil {
+			return nil, entityerrors.DoesNotExist()
+		}
+	} else {
+		treeByPath = rootTree
 	}
 
 	filesInCommit := make([]git.FileInCommit, 0, len(rootTree.Entries))
@@ -447,12 +456,10 @@ func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash st
 			"with userLogin=%s, repoName=%s", userLogin, repoName)
 	}
 
-	gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, gogitPlumbing.NewHash(commitHash))
+	gogitCommit, err := gogitRepo.CommitObject(gogitPlumbing.NewHash(commitHash))
 	switch {
 	case err == gogitPlumbing.ErrObjectNotFound:
 		return nil, entityerrors.DoesNotExist()
-	case err == gogitPlumbingObj.ErrUnsupportedObject:
-		return nil, entityerrors.Invalid()
 	case err != nil:
 		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByCommitHash "+
 			"with userLogin=%s, repoName=%s, commitHash=%s",
@@ -493,4 +500,35 @@ func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash st
 		limit--
 	}
 	return gitCommits, nil
+}
+
+func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) {
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByBranchName "+
+			"with userLogin=%s, repoName=%s, branchName=%s", userLogin, repoName, branchName)
+	}
+	gogitBranch, err := gogitRepo.Reference(gogitPlumbing.NewBranchReferenceName(branchName), true)
+	switch {
+	case err == gogitPlumbing.ErrReferenceNotFound:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByBranchName "+
+			"with userLogin=%s, repoName=%s, branchName=%s", userLogin, repoName, branchName)
+	}
+
+	gogitCommit, err := gogitRepo.CommitObject(gogitBranch.Hash())
+	switch {
+	case err == gogitPlumbing.ErrObjectNotFound:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByBranchName "+
+			"with userLogin=%s, repoName=%s, branchName=%s, branchHash=%s",
+			userLogin, repoName, branchName, gogitBranch.Hash().String())
+	}
+
+	return repo.GetCommitsByCommitHash(userLogin, repoName, gogitCommit.Hash.String(), offset, limit)
 }
