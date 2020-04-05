@@ -9,5 +9,4 @@ type Repository struct {
 	Description string    `json:"description" valid:"stringlength(1|2048)"`
 	IsFork      bool      `json:"is_fork" valid:"-"`
 	CreatedAt   time.Time `json:"created_at" valid:"-"`
-	IsPublic    bool      `json:"is_public" valid:"-"`
 }

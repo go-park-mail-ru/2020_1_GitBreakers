@@ -9,6 +9,8 @@ type RepoUser interface {
 	GetUserByIdWithoutPass(id int) (models.User, error)
 	GetUserByLoginWithPass(login string) (models.User, error)
 	GetByLoginWithoutPass(login string) (models.User, error)
+	GetLoginById(id int) (string, error)
+	GetIdByLogin(login string) (int, error)
 	Create(newUser models.User) error
 	Update(usrUpd models.User) error
 	IsExists(user models.User) (bool, error)
