@@ -15,16 +15,15 @@ type GitUseCase struct {
 func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
 	//todo лучше бы по указателю принимал
 	repos.OwnerId = userid
-	if err := GU.Repo.Create(*repos); err != nil {
+	if _, err := GU.Repo.Create(*repos); err != nil {
 		return err
 	}
 	return nil
 }
 
-//func (GU *GitUseCase) GetRepo(userName string, repoName string) (gitmodels.Repository, error) {
-//	return GU.Repo.GetByName(userName, repoName)
-//}
-//func (GU *GitUseCase) GetRepoList(userName string) (*[]gitmodels.Repository, error) {
-//	//todo repolist
-//	return GU.Repo.GetByName(userName, userName)
-//}
+func (GU *GitUseCase) GetRepo(userName string, repoName string) (gitmodels.Repository, error) {
+	return GU.Repo.GetByName(userName, repoName)
+}
+func (GU *GitUseCase) GetRepoList(userName string) ([]gitmodels.Repository, error) {
+	return GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
+}

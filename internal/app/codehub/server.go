@@ -104,8 +104,10 @@ func StartNew() {
 	r.HandleFunc("/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
 	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 
-	////todo handler от репозитория
 	r.HandleFunc("/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
+	r.HandleFunc("/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
+	r.HandleFunc("/repolist", repoHandler.GetRepoList).Methods(http.MethodGet)
+	r.HandleFunc("/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
 	//r.HandleFunc("/{user}/{repa}/branch/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
 	//r.HandleFunc("/{user}/{repa}/branches", userSetHandler.Login).Methods(http.MethodGet)
 	//r.HandleFunc("/{user}/{repa}/commits/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
@@ -134,7 +136,7 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 	//todo создать репо для гита
 	repogit := repository.NewRepository(db, "..")
 	gitUseCase := usecase.GitUseCase{&repogit}
-	gitDelivery := gitDeliv.GitDelivery{&gitUseCase, &logger}
+	gitDelivery := gitDeliv.GitDelivery{&gitUseCase, &logger, &userUCase}
 	m := middleware.Middleware{
 		SessDeliv: &sessDelivery,
 		UCUser:    &userUCase,

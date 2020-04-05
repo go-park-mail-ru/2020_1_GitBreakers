@@ -5,16 +5,16 @@ import (
 )
 
 type Repository interface {
-	GetById(id int) (git.Repository, error) // DONE
+	GetById(id int) (git.Repository, error)                       // DONE
 	GetByName(userLogin, repoName string) (git.Repository, error) // DONE
-	Create(repos git.Repository) (id int64, err error) // DONE
-	DeleteById(id int) error // TODO
-	DeleteByName(userId int, repoName string) error // TODO
-	CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error)  // DONE
-	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)  // DONE
-	GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error)  // DONE
-	GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error)  // DONE
+	Create(repos git.Repository) (id int64, err error)            // DONE
+	//DeleteById(id int) error // TODO
+	//DeleteByName(userId int, repoName string) error // TODO
+	CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error)                        // DONE
+	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)                                  // DONE
+	GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error)                // DONE
+	GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error) // DONE
 
-	GetCommitsInBranch(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) // TODO
-	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error) // TODO
+	//GetCommitsInBranch(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) // TODO
+	//FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error)       // TODO
 }
