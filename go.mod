@@ -7,7 +7,8 @@ require (
 	github.com/go-git/go-git/v5 v5.0.0
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/gorilla/mux v1.7.4
-	github.com/h2non/filetype v1.0.12 // indirect
+	github.com/gorilla/schema v1.1.0
+	github.com/h2non/filetype v1.0.12
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0

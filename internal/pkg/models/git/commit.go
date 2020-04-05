@@ -13,3 +13,10 @@ type Commit struct {
 	TreeHash          string    `json:"tree_hash" valid:"-"`
 	CommitParents     []string  `json:"commit_parents" valid:"-"`
 }
+type CommitRequest struct {
+	UserLogin  string
+	RepoName   string
+	CommitHash string
+	Offset     int `schema:"offset"`
+	Limit      int `schema:"limit"`
+}

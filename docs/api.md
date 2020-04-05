@@ -223,4 +223,40 @@ required email, login, password
     }
 ]
 ```
-2. 404 (нет такого юзера или репозитория)
+2. 404 (нет такого юзера или репозитория)  
+### 4.2 Получить список коммитов 
+Запрос: `/{username}/{reponame}/commits/{branchname}` типа `GET`  
+{branchname} - хеш коммита ветки(передается при получении списка веток)
+Образец:  
+`89.208.198.186:8080/lox5000/ahahmfda/commits/47695708f45d379f4608db11cc2b4b26c8c517b2?offset=10&limit=10`
+Ответ:  
+1. 200 ok
+```json  
+[
+    {
+        "commit_hash": "47695708f45d379f4608db11cc2b4b26c8c517b2",
+        "commit_author_name": "Deiklov",
+        "commit_author_email": "romanov408g@mail.ru",
+        "commit_author_when": "2020-04-05T16:30:33+03:00",
+        "committer_name": "Deiklov",
+        "committer_email": "romanov408g@mail.ru",
+        "committer_when": "2020-04-05T16:30:33+03:00",
+        "tree_hash": "6d557828f228e61a303344841b199b4454b87c5e",
+        "commit_parents": [
+            "6ba6381462dfc29f0e6fcd1be049ddefe0ecda33"
+        ]
+    },
+    {
+        "commit_hash": "6ba6381462dfc29f0e6fcd1be049ddefe0ecda33",
+        "commit_author_name": "Deiklov",
+        "commit_author_email": "romanov408g@mail.ru",
+        "commit_author_when": "2020-04-04T01:59:58+03:00",
+        "committer_name": "Deiklov",
+        "committer_email": "romanov408g@mail.ru",
+        "committer_when": "2020-04-04T01:59:58+03:00",
+        "tree_hash": "cc1e204bebe4eacf6964ec3e2d44ce03322e8644",
+        "commit_parents": []
+    }
+]
+```
+2. 404 (нет такого юзера или репозитория или коммита)

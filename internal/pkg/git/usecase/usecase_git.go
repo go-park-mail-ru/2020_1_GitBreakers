@@ -9,7 +9,6 @@ type GitUseCase struct {
 	Repo git.Repository
 }
 
-
 func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
 	//todo лучше бы по указателю принимал
 	repos.OwnerId = userid
@@ -33,4 +32,15 @@ func (GU *GitUseCase) GetBranchList(requestUserID *int, userName string, repoNam
 	} else {
 		return nil, err
 	}
+}
+func (GU *GitUseCase) FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]gitmodels.FileInCommit, error) {
+	//todo просмотр для не для любого юзера
+	return GU.Repo.FilesInCommitByPath(userLogin, repoName, commitHash, path)
+}
+func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error) {
+	if params.Limit == 0 {
+		params.Limit = 100
+	}
+	return GU.Repo.GetCommitsByCommitHash(params.UserLogin,
+		params.RepoName, params.CommitHash, params.Offset, params.Limit)
 }

@@ -2,12 +2,14 @@ package delivery
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"net/http"
 )
 
@@ -121,9 +123,30 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 
 //cписок коммитов для ветки
 func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-	//userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
-
+	//сжирает два параметра
+	vars := mux.Vars(r)
+	commitParams := &gitmodels.CommitRequest{
+		UserLogin:  vars["username"],
+		RepoName:   vars["reponame"],
+		CommitHash: vars["branchname"],
+	}
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	err := decoder.Decode(commitParams, r.URL.Query())
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	res, err := GD.UC.GetCommitsByCommitHash(*commitParams)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(&res); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
