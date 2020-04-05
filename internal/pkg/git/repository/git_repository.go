@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	gogitPlumbing "github.com/go-git/go-git/v5/plumbing"
+	gogitPlumbingObj "github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 
@@ -19,24 +21,38 @@ type Repository struct {
 	reposDir string
 }
 
+type queryer interface {
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+}
+
 func NewRepository(db *sqlx.DB, reposDirs string) Repository {
 	return Repository{db: db, reposDir: reposDirs}
 }
 
-func createRepoPath(tx *sql.Tx, ownerId int, repoName string) (string, error) {
+func convertToRepoPath(userLogin, repoName string) string {
+	return userLogin + gitPostfix + "/" + repoName
+}
+
+func createRepoPath(queryer queryer, ownerId int, repoName string) (string, error) {
+	if repoName == "" {
+		return "", entityerrors.Invalid()
+	}
 	var userLogin string
-	err := tx.QueryRow("SELECT login FROM users WHERE id = $1",
+	err := queryer.QueryRow("SELECT login FROM users WHERE id = $1",
 		ownerId).Scan(&userLogin)
 	if err != nil {
 		return "", err
 	}
-	repoPath := userLogin + gitPostfix + "/" + repoName
-	return repoPath, nil
+	return convertToRepoPath(userLogin, repoName), nil
 }
 
-func isRepoExistsInDb(tx *sql.Tx, ownerId int, repoName string) (bool, error) {
+func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, error) {
+	if repoName == "" {
+		return false, entityerrors.Invalid()
+	}
 	var isRepoExists bool
-	err := tx.QueryRow(
+	err := queryer.QueryRow(
 		"SELECT EXISTS(SELECT 1 FROM git_repositories WHERE owner_id = $1 and name = $2)",
 		ownerId, repoName).Scan(&isRepoExists)
 	if err != nil {
@@ -45,11 +61,11 @@ func isRepoExistsInDb(tx *sql.Tx, ownerId int, repoName string) (bool, error) {
 	return isRepoExists, nil
 }
 
-func (repo Repository) Create(newRepo git.Repository) (err error) {
+func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	// Begin transaction
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return errors.Wrap(err, "cannot begin transaction in create repository")
+		return -1, errors.Wrap(err, "cannot begin transaction in create repository")
 	}
 	// Transaction cleanups
 	defer func() {
@@ -64,10 +80,10 @@ func (repo Repository) Create(newRepo git.Repository) (err error) {
 
 	isRepoExist, err := isRepoExistsInDb(tx, newRepo.OwnerId, newRepo.Name)
 	if err != nil {
-		return errors.Wrap(err, "error in create repository while checking if repository is not exits")
+		return -1, errors.Wrap(err, "error in create repository while checking if repository is not exits")
 	}
 	if isRepoExist {
-		return entityerrors.AlreadyExist()
+		return -1, entityerrors.AlreadyExist()
 	}
 
 	// Create new db entity of git_repository
@@ -76,28 +92,34 @@ func (repo Repository) Create(newRepo git.Repository) (err error) {
 				VALUES ($1, $2, $3, $4, $5) RETURNING id`,
 		newRepo.OwnerId, newRepo.Name, newRepo.Description, newRepo.IsPublic, newRepo.IsFork)
 	if err != nil {
-		return errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
+		return -1, errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v",
+			newRepo)
 	}
 
-	_, err = tx.Exec("INSERT INTO users_git_repositories (repository_id, user_id) VALUES ($1, $2)",
-		repoCreationResult.LastInsertId(), newRepo.OwnerId)
+	newRepoId, err := repoCreationResult.LastInsertId()
 	if err != nil {
-		return errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
+		return -1, errors.Wrapf(err, "cannot get id from git repository entity from db (this entity " +
+			"not exist in db now), newRepo=%+v", newRepo)
+	}
+	_, err = tx.Exec("INSERT INTO users_git_repositories (repository_id, user_id) VALUES ($1, $2)",
+		newRepoId, newRepo.OwnerId)
+	if err != nil {
+		return -1, errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
 	}
 
 	// Calculate path where git creates new repository on filesystem
 	repoPath, err := createRepoPath(tx, newRepo.OwnerId, newRepo.Name)
 	if err != nil {
-		return errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
+		return -1, errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
 	}
 
 	// Create new bare repository aka 'git init --bare' on repoPath
 	_, err = gogit.PlainInit(repo.reposDir+"/"+repoPath, true)
 	if err == gogit.ErrRepositoryAlreadyExists {
-		return entityerrors.AlreadyExist()
+		return -1, entityerrors.AlreadyExist()
 	}
 
-	return nil
+	return newRepoId, nil
 }
 
 func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error) {
@@ -245,4 +267,59 @@ func (repo Repository) CheckReadAccess(currentUserId *int, userLogin, repoName s
 			"with currentUserId=%+v, userLogin=%s, repoName=%s", currentUserId, userLogin, repoName)
 	}
 	return haveAccess, nil
+}
+
+func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Branch, error) {
+	gogitRepo, err := gogit.PlainOpen(userLogin + gitPostfix + "/" + repoName)
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+			"with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+
+	gogitBranchesIter, err := gogitRepo.Branches()
+	if err != nil {
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+			"with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+
+	var gitRepoBranches []git.Branch
+
+	err = gogitBranchesIter.ForEach(func(reference *gogitPlumbing.Reference) error {
+		gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, reference.Hash())
+		if err != nil {
+			return errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+				"with userLogin=%s, repoName=%s, branchName=%s",
+				userLogin, repoName, reference.Name().String())
+		}
+
+		gogitCommitParentHashes := make([]string, 0, len(gogitCommit.ParentHashes))
+		for _, hash := range gogitCommit.ParentHashes {
+			gogitCommitParentHashes = append(gogitCommitParentHashes, hash.String())
+		}
+
+		gitBranch := git.Branch{
+			Name: reference.Name().String(),
+			Commit: git.Commit{
+				CommitHash:        gogitCommit.Hash.String(),
+				CommitAuthorName:  gogitCommit.Author.Name,
+				CommitAuthorEmail: gogitCommit.Author.Email,
+				CommitAuthorWhen:  gogitCommit.Author.When,
+				CommitterName:     gogitCommit.Committer.Name,
+				CommitterEmail:    gogitCommit.Committer.Email,
+				CommitterWhen:     gogitCommit.Committer.When,
+				TreeHash:          gogitCommit.TreeHash.String(),
+				CommitParents:     gogitCommitParentHashes,
+			},
+		}
+		gitRepoBranches = append(gitRepoBranches, gitBranch)
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+			"after iterating by branches with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+	return gitRepoBranches, nil
 }
