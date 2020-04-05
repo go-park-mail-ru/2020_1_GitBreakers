@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -100,6 +101,17 @@ func (repo Repository) createRepoPath(queryer queryer, ownerId int, repoName str
 }
 
 func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
+	// New repo will be created by this path
+	var repoPath string
+	// Cleanup on error
+	defer func() {
+		if err != nil && repoPath != "" {
+			if removeErr := os.RemoveAll(repoPath); removeErr != nil {
+				err = errors.Wrapf(err, removeErr.Error())
+			}
+		}
+	}()
+
 	// Begin transaction
 	tx, err := repo.db.Begin()
 	if err != nil {
@@ -142,7 +154,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	}
 
 	// Calculate path where git creates new repository on filesystem
-	repoPath, err := repo.createRepoPath(tx, newRepo.OwnerId, newRepo.Name)
+	repoPath, err = repo.createRepoPath(tx, newRepo.OwnerId, newRepo.Name)
 	if err != nil {
 		return -1, errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
 	}
