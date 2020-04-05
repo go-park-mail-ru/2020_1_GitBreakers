@@ -192,33 +192,35 @@ required email, login, password
 ```json
 [
     {
-        "name": "refs/heads/bmstu",
+        "name": "xp/git-lfs",
         "commit": {
-            "commit_hash": "47695708f45d379f4608db11cc2b4b26c8c517b2",
-            "commit_author_name": "Deiklov",
-            "commit_author_email": "romanov408g@mail.ru",
-            "commit_author_when": "2020-04-05T16:30:33+03:00",
-            "committer_name": "Deiklov",
-            "committer_email": "romanov408g@mail.ru",
-            "committer_when": "2020-04-05T16:30:33+03:00",
-            "tree_hash": "6d557828f228e61a303344841b199b4454b87c5e",
+            "commit_hash": "23c70a09237681d7a0d908220a1a1af44ee74229",
+            "commit_author_name": "ᴜɴᴋɴᴡᴏɴ",
+            "commit_author_email": "u@gogs.io",
+            "commit_author_when": "2020-03-30T00:09:37+08:00",
+            "committer_name": "ᴜɴᴋɴᴡᴏɴ",
+            "committer_email": "u@gogs.io",
+            "committer_when": "2020-03-30T00:09:37+08:00",
+            "tree_hash": "c79a6098241e27d82de8f3a916dfa3d6ce0d9b7d",
             "commit_parents": [
-                "6ba6381462dfc29f0e6fcd1be049ddefe0ecda33"
+                "5164d782afd860a5642c9bf71fea5f1723151ea6"
             ]
         }
     },
     {
-        "name": "refs/heads/hehe",
+        "name": "master",
         "commit": {
-            "commit_hash": "6ba6381462dfc29f0e6fcd1be049ddefe0ecda33",
-            "commit_author_name": "Deiklov",
-            "commit_author_email": "romanov408g@mail.ru",
-            "commit_author_when": "2020-04-04T01:59:58+03:00",
-            "committer_name": "Deiklov",
-            "committer_email": "romanov408g@mail.ru",
-            "committer_when": "2020-04-04T01:59:58+03:00",
-            "tree_hash": "cc1e204bebe4eacf6964ec3e2d44ce03322e8644",
-            "commit_parents": []
+            "commit_hash": "07818d5fa5aef7dd7dca1d556f59c7a146a9b00c",
+            "commit_author_name": "ᴜɴᴋɴᴡᴏɴ",
+            "commit_author_email": "u@gogs.io",
+            "commit_author_when": "2020-04-05T06:36:08+08:00",
+            "committer_name": "GitHub",
+            "committer_email": "noreply@github.com",
+            "committer_when": "2020-04-05T06:36:08+08:00",
+            "tree_hash": "14c89609a04f269123413f676a8cbe68c197de07",
+            "commit_parents": [
+                "bae1d6ccd81cd427382a2456e7c3646bdac9cf46"
+            ]
         }
     }
 ]
@@ -228,10 +230,10 @@ required email, login, password
 Запрос: `/{username}/{reponame}/commits/{branchname}` типа `GET`  
 {branchname} - хеш коммита ветки(передается при получении списка веток)
 Образец:  
-`89.208.198.186:8080/lox5000/ahahmfda/commits/47695708f45d379f4608db11cc2b4b26c8c517b2?offset=10&limit=10`
+`89.208.198.186:8080/logggers/hefherser/commits/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
 Ответ:  
 1. 200 ok
-```json  
+```json
 [
     {
         "commit_hash": "47695708f45d379f4608db11cc2b4b26c8c517b2",
@@ -263,10 +265,25 @@ required email, login, password
 ### 4.3 Получить список файлов по коммиту 
 Запрос: `/{username}/{reponame}/files/{commithash}` типа `GET`  
 Образец:  
-`localhost:8080/lox5000/testname/files/2ef55ce2af5701880f2d165e6dbac49ca60d7e3f`
+`89.208.198.186:8080/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`
 Ответ:  
 1. 200 ok
-```json  
-
+```json
+[
+    {
+        "Name": ".s6-svscan",
+        "FileType": "tree",
+        "FileMode": "dir",
+        "ContentType": "",
+        "EntryHash": "720d59ef11a18b3c177e4e85854542b57060f232"
+    },
+    {
+        "Name": "crond",
+        "FileType": "tree",
+        "FileMode": "regular",
+        "ContentType": "",
+        "EntryHash": "609789152b89b2d1d6a3fc892bb98115db1b8234"
+    }
+]
 ```
 2. 404 (нет такого юзера или репозитория или коммита)
