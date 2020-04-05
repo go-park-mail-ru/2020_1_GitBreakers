@@ -34,6 +34,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		UsHttp.Logger.HttpLogWarning(r.Context(), "validator", "", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	if err := UsHttp.UserUC.Create(*User); err != nil {
 		UsHttp.Logger.HttpLogWarning(r.Context(), "", "", "не создали юзера")
