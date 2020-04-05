@@ -119,7 +119,13 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-////cписок коммитов для ветки
-//func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
-//
-//}
+//cписок коммитов для ветки
+func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
+	//vars := mux.Vars(r)
+	//userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
+
+}
+
+func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
+
+}
