@@ -90,7 +90,7 @@ func (repo Repository) createRepoPath(queryer queryer, ownerId int, repoName str
 		return "", entityerrors.Invalid()
 	}
 	var userLogin string
-	err := queryer.QueryRow("SELECT login FROM users WHERE id = $1",
+	err := queryer.QueryRow("SELECT login FROM users	 WHERE id = $1",
 		ownerId).Scan(&userLogin)
 	if err != nil {
 		return "", err
@@ -475,10 +475,6 @@ func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash st
 	var gitCommits []git.Commit
 
 	for limit > 0 {
-		if offset > 0 {
-			offset--
-			continue
-		}
 		gogitCommit, err := commitIterator.Next()
 		if err == io.EOF {
 			break
@@ -488,7 +484,10 @@ func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash st
 				"with userLogin=%s, repoName=%s, commitHash=%s",
 				userLogin, repoName, commitHash)
 		}
-
+		if offset > 0 {
+			offset--
+			continue
+		}
 		gitCommits = append(gitCommits, convertToGitCommitModel(gogitCommit))
 
 		limit--
