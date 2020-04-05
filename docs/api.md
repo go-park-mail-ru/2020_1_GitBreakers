@@ -121,7 +121,7 @@ required email, login, password
 2. 401 unauthorized
 3. 400 невалидный json 
 ### 3.2 Получить репозиторий по имени юзера и названию
-Запрос: `/{username}/{reponame}` типа `GET`
+Запрос: `/{username}/{reponame}` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
@@ -137,7 +137,7 @@ required email, login, password
 ```
 2. 401 unauthorized
 ### 3.3 Получить список своих репозиториев
-Запрос: `/repolist` типа `GET`
+Запрос: `/repolist` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
@@ -158,11 +158,10 @@ required email, login, password
     "is_public": "bool",
     "is_fork": "bool",
     "created_at": "date"
-}...
-]
+}]
 ```
 ### 3.4 Получить список репозиториев юзера его логину
-Запрос: `/{username}` типа `GET`
+Запрос: `/{username}` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
@@ -174,12 +173,20 @@ required email, login, password
     "is_public": "bool",
     "is_fork": "bool",
     "created_at": "date"
-},...
-]
+},
+{
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date"
+}]
 ```
 ## 4. Ветки и коммиты  
 ### 4.1 Получить список веток по логину и названию репозитория  
-Запрос: `/{username}/{reponame}/branches` типа `GET`
+Запрос: `/{username}/{reponame}/branches` типа `GET`  
 Ответ:  
 1. 200 ok  
 ```json
