@@ -15,6 +15,6 @@ type Repository interface {
 	GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error)  // DONE
 	GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error)  // DONE
 
-	GetCommitsInBranch(repoName, branchName string, offset, limit int) ([]git.Commit, error) // TODO
+	GetCommitsInBranch(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) // TODO
 	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error) // TODO
 }
