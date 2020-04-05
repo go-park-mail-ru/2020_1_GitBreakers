@@ -17,4 +17,5 @@ type Repository interface {
 
 	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error)
 	GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int) ([]git.Commit, error)
+	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error)
 }
