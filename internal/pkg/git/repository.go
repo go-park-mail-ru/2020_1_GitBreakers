@@ -10,8 +10,10 @@ type Repository interface {
 	Create(repos git.Repository) error
 	DeleteById(id int) error // TODO
 	DeleteByName(userId int, repoName string) error
+	CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error)
 	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)
-	GetReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error)
+	GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error)
+	GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error)
 
 	GetCommitsInBranch(repoName, branchName string, offset, limit int) ([]git.Commit, error)
 	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error)
