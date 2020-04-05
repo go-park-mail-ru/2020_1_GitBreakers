@@ -86,21 +86,17 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 		return -1, entityerrors.AlreadyExist()
 	}
 
+	var newRepoId int64
 	// Create new db entity of git_repository
-	repoCreationResult, err := tx.Exec(
+	err = tx.QueryRow(
 		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork) 
 				VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-		newRepo.OwnerId, newRepo.Name, newRepo.Description, newRepo.IsPublic, newRepo.IsFork)
+		newRepo.OwnerId, newRepo.Name, newRepo.Description, newRepo.IsPublic, newRepo.IsFork).Scan(&newRepoId)
 	if err != nil {
 		return -1, errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v",
 			newRepo)
 	}
 
-	newRepoId, err := repoCreationResult.LastInsertId()
-	if err != nil {
-		return -1, errors.Wrapf(err, "cannot get id from git repository entity from db (this entity "+
-			"not exist in db now), newRepo=%+v", newRepo)
-	}
 	_, err = tx.Exec("INSERT INTO users_git_repositories (repository_id, user_id) VALUES ($1, $2)",
 		newRepoId, newRepo.OwnerId)
 	if err != nil {
