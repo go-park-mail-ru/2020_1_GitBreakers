@@ -136,8 +136,8 @@ required email, login, password
 }
 ```
 2. 401 unauthorized
-### 3.3 Получить список репозиториев юзера
-Запрос: `/{username}/repolist` типа `GET`
+### 3.3 Получить список своих репозиториев
+Запрос: `/repolist` типа `GET`
 Ответ:
 1. 200 ok  
 ```json
@@ -160,5 +160,20 @@ required email, login, password
     "created_at": "date"
 }...
 ]
-
+```
+### 3.3 Получить список репозиториев юзера его логину
+Запрос: `/{username}` типа `GET`
+Ответ:
+1. 200 ok  
+```json
+   [{
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date"
+},...
+]
 ```
