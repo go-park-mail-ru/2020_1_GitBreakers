@@ -153,4 +153,5 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//userName, repoName, hashCommits := vars["username"], vars["reponame"], vars["hashcommits"]
 	//GD.UC.FilesInCommitByPath()
+
 }
