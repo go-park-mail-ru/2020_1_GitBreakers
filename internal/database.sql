@@ -3,9 +3,9 @@
 CREATE TABLE IF NOT EXISTS users
 (
     id             BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
-    login          VARCHAR(128)                                       NOT NULL UNIQUE,
-    email          VARCHAR(128)                                       NOT NULL UNIQUE,
-    password       VARCHAR(256)                                       NOT NULL,
+    login          VARCHAR(128)                                       NOT NULL UNIQUE CHECK ( login <> '' ),
+    email          VARCHAR(128)                                       NOT NULL UNIQUE CHECK ( email <> '' ),
+    password       VARCHAR(256)                                       NOT NULL CHECK ( password <> '' ),
     name           VARCHAR(256)                                       NOT NULL DEFAULT '',
     avatar_path    VARCHAR(1024)                                      NOT NULL,
     email_verified BOOLEAN                  DEFAULT FALSE             NOT NULL,
