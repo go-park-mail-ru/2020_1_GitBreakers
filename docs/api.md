@@ -259,4 +259,14 @@ required email, login, password
     }
 ]
 ```
+2. 404 (нет такого юзера или репозитория или коммита)  
+### 4.3 Получить список файлов по коммиту 
+Запрос: `/{username}/{reponame}/files/{commithash}` типа `GET`  
+Образец:  
+`localhost:8080/lox5000/testname/files/2ef55ce2af5701880f2d165e6dbac49ca60d7e3f`
+Ответ:  
+1. 200 ok
+```json  
+
+```
 2. 404 (нет такого юзера или репозитория или коммита)
