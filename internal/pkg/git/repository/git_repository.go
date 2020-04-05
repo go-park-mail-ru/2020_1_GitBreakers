@@ -90,3 +90,49 @@ func (repo Repository) Create(newRepo git.Repository) (err error) {
 	}
 	return nil
 }
+
+func (repo Repository) GetReposByUserLogin(userLogin string, offset, limit int) (gitRepos []git.Repository, err error) {
+	rows, err := repo.db.Query(
+		`SELECT r.id,
+				   r.owner_id,
+				   r.name,
+				   r.description,
+				   r.is_fork,
+				   r.created_at,
+				   r.is_public
+			FROM git_repository AS r
+					 JOIN users AS u ON r.owner_id = u.id
+				OFFSET $1
+			LIMIT $2`,
+		offset, limit)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "error while performing query in repository "+
+			"for git repositories with userLogin=%s, offset=%d, limit=$d", userLogin, offset, limit)
+	}
+
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = errors.Wrap(err, closeErr.Error())
+		}
+	}()
+
+	gitRepos = make([]git.Repository, 0, limit)
+	for rows.Next() {
+		gitRepo := git.Repository{}
+		err = rows.Scan(
+			&gitRepo.Id,
+			&gitRepo.OwnerId,
+			&gitRepo.Name,
+			&gitRepo.Description,
+			&gitRepo.IsFork,
+			&gitRepo.CreatedAt,
+			&gitRepo.IsPublic)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error in repository for git repositories "+
+				"while scanning userLogin=%s, offset=%d, limit=$d", userLogin, offset, limit)
+		}
+		gitRepos = append(gitRepos, gitRepo)
+	}
+	return gitRepos, nil
+}
