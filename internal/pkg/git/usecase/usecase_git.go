@@ -34,7 +34,7 @@ func (GU *GitUseCase) GetBranchList(requestUserID *int, userName string, repoNam
 	}
 }
 func (GU *GitUseCase) FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]gitmodels.FileInCommit, error) {
-	//todo просмотр для не для любого юзера
+
 	return GU.Repo.FilesInCommitByPath(userLogin, repoName, commitHash, path)
 }
 func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error) {
