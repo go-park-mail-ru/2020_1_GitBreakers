@@ -35,6 +35,7 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 	if _, err := govalidator.ValidateStruct(newRepo); err != nil {
 		GD.Logger.HttpInfo(r.Context(), err.Error(), http.StatusBadRequest)
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	if err := GD.UC.Create(userID, newRepo); err != nil {
