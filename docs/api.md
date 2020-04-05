@@ -161,7 +161,7 @@ required email, login, password
 }...
 ]
 ```
-### 3.3 Получить список репозиториев юзера его логину
+### 3.4 Получить список репозиториев юзера его логину
 Запрос: `/{username}` типа `GET`
 Ответ:
 1. 200 ok  
@@ -177,3 +177,43 @@ required email, login, password
 },...
 ]
 ```
+## 4. Ветки и коммиты  
+### 4.1 Получить список веток по логину и названию репозитория  
+Запрос: `/{username}/{reponame}/branches` типа `GET`
+Ответ:  
+1. 200 ok  
+```json
+[
+    {
+        "name": "refs/heads/bmstu",
+        "commit": {
+            "commit_hash": "47695708f45d379f4608db11cc2b4b26c8c517b2",
+            "commit_author_name": "Deiklov",
+            "commit_author_email": "romanov408g@mail.ru",
+            "commit_author_when": "2020-04-05T16:30:33+03:00",
+            "committer_name": "Deiklov",
+            "committer_email": "romanov408g@mail.ru",
+            "committer_when": "2020-04-05T16:30:33+03:00",
+            "tree_hash": "6d557828f228e61a303344841b199b4454b87c5e",
+            "commit_parents": [
+                "6ba6381462dfc29f0e6fcd1be049ddefe0ecda33"
+            ]
+        }
+    },
+    {
+        "name": "refs/heads/hehe",
+        "commit": {
+            "commit_hash": "6ba6381462dfc29f0e6fcd1be049ddefe0ecda33",
+            "commit_author_name": "Deiklov",
+            "commit_author_email": "romanov408g@mail.ru",
+            "commit_author_when": "2020-04-04T01:59:58+03:00",
+            "committer_name": "Deiklov",
+            "committer_email": "romanov408g@mail.ru",
+            "committer_when": "2020-04-04T01:59:58+03:00",
+            "tree_hash": "cc1e204bebe4eacf6964ec3e2d44ce03322e8644",
+            "commit_parents": []
+        }
+    }
+]
+```
+2. 404 (нет такого юзера или репозитория)

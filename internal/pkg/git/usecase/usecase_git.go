@@ -9,9 +9,7 @@ type GitUseCase struct {
 	Repo git.Repository
 }
 
-//func (GU *GitUseCase) GetBranchList(repoName string, userName string) {
-//
-//}
+
 func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
 	//todo лучше бы по указателю принимал
 	repos.OwnerId = userid
@@ -26,4 +24,13 @@ func (GU *GitUseCase) GetRepo(userName string, repoName string) (gitmodels.Repos
 }
 func (GU *GitUseCase) GetRepoList(userName string) ([]gitmodels.Repository, error) {
 	return GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
+}
+
+func (GU *GitUseCase) GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error) {
+	ReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, userName, repoName)
+	if ReadyToRead {
+		return GU.Repo.GetBranchesByName(userName, repoName)
+	} else {
+		return nil, err
+	}
 }

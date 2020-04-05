@@ -7,5 +7,5 @@ type UseCase interface {
 	//Update()
 	GetRepo(userName string, repoName string) (gitmodels.Repository, error)
 	GetRepoList(userName string) ([]gitmodels.Repository, error)
-	//GetBranchList(userName string, repoName string) gitmodels.Branch
+	GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error)
 }

@@ -91,11 +91,33 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 
 //
 ////ветки репака(просто названия и ссылки)
-//func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
-//	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
-//	GD.UC.
-//}
-//
+func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
+	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
+
+	res := r.Context().Value("UserID")
+	var branches []gitmodels.Branch
+	var err error
+
+	if res == nil {
+		branches, err = GD.UC.GetBranchList(nil, userName, repoName)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+	} else {
+		userID := res.(int)
+		branches, err = GD.UC.GetBranchList(&userID, userName, repoName)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+	}
+	if err := json.NewEncoder(w).Encode(&branches); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 ////cписок коммитов для ветки
 //func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 //
