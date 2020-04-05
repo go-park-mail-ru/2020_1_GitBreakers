@@ -47,3 +47,6 @@ func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]
 	return GU.Repo.GetCommitsByCommitHash(params.UserLogin,
 		params.RepoName, params.CommitHash, params.Offset, params.Limit)
 }
+func (GU *GitUseCase) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]gitmodels.Commit, error) {
+	return GU.Repo.GetCommitsByBranchName(userLogin, repoName, branchName, offset, limit)
+}

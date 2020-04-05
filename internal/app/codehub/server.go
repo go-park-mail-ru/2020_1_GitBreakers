@@ -111,8 +111,7 @@ func StartNew() {
 	r.HandleFunc("/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
 	r.HandleFunc("/{username}/{reponame}/commits/{branchname}", repoHandler.GetCommitsList).Methods(http.MethodGet)
 	r.HandleFunc("/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
-	//r.HandleFunc("/{user}/{repa}/branches", userSetHandler.Login).Methods(http.MethodGet)
-	//r.HandleFunc("/{user}/{repa}/commits/{branchname}", userSetHandler.Login).Methods(http.MethodGet)
+	r.HandleFunc("/{username}/{reponame}/{branchname}/commits", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))

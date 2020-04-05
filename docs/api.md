@@ -228,7 +228,7 @@ required email, login, password
 2. 404 (нет такого юзера или репозитория)  
 ### 4.2 Получить список коммитов 
 Запрос: `/{username}/{reponame}/commits/{branchname}` типа `GET`  
-{branchname} - хеш коммита ветки(передается при получении списка веток)
+{branchname} - **хеш коммита** ветки(передается при получении списка веток)
 Образец:  
 `89.208.198.186:8080/logggers/hefherser/commits/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
 Ответ:  
@@ -262,7 +262,45 @@ required email, login, password
 ]
 ```
 2. 404 (нет такого юзера или репозитория или коммита)  
-### 4.3 Получить список файлов по коммиту 
+### 4.3 Получить список коммитов ветки (аналог 4.2)
+Запрос: `/{username}/{reponame}/{branchname}/commits` типа `GET`  
+{branchname} - обычное название ветки (master, dev,prod ...)  
+Образец:  
+`89.208.198.186:8080/localhost:8080/lox5000/testname/bmstu/commits`  
+Ответ:  
+1. 200 ok
+```json
+[
+    {
+        "commit_hash": "2ef55ce2af5701880f2d165e6dbac49ca60d7e3f",
+        "commit_author_name": "Deiklov",
+        "commit_author_email": "romanov408g@mail.ru",
+        "commit_author_when": "2020-04-05T21:23:55+03:00",
+        "committer_name": "Deiklov",
+        "committer_email": "romanov408g@mail.ru",
+        "committer_when": "2020-04-05T21:23:55+03:00",
+        "tree_hash": "ab52364eca9a07eaa7c70458a91edff748c243b7",
+        "commit_parents": [
+            "610307817a81acad346201f97548e72d6b061607"
+        ]
+    },
+    {
+        "commit_hash": "610307817a81acad346201f97548e72d6b061607",
+        "commit_author_name": "Deiklov",
+        "commit_author_email": "romanov408g@mail.ru",
+        "commit_author_when": "2020-04-05T21:17:53+03:00",
+        "committer_name": "Deiklov",
+        "committer_email": "romanov408g@mail.ru",
+        "committer_when": "2020-04-05T21:17:53+03:00",
+        "tree_hash": "d1eb67922e1eb2d21191100a669ab6336a0681ff",
+        "commit_parents": [
+            "47695708f45d379f4608db11cc2b4b26c8c517b2"
+        ]
+    }
+]
+```
+2. 404 (нет такого юзера или репозитория или коммита)  
+### 4.4 Получить список файлов по коммиту 
 Запрос: `/{username}/{reponame}/files/{commithash}` типа `GET`  
 Образец:  
 `89.208.198.186:8080/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`

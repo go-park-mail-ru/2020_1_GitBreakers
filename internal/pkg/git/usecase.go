@@ -12,5 +12,6 @@ type UseCase interface {
 	GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error)
 	FilesInCommitByPath(requet gitmodels.FilesCommitRequest) ([]gitmodels.FileInCommit, error)
 	GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error)
+	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]gitmodels.Commit, error)
 
 }

@@ -174,5 +174,17 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+}
+func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
+	//todo из урла забирать
+	res, err := GD.UC.GetCommitsByBranchName(userName, repoName, branchName, 0, 100)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
