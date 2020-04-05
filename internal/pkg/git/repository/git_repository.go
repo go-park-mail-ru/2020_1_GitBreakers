@@ -84,7 +84,7 @@ func (repo Repository) Create(newRepo git.Repository) (err error) {
 	}
 
 	// Create new bare repository aka 'git init --bare' on repoPath
-	_, err = gogit.PlainInit(repo.reposDir + "/" + repoPath, true)
+	_, err = gogit.PlainInit(repo.reposDir+"/"+repoPath, true)
 	if err == gogit.ErrRepositoryAlreadyExists {
 		return entityerrors.AlreadyExist()
 	}

@@ -11,6 +11,7 @@ type Repository interface {
 	DeleteById(id int) error // TODO
 	DeleteByName(userId int, repoName string) error
 	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)
+	GetReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error)
 
 	GetCommitsInBranch(repoName, branchName string, offset, limit int) ([]git.Commit, error)
 	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error)
