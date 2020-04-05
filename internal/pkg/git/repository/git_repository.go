@@ -2,14 +2,15 @@ package repository
 
 import (
 	"database/sql"
+	gogit "github.com/go-git/go-git/v5"
 	gogitPlumbing "github.com/go-git/go-git/v5/plumbing"
 	gogitPlumbingObj "github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
-
-	gogit "github.com/go-git/go-git/v5"
+	"github.com/h2non/filetype"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"io"
 )
 
 const (
@@ -28,6 +29,42 @@ type queryer interface {
 
 func NewRepository(db *sqlx.DB, reposDir string) Repository {
 	return Repository{db: db, reposDir: reposDir}
+}
+
+func convertToGitCommitModel(gogitCommit *gogitPlumbingObj.Commit) git.Commit {
+	gogitCommitParentsHashes := make([]string, 0, len(gogitCommit.ParentHashes))
+	for _, hash := range gogitCommit.ParentHashes {
+		gogitCommitParentsHashes = append(gogitCommitParentsHashes, hash.String())
+	}
+	return git.Commit{
+		CommitHash:        gogitCommit.Hash.String(),
+		CommitAuthorName:  gogitCommit.Author.Name,
+		CommitAuthorEmail: gogitCommit.Author.Email,
+		CommitAuthorWhen:  gogitCommit.Author.When,
+		CommitterName:     gogitCommit.Committer.Name,
+		CommitterEmail:    gogitCommit.Committer.Email,
+		CommitterWhen:     gogitCommit.Committer.When,
+		TreeHash:          gogitCommit.TreeHash.String(),
+		CommitParents:     gogitCommitParentsHashes,
+	}
+}
+
+func getMimeTypeOfTreeEntry(treeByPath *gogitPlumbingObj.Tree, entry *gogitPlumbingObj.TreeEntry) (string, error) {
+	entryFile, err := treeByPath.TreeEntryFile(entry)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	entryFileReader, err := entryFile.Blob.Reader()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	fileType, err := filetype.MatchReader(entryFileReader)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return fileType.MIME.Value, nil
+
 }
 
 func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, error) {
@@ -275,7 +312,7 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 			"with userLogin=%s, repoName=%s", userLogin, repoName)
 	}
 
-	gogitBranchesIter, err := gogitRepo.Branches()
+	gogitBranchesIterator, err := gogitRepo.Branches()
 	if err != nil {
 		return nil, errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
 			"with userLogin=%s, repoName=%s", userLogin, repoName)
@@ -283,7 +320,7 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 
 	var gitRepoBranches []git.Branch
 
-	err = gogitBranchesIter.ForEach(func(reference *gogitPlumbing.Reference) error {
+	err = gogitBranchesIterator.ForEach(func(reference *gogitPlumbing.Reference) error {
 		gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, reference.Hash())
 		if err != nil {
 			return errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
@@ -291,26 +328,13 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 				userLogin, repoName, reference.Name().String())
 		}
 
-		gogitCommitParentsHashes := make([]string, 0, len(gogitCommit.ParentHashes))
-		for _, hash := range gogitCommit.ParentHashes {
-			gogitCommitParentsHashes = append(gogitCommitParentsHashes, hash.String())
-		}
-
-		gitBranch := git.Branch{
-			Name: reference.Name().String(),
-			Commit: git.Commit{
-				CommitHash:        gogitCommit.Hash.String(),
-				CommitAuthorName:  gogitCommit.Author.Name,
-				CommitAuthorEmail: gogitCommit.Author.Email,
-				CommitAuthorWhen:  gogitCommit.Author.When,
-				CommitterName:     gogitCommit.Committer.Name,
-				CommitterEmail:    gogitCommit.Committer.Email,
-				CommitterWhen:     gogitCommit.Committer.When,
-				TreeHash:          gogitCommit.TreeHash.String(),
-				CommitParents:     gogitCommitParentsHashes,
+		gitRepoBranches = append(gitRepoBranches,
+			git.Branch{
+				Name:   reference.Name().String(),
+				Commit: convertToGitCommitModel(gogitCommit),
 			},
-		}
-		gitRepoBranches = append(gitRepoBranches, gitBranch)
+		)
+
 		return nil
 	})
 	if err != nil {
@@ -350,4 +374,124 @@ func (repo Repository) GetById(id int) (git.Repository, error) {
 	}
 
 	return gitRepo, nil
+}
+
+func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error) {
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+			"with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+
+	gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, gogitPlumbing.NewHash(commitHash))
+	if err != nil {
+		return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+			"with userLogin=%s, repoName=%s, commitHash=%s",
+			userLogin, repoName, commitHash)
+	}
+
+	rootTree, err := gogitCommit.Tree()
+	if err != nil {
+		return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+			"while getting commit rootTree with userLogin=%s, repoName=%s, commitHash=%s",
+			userLogin, repoName, commitHash)
+	}
+
+	treeByPath, err := rootTree.Tree(path)
+	if err != nil {
+		return nil, entityerrors.DoesNotExist()
+	}
+
+	filesInCommit := make([]git.FileInCommit, 0, len(rootTree.Entries))
+	for _, entry := range treeByPath.Entries {
+		obj, err := gogitPlumbingObj.GetObject(gogitRepo.Storer, entry.Hash)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+				"while getting object rootTree with userLogin=%s, repoName=%s, commitHash=%s, entryHash=%s",
+				userLogin, repoName, commitHash, entry.Hash.String())
+		}
+
+		var fileMIMEType string
+		if obj.Type() == gogitPlumbing.BlobObject {
+			fileMIMEType, err = getMimeTypeOfTreeEntry(treeByPath, &entry)
+			if err != nil {
+				return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+					"while getting entry file reader with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
+					userLogin, repoName, commitHash, entry)
+			}
+		}
+
+		fileInCommit := git.FileInCommit{
+			Name:        entry.Name,
+			FileType:    obj.Type().String(),
+			FileMode:    git.FileMode(entry.Mode).String(),
+			ContentType: fileMIMEType,
+			EntryHash:   entry.Hash.String(),
+		}
+
+		filesInCommit = append(filesInCommit, fileInCommit)
+	}
+	return filesInCommit, nil
+}
+
+func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int) ([]git.Commit, error) {
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByCommitHash "+
+			"with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+
+	gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, gogitPlumbing.NewHash(commitHash))
+	switch {
+	case err == gogitPlumbing.ErrObjectNotFound:
+		return nil, entityerrors.DoesNotExist()
+	case err == gogitPlumbingObj.ErrUnsupportedObject:
+		return nil, entityerrors.Invalid()
+	case err != nil:
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByCommitHash "+
+			"with userLogin=%s, repoName=%s, commitHash=%s",
+			userLogin, repoName, commitHash)
+	}
+
+	commitIterator, err := gogitRepo.Log(
+		&gogit.LogOptions{
+			From:  gogitCommit.Hash,
+			Order: gogit.LogOrderCommitterTime,
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByCommitHash "+
+			"with userLogin=%s, repoName=%s, commitHash=%s",
+			userLogin, repoName, commitHash)
+	}
+	defer commitIterator.Close()
+
+	var gitCommits []git.Commit
+
+	for limit > 0 {
+		if offset > 0 {
+			offset--
+			continue
+		}
+		gogitCommit, err := commitIterator.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByCommitHash "+
+				"with userLogin=%s, repoName=%s, commitHash=%s",
+				userLogin, repoName, commitHash)
+		}
+
+		gitCommits = append(gitCommits, convertToGitCommitModel(gogitCommit))
+
+		limit--
+	}
+	return gitCommits, nil
 }
