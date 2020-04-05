@@ -39,13 +39,14 @@ func StartNew() {
 	defer func() {
 		if f != os.Stdout {
 			if err := f.Close(); err != nil {
-				customLogger.Info("Failed to close logger: " + err.Error())
+				log.Println("Failed to close logfile: " + err.Error())
 			}
 		}
 	}()
 	if _, err = fmt.Fprintf(f, ">>>>>>>>>>>>%v<<<<<<<<<<<<\n", time.Now()); err != nil {
-		customLogger.Error("Failed to write server start timestamp in log output: " + err.Error())
-		return
+		msg := "Failed to write server start timestamp in log output: " + err.Error()
+		customLogger.Error(msg)
+		log.Fatal(msg)
 	}
 
 	//берутся из .env файла
@@ -54,8 +55,9 @@ func StartNew() {
 
 	db, err := sqlx.Connect("pgx", connStr)
 	if err != nil {
-		customLogger.Error("Failed to start db: " + err.Error())
-		return
+		msg := "Failed to start db: " + err.Error()
+		customLogger.Error(msg)
+		log.Fatal(msg)
 	} else {
 		customLogger.Println("Connected to postgres ", err)
 	}
@@ -84,11 +86,12 @@ func StartNew() {
 	}).Conn()
 
 	res, err := redisConn.Ping().Result()
-	if res != "PONG" {
-		customLogger.Error("error with redis")
-		return
+	if err != nil {
+		msg := "error with redis: " + err.Error()
+		customLogger.Error(msg)
+		log.Fatal(msg)
 	} else {
-		customLogger.Println("Connected to redis ", res, err)
+		customLogger.Println("Connected to redis: ", res)
 	}
 
 	userSetHandler, m, repoHandler := initNewHandler(db, redisConn, customLogger, conf)
