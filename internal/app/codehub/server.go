@@ -14,11 +14,11 @@ import (
 	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/repository"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
-	middleareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
+	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
-	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -53,7 +53,7 @@ func StartNew() {
 	connStr := "user=" + conf.POSTGRES_USER + " password=" +
 		conf.POSTGRES_PASS + " dbname=" + conf.POSTGRES_DBNAME
 
-	db, err := sqlx.Connect("pgx", connStr)
+	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		msg := "Failed to start db: " + err.Error()
 		customLogger.Error(msg)
@@ -115,7 +115,7 @@ func StartNew() {
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
-	loggerMWare := middleareCommon.CreateAccessLogMiddleware(1, customLogger)
+	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
 		log.Fatal(err)
 	}
