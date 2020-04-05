@@ -116,7 +116,7 @@ func StartNew() {
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
-	panicMiddleware := middleware.PanicMiddleware(m.AuthMiddleware(r))
+	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)(m.AuthMiddleware(r))
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
 		log.Fatal(err)

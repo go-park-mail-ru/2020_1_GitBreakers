@@ -82,7 +82,7 @@ func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, erro
 }
 
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
-	return repo.reposDir + "/" + userLogin + gitPostfix + "/" + repoName
+	return repo.reposDir + "/" + userLogin + "/" + repoName + gitPostfix
 }
 
 func (repo Repository) createRepoPath(queryer queryer, ownerId int, repoName string) (string, error) {
