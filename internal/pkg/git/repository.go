@@ -5,7 +5,7 @@ import (
 )
 
 type Repository interface {
-	GetById(id int) (git.Repository, error) // TODO
+	GetById(id int) (git.Repository, error) // DONE
 	GetByName(userLogin, repoName string) (git.Repository, error) // DONE
 	Create(repos git.Repository) (id int64, err error) // DONE
 	DeleteById(id int) error // TODO

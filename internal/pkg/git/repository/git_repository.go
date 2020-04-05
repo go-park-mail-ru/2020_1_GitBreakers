@@ -98,7 +98,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 
 	newRepoId, err := repoCreationResult.LastInsertId()
 	if err != nil {
-		return -1, errors.Wrapf(err, "cannot get id from git repository entity from db (this entity " +
+		return -1, errors.Wrapf(err, "cannot get id from git repository entity from db (this entity "+
 			"not exist in db now), newRepo=%+v", newRepo)
 	}
 	_, err = tx.Exec("INSERT INTO users_git_repositories (repository_id, user_id) VALUES ($1, $2)",
@@ -322,4 +322,36 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 			"after iterating by branches with userLogin=%s, repoName=%s", userLogin, repoName)
 	}
 	return gitRepoBranches, nil
+}
+
+func (repo Repository) GetById(id int) (git.Repository, error) {
+	var gitRepo git.Repository
+	err := repo.db.QueryRow(`
+			SELECT id,
+			       owner_id,
+			       name,
+			       description,
+			       is_public,
+			       is_fork, 
+			       created_at
+			FROM git_repositories WHERE id = $1
+			`, id).Scan(
+		&gitRepo.Id,
+		&gitRepo.OwnerId,
+		&gitRepo.Name,
+		&gitRepo.Description,
+		&gitRepo.IsPublic,
+		&gitRepo.IsFork,
+		&gitRepo.CreatedAt,
+	)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return gitRepo, entityerrors.DoesNotExist()
+	case err != nil:
+		return gitRepo, errors.Wrapf(err, "error in repository for git repositories in GetById "+
+			"with id=%d", id)
+	}
+
+	return gitRepo, nil
 }
