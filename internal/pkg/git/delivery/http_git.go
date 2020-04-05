@@ -150,8 +150,29 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-	//userName, repoName, hashCommits := vars["username"], vars["reponame"], vars["hashcommits"]
-	//GD.UC.FilesInCommitByPath()
+	vars := mux.Vars(r)
+	showParams := gitmodels.FilesCommitRequest{
+		UserName:    vars["username"],
+		Reponame:    vars["reponame"],
+		HashCommits: vars["hashcommits"],
+	}
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	err := decoder.Decode(&showParams, r.URL.Query())
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	res, err := GD.UC.FilesInCommitByPath(showParams)
+	if err != nil {
+		GD.Logger.HttpInfo(r.Context(), "не смогли отобразить файлы", 500)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(&res); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 }

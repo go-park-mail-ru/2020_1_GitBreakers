@@ -32,3 +32,9 @@ type FileInCommit struct {
 	ContentType string // github.com/h2non/filetype, if FileType != 'blob' then this field will be empty
 	EntryHash   string
 }
+type FilesCommitRequest struct {
+	UserName    string
+	Reponame    string
+	HashCommits string
+	Path        string `schema:"path"`
+}

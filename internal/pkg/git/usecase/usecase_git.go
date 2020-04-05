@@ -33,9 +33,12 @@ func (GU *GitUseCase) GetBranchList(requestUserID *int, userName string, repoNam
 		return nil, err
 	}
 }
-func (GU *GitUseCase) FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]gitmodels.FileInCommit, error) {
-
-	return GU.Repo.FilesInCommitByPath(userLogin, repoName, commitHash, path)
+func (GU *GitUseCase) FilesInCommitByPath(request gitmodels.FilesCommitRequest) ([]gitmodels.FileInCommit, error) {
+	//todo настроить путь
+	//if request.Path == "" {
+	//	request.Path = "./"
+	//}
+	return GU.Repo.FilesInCommitByPath(request.UserName, request.Reponame, request.HashCommits, request.Path)
 }
 func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error) {
 	if params.Limit == 0 {

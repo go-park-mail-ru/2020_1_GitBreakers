@@ -10,7 +10,7 @@ type UseCase interface {
 	GetRepo(userName string, repoName string) (gitmodels.Repository, error)
 	GetRepoList(userName string) ([]gitmodels.Repository, error)
 	GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error)
-	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]gitmodels.FileInCommit, error)
+	FilesInCommitByPath(requet gitmodels.FilesCommitRequest) ([]gitmodels.FileInCommit, error)
 	GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error)
 
 }
