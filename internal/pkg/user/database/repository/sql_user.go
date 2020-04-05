@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jmoiron/sqlx"
@@ -181,4 +182,28 @@ func (repo UserRepo) UploadAvatar(Name string, Content []byte) error {
 		return errors.Wrap(err, " in repo user upload avatar")
 	}
 	return nil
+}
+
+func (repo UserRepo) GetLoginById(id int) (string, error) {
+	var login string
+	err := repo.db.QueryRow("SELECT login FROM users WHERE id = $1", id).Scan(&login)
+	switch {
+	case err == sql.ErrNoRows:
+		return login, entityerrors.DoesNotExist()
+	case err != nil:
+		return login, errors.Wrap(err, "error in user GetLoginById")
+	}
+	return login, err
+}
+
+func (repo UserRepo) GetIdByLogin(login string) (int, error) {
+	var id int
+	err := repo.db.QueryRow("SELECT id FROM users WHERE login = $1", login).Scan(&id)
+	switch {
+	case err == sql.ErrNoRows:
+		return id, entityerrors.DoesNotExist()
+	case err != nil:
+		return id, errors.Wrap(err, "error in user GetLoginById")
+	}
+	return id, nil
 }
