@@ -22,7 +22,7 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		GD.Logger.HttpInfo(r.Context(), "already authorized", http.StatusBadRequest)
+		GD.Logger.HttpInfo(r.Context(), "anauthorized", http.StatusBadRequest)
 		return
 	}
 	userID := res.(int)
