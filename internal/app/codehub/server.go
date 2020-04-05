@@ -135,7 +135,7 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 		Logger:   &logger,
 	}
 	//todo создать репо для гита
-	repogit := repository.NewRepository(db, "..")
+	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 	gitUseCase := usecase.GitUseCase{&repogit}
 	gitDelivery := gitDeliv.GitDelivery{&gitUseCase, &logger, &userUCase}
 	m := middleware.Middleware{

@@ -7,16 +7,17 @@ import (
 )
 
 type Config struct {
-	REDIS_ADDR       string
-	POSTGRES_USER    string
-	POSTGRES_PASS    string
-	POSTGRES_DBNAME  string
-	MAX_DB_OPEN_CONN int
-	MAIN_LISTEN_PORT string
-	ALLOWED_ORIGINS  []string
-	REDIS_PASS       string
-	LOGFILE          string
-	HOST_TO_SAVE     string
+	REDIS_ADDR         string
+	POSTGRES_USER      string
+	POSTGRES_PASS      string
+	POSTGRES_DBNAME    string
+	MAX_DB_OPEN_CONN   int
+	MAIN_LISTEN_PORT   string
+	ALLOWED_ORIGINS    []string
+	REDIS_PASS         string
+	LOGFILE            string
+	HOST_TO_SAVE       string
+	GIT_USER_REPOS_DIR string
 }
 
 // New returns a new Config struct(!!!пароль не задан по дефолту)
@@ -33,6 +34,7 @@ func New() *Config {
 		LOGFILE:          getEnv("LOGFILE", "logfile.log"),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://localhost:3000", "http://89.208.198.186:80", "http://89.208.198.186:3000"}, ","),
+		GIT_USER_REPOS_DIR: getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
 	}
 }
 
