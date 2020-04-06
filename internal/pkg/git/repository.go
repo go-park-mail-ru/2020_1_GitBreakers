@@ -16,6 +16,7 @@ type Repository interface {
 	GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error)
 
 	FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error)
+	GetFileByPath(userLogin, repoName, commitHash, path string) (git.FileCommitted, error)
 	GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int) ([]git.Commit, error)
 	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error)
 }
