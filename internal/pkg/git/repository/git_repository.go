@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -51,12 +52,8 @@ func convertToGitCommitModel(gogitCommit *gogitPlumbingObj.Commit) git.Commit {
 	}
 }
 
-func getMimeTypeOfTreeEntry(treeByPath *gogitPlumbingObj.Tree, entry *gogitPlumbingObj.TreeEntry) (string, error) {
-	entryFile, err := treeByPath.TreeEntryFile(entry)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-	entryFileReader, err := entryFile.Blob.Reader()
+func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
+	entryFileReader, err := gogitFile.Blob.Reader()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -437,10 +434,17 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 
 		var fileMIMEType string
 		if obj.Type() == gogitPlumbing.BlobObject {
-			fileMIMEType, err = getMimeTypeOfTreeEntry(treeByPath, &entry)
+			entryFile, err := treeByPath.TreeEntryFile(&entry)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
-					"while getting entry file reader with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
+					"while getting tree entry file reader with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
+					userLogin, repoName, commitHash, entry)
+			}
+
+			fileMIMEType, err = getMimeTypeOfFile(entryFile)
+			if err != nil {
+				return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+					"while getting tree entry file reader with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
 					userLogin, repoName, commitHash, entry)
 			}
 		}
@@ -543,4 +547,80 @@ func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName st
 	}
 
 	return repo.GetCommitsByCommitHash(userLogin, repoName, gogitCommit.Hash.String(), offset, limit)
+}
+
+func (repo Repository) GetFileByPath(userLogin, repoName, commitHash, path string) (file git.FileCommitted, err error) {
+	defer func() {
+		if err != nil && err != entityerrors.DoesNotExist() && err != entityerrors.Invalid() {
+			err = errors.Wrapf(err, "error in repository for git repositories in GetFileByPath "+
+				"with userLogin=%s, repoName=%s, commitHash=%s, path=%",
+				userLogin, repoName, commitHash, path)
+		}
+	}()
+
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return file, entityerrors.DoesNotExist()
+	case err != nil:
+		return file, err
+	}
+
+	gogitCommit, err := gogitRepo.CommitObject(gogitPlumbing.NewHash(commitHash))
+	switch {
+	case err == gogitPlumbing.ErrObjectNotFound:
+		return file, entityerrors.DoesNotExist()
+	case err != nil:
+		return file, err
+	}
+
+	rootTree, err := gogitCommit.Tree()
+	if err != nil {
+		return file, err
+	}
+
+	gogitFile, err := rootTree.File(path)
+	switch {
+	case err == gogitPlumbingObj.ErrFileNotFound:
+		return file, entityerrors.DoesNotExist()
+	case err != nil:
+		return file, err
+	}
+
+	isBinary, err := gogitFile.IsBinary()
+	if err != nil {
+		return file, err
+	}
+
+	if gogitFile.Type() != gogitPlumbing.BlobObject || isBinary {
+		return file, entityerrors.Invalid()
+	}
+
+	fileMIMEType, err := getMimeTypeOfFile(gogitFile)
+	if err != nil {
+		return file, err
+	}
+
+	gogitFileReader, err := gogitFile.Blob.Reader()
+	if err != nil {
+		return file, err
+	}
+
+	gogitFileContent, err := ioutil.ReadAll(gogitFileReader)
+	if err != nil {
+		return file, err
+	}
+
+	file = git.FileCommitted{
+		FileInfo: git.FileInCommit{
+			Name:        gogitFile.Name,
+			FileType:    gogitFile.Type().String(),
+			FileMode:    git.FileMode(gogitFile.Mode).String(),
+			ContentType: fileMIMEType,
+			EntryHash:   gogitFile.Hash.String(),
+		},
+		Content: string(gogitFileContent),
+	}
+
+	return file, nil
 }
