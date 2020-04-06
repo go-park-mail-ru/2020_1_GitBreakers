@@ -26,15 +26,16 @@ func (fm FileMode) String() string {
 }
 
 type FileInCommit struct {
-	Name        string
-	FileType    string
-	FileMode    string
-	ContentType string // github.com/h2non/filetype, if FileType != 'blob' then this field will be empty
-	EntryHash   string
+	Name        string `json:"name"`
+	FileType    string `json:"file_type"`
+	FileMode    string `json:"file_mode"`
+	FileSize    int64  `json:"file_size"`
+	ContentType string `json:"content_type"` // github.com/h2non/filetype, if FileType != 'blob' then this field will be empty
+	EntryHash   string `json:"entry_hash"`
 }
 type FilesCommitRequest struct {
-	UserName    string
-	Reponame    string
-	HashCommits string
+	UserName    string `json:"user_name"`
+	Reponame    string `json:"reponame"`
+	HashCommits string `json:"hash_commits"`
 	Path        string `schema:"path"`
 }

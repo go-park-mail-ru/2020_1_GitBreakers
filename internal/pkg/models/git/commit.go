@@ -14,9 +14,9 @@ type Commit struct {
 	CommitParents     []string  `json:"commit_parents" valid:"-"`
 }
 type CommitRequest struct {
-	UserLogin  string
-	RepoName   string
-	CommitHash string
-	Offset     int `schema:"offset"`
-	Limit      int `schema:"limit"`
+	UserLogin  string `json:"user_login"`
+	RepoName   string `json:"repo_name"`
+	CommitHash string `json:"commit_hash"`
+	Offset     int    `json:"offset" schema:"offset"`
+	Limit      int    `json:"limit" schema:"limit"`
 }

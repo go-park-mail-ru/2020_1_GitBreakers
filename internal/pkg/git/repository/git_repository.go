@@ -432,6 +432,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 				userLogin, repoName, commitHash, entry.Hash.String())
 		}
 
+		var fileSize int64 = -1
 		var fileMIMEType string
 		if obj.Type() == gogitPlumbing.BlobObject {
 			entryFile, err := treeByPath.TreeEntryFile(&entry)
@@ -440,7 +441,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 					"while getting tree entry file reader with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
 					userLogin, repoName, commitHash, entry)
 			}
-
+			fileSize = entryFile.Size
 			fileMIMEType, err = getMimeTypeOfFile(entryFile)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
@@ -453,6 +454,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 			Name:        entry.Name,
 			FileType:    obj.Type().String(),
 			FileMode:    git.FileMode(entry.Mode).String(),
+			FileSize:    fileSize,
 			ContentType: fileMIMEType,
 			EntryHash:   entry.Hash.String(),
 		}
@@ -616,6 +618,7 @@ func (repo Repository) GetFileByPath(userLogin, repoName, commitHash, path strin
 			Name:        gogitFile.Name,
 			FileType:    gogitFile.Type().String(),
 			FileMode:    git.FileMode(gogitFile.Mode).String(),
+			FileSize:    gogitFile.Size,
 			ContentType: fileMIMEType,
 			EntryHash:   gogitFile.Hash.String(),
 		},
