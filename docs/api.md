@@ -227,8 +227,8 @@ required email, login, password
 ```
 2. 404 (нет такого юзера или репозитория)  
 ### 4.2 Получить список коммитов 
-Запрос: `/{username}/{reponame}/commits/{branchname}` типа `GET`  
-{branchname} - **хеш коммита** ветки(передается при получении списка веток)
+Запрос: `/{username}/{reponame}/commits/{commithash}` типа `GET`  
+{commithash} - **хеш коммита** или последний коммит ветки(передается при получении списка веток)
 Образец:  
 `89.208.198.186:8080/logggers/hefherser/commits/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
 Ответ:  
