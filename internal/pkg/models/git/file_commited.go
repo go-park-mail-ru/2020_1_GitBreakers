@@ -1,6 +1,6 @@
 package git
 
 type FileCommitted struct {
-	FileInfo FileInCommit
-	Content  string
+	FileInfo FileInCommit `json:"file_info"`
+	Content  string       `json:"content"`
 }
