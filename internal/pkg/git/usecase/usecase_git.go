@@ -50,3 +50,6 @@ func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]
 func (GU *GitUseCase) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]gitmodels.Commit, error) {
 	return GU.Repo.GetCommitsByBranchName(userLogin, repoName, branchName, offset, limit)
 }
+func (GU *GitUseCase) GetFileByPath(params gitmodels.FilesCommitRequest) (file gitmodels.FileCommitted, err error) {
+	return GU.Repo.GetFileByPath(params.UserName, params.Reponame, params.HashCommits, params.Path)
+}

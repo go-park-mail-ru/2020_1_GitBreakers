@@ -166,9 +166,16 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	res, err := GD.UC.FilesInCommitByPath(showParams)
 	if err != nil {
-		GD.Logger.HttpInfo(r.Context(), "не смогли отобразить файлы", 500)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		res, err := GD.UC.GetFileByPath(showParams)
+		if err != nil {
+			GD.Logger.HttpInfo(r.Context(), "не смогли отобразить файлы", 500)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(&res); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 	if err := json.NewEncoder(w).Encode(&res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

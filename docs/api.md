@@ -324,4 +324,23 @@ required email, login, password
     }
 ]
 ```
-2. 404 (нет такого юзера или репозитория или коммита)
+2. 404 (нет такого юзера или репозитория или коммита)  
+### 4.5 Просмотр одного файла  
+Запрос: `/{username}/{reponame}/files/{commithash}` типа `GET`  
+Образец:  
+`89.208.198.186:8080/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/main.go`
+Ответ:  
+1. 200 ok  
+```json
+{
+    "file_info": {
+        "Name": "golang/database.sql",
+        "FileType": "blob",
+        "FileMode": "regular",
+        "ContentType": "",
+        "EntryHash": "50f1a8d023c356ed5d0ac59285116081dc95528e"
+    },
+    "content": "text from files create table if not exists users\n(\n    nickname text, "
+} 
+```
+2. 500  
