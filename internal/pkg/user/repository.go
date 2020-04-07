@@ -15,7 +15,7 @@ type RepoUser interface {
 	Update(usrUpd models.User) error
 	IsExists(user models.User) (bool, error)
 	DeleteById(id int) error
-	CheckPass(oldpass string, newpass string) (bool, error)
+	CheckPass(login string, newpass string) (bool, error)
 	UploadAvatar(Name string, Content []byte) error
 	UpdateAvatarPath(User models.User, Name string) error
 	UserCanUpdate(user models.User) (bool, error)

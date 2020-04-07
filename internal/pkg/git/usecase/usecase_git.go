@@ -3,6 +3,8 @@ package usecase
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/pkg/errors"
 )
 
 type GitUseCase struct {
@@ -10,10 +12,13 @@ type GitUseCase struct {
 }
 
 func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
-	//todo лучше бы по указателю принимал
 	repos.OwnerId = userid
-	if _, err := GU.Repo.Create(*repos); err != nil {
-		return err
+	_, err := GU.Repo.Create(*repos)
+	switch {
+	case err == entityerrors.AlreadyExist():
+		return entityerrors.AlreadyExist()
+	case err != nil:
+		return errors.Wrap(err, "repo not created")
 	}
 	return nil
 }
@@ -34,10 +39,6 @@ func (GU *GitUseCase) GetBranchList(requestUserID *int, userName string, repoNam
 	}
 }
 func (GU *GitUseCase) FilesInCommitByPath(request gitmodels.FilesCommitRequest) ([]gitmodels.FileInCommit, error) {
-	//todo настроить путь
-	//if request.Path == "" {
-	//	request.Path = "./"
-	//}
 	return GU.Repo.FilesInCommitByPath(request.UserName, request.Reponame, request.HashCommits, request.Path)
 }
 func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error) {

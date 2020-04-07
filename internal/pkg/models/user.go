@@ -5,8 +5,8 @@ type User struct {
 	Password string `json:"password,omitempty" valid:"stringlength(5|128)"`
 	Name     string `json:"name" valid:"optional,alphanum"`
 	Login    string `json:"login" valid:"stringlength(3|128)"`
-	Image    string `json:"image" valid:"-"`
-	Email    string `json:"email" valid:"email,stringlength(5|128)"`
+	Image    string `json:"image" valid:"-" db:"avatar_path"`
+	Email    string `json:"email" valid:"email,stringlength(4|128)"`
 }
 
 type SignInForm struct {

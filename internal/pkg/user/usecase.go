@@ -11,6 +11,6 @@ type UCUser interface {
 	Update(userid int, user models.User) error
 	GetByLogin(login string) (models.User, error)
 	GetByID(userId int) (models.User, error)
-	CheckPass(User models.User, pass string) (bool, error)
+	CheckPass(login string, pass string) (bool, error)
 	UploadAvatar(User models.User, fileName *multipart.FileHeader, file multipart.File) error
 }

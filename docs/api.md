@@ -2,7 +2,7 @@
 ### 1.1 Логин
 
 Запрос: `/login` типа `POST`
-login: string, password:string
+required: login: string(>3 симв), password:string(>5 симв)  
 
 Тело запроса:
 ```json
@@ -13,15 +13,17 @@ login: string, password:string
 ```
 Ответ:  
 1. 200 OK+поставит куки session_id
-2. 401 неверный пароль или логин
-3. 400 уже авторизован или невалидный json
+2. 400 невалдиный json или невалидные поля
+3. 401 неверный пароль
+4. 404 нет такого юзера
+5. 406 уже авторизован
 
 ### 1.2 Регистрация
 
 Запрос: `/signup` типа `POST`
 
 Тело запроса:  
-required email, login, password
+required email, login(>3 симв), password(>5 симв)  
 ```json
 {
   "login": "string",
@@ -31,8 +33,9 @@ required email, login, password
 }
 ```
 Ответ:  
-1. 200 OK+поставит куки session_id
-2. 409 Conflict(уже есть такой юзер)
+1. 201 Created+поставит куки session_id  
+2. 400 Невалидныые данные(плохой json или поля не прошли валидацию)  
+3. 409 Conflict(уже есть такой юзер)  
 
 ### 1.3 Логаут
 
@@ -55,7 +58,7 @@ required email, login, password
     "login": "string",
     "email": "string",
     "name": "string",
-    "avatar": "string"
+    "image": "string"
 }
 ```
 | Ключ          | Значение                 |
@@ -65,8 +68,11 @@ required email, login, password
 | `name`        | Имя+Фамилия              |
 | `avatar`      | Ссылка на аватарку (url) |
 2. 401 unauthorized  
+3. 404 юзера не существует  
 ### 2.2 Обновить данные юзера
-Запрос: `/profile` типа `PUT`
+Запрос: `/profile` типа `PUT`  
+Тело запроса:  
+Все поля опциональны  
 ```json
 {
     "email": "string",
@@ -74,40 +80,42 @@ required email, login, password
     "password": "string"
 }
 ```
-Ответ:
-1. 200 ok
-2. 401 unauthorized
-3. 400 json невалидный
+Ответ:  
+1. 200 ok  
+2. 401 unauthorized  
+3. 400 json невалидный  
+4. 409 уже есть юзер с такими данными  
 ### 2.3 Получить инфу по логину
-Запрос: `/profile/{login}` типа `GET`
+Запрос: `/profile/{login}` типа `GET`  
 
-Ответ:
+Ответ:  
 1. 200 ok
 ```json
 {
     "id": "int",
     "name": "string",
     "login": "string",
-    "image": "./static/image/avatar/default.jpg",
+    "image": "http://localhost:8080/static/image/avatar/default.jpg",
     "email": "string"
 }
 ```
-2. 404 не найден такой юзер
+2. 404 не найден такой юзер  
 ### 2.4 Загрузить аватарку
 
-Запрос: `/avatar` типа `PUT`
-
-Ответ:
-1. 200 ok
+Запрос: `/avatar` типа `PUT`  
+Запрос: Картинка(6MB max size), имя поля **avatar**  
 ```html
 <form enctype="multipart/form-data">
     <input name="avatar" type="file" />
 </form>
 ```
-2. 401 unauthorized  
+Ответ:
+1. 200 ok
+2. 400 плохой файл(недопустимый формат или большой размер)  
+2. 401 не авторизован  
 ## 3. Репозиторий
 ### 3.1 Создать новый репозиторий
-Запрос: `/repo` типа `POST`
+Запрос: `/repo` типа `POST`  
 ```json
 {
     "name": "string",
@@ -116,7 +124,7 @@ required email, login, password
     "is_fork": "bool"
 }
 ```
-Ответ:
+Ответ:  
 1. 201 created  
 2. 401 unauthorized
 3. 400 невалидный json 

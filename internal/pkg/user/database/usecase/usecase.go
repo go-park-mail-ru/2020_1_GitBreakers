@@ -4,6 +4,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -22,7 +23,7 @@ func (UC *UCUser) Create(user models.User) error {
 		return errors.Wrap(err, "error in repo layer")
 	}
 	if isExsist {
-		return errors.New("user with this login or email is already exists")
+		return entityerrors.AlreadyExist()
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	//конвертим в строку
@@ -59,6 +60,9 @@ func (UC *UCUser) Update(userid int, newUserData models.User) error {
 		oldUserData.Password = string(pass[:])
 	}
 	if canUpdate, err := UC.RepUser.UserCanUpdate(oldUserData); !canUpdate || err != nil {
+		if !canUpdate {
+			return entityerrors.AlreadyExist()
+		}
 		return err
 	}
 	if err := UC.RepUser.Update(oldUserData); err != nil {
@@ -68,13 +72,13 @@ func (UC *UCUser) Update(userid int, newUserData models.User) error {
 }
 
 func (UC *UCUser) GetByLogin(login string) (models.User, error) {
-	return UC.RepUser.GetUserByLoginWithPass(login)
+	return UC.RepUser.GetByLoginWithoutPass(login)
 }
 func (UC *UCUser) GetByID(userId int) (models.User, error) {
 	return UC.RepUser.GetUserByIdWithoutPass(userId)
 }
-func (UC *UCUser) CheckPass(User models.User, pass string) (bool, error) {
-	return UC.RepUser.CheckPass(User.Password, pass)
+func (UC *UCUser) CheckPass(login string, pass string) (bool, error) {
+	return UC.RepUser.CheckPass(login, pass)
 }
 func (UC *UCUser) UploadAvatar(User models.User, fileName *multipart.FileHeader, image multipart.File) error {
 	byteImage, err := ioutil.ReadAll(image)

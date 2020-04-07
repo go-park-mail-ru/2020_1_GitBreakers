@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -23,8 +24,8 @@ type GitDelivery struct {
 func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		GD.Logger.HttpInfo(r.Context(), "anauthorized", http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
+		GD.Logger.HttpInfo(r.Context(), "anauthorized", http.StatusUnauthorized)
 		return
 	}
 	userID := res.(int)
@@ -35,7 +36,7 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := govalidator.ValidateStruct(newRepo); err != nil {
-		GD.Logger.HttpInfo(r.Context(), err.Error(), http.StatusBadRequest)
+		GD.Logger.HttpLogError(r.Context(), "govalidator", "", errors.Cause(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
