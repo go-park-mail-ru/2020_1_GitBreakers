@@ -21,7 +21,6 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		//TODO проверить то ли вернет метод
 		sessModel, err := Mdware.SessDeliv.GetBySessID(cookie.Value)
 		if err != nil {
 			next.ServeHTTP(w, r)

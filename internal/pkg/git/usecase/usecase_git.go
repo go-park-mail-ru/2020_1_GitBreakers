@@ -23,34 +23,81 @@ func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
 	return nil
 }
 
-func (GU *GitUseCase) GetRepo(userName string, repoName string) (gitmodels.Repository, error) {
+func (GU *GitUseCase) GetRepo(userName string, repoName string, requestUserID *int) (gitmodels.Repository, error) {
+	isReadAccepted, err := GU.Repo.CheckReadAccess(requestUserID, userName, repoName)
+	if err != nil {
+		return gitmodels.Repository{}, errors.Wrap(err, "error in access check")
+	}
+
+	if !isReadAccepted {
+		return gitmodels.Repository{}, entityerrors.AccessDenied()
+	}
+
 	return GU.Repo.GetByName(userName, repoName)
 }
-func (GU *GitUseCase) GetRepoList(userName string) ([]gitmodels.Repository, error) {
-	return GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
+func (GU *GitUseCase) GetRepoList(userName string, requestUserID *int) ([]gitmodels.Repository, error) {
+	rawRepoList, err := GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
+	if err != nil {
+		return nil, errors.Wrap(err, "didn't get repolist")
+	}
+
+	resultRepoList := make([]gitmodels.Repository, 0)
+	for _, v := range rawRepoList {
+		isReadAccepted, err := GU.Repo.CheckReadAccess(requestUserID, userName, v.Name)
+		if err == nil && isReadAccepted {
+			resultRepoList = append(resultRepoList, v)
+		}
+	}
+
+	return resultRepoList, nil
 }
 
 func (GU *GitUseCase) GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error) {
-	ReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, userName, repoName)
+	ReadyToRead, _ := GU.Repo.CheckReadAccess(requestUserID, userName, repoName)
+
 	if ReadyToRead {
 		return GU.Repo.GetBranchesByName(userName, repoName)
-	} else {
-		return nil, err
 	}
+
+	return nil, entityerrors.AccessDenied()
 }
-func (GU *GitUseCase) FilesInCommitByPath(request gitmodels.FilesCommitRequest) ([]gitmodels.FileInCommit, error) {
-	return GU.Repo.FilesInCommitByPath(request.UserName, request.Reponame, request.HashCommits, request.Path)
-}
-func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error) {
-	if params.Limit == 0 {
-		params.Limit = 100
+func (GU *GitUseCase) FilesInCommitByPath(request gitmodels.FilesCommitRequest, requestUserID *int) ([]gitmodels.FileInCommit, error) {
+	ReadyToRead, _ := GU.Repo.CheckReadAccess(requestUserID, request.UserName, request.Reponame)
+
+	if ReadyToRead {
+		return GU.Repo.FilesInCommitByPath(request.UserName, request.Reponame, request.HashCommits, request.Path)
 	}
-	return GU.Repo.GetCommitsByCommitHash(params.UserLogin,
-		params.RepoName, params.CommitHash, params.Offset, params.Limit)
+
+	return nil, entityerrors.AccessDenied()
 }
-func (GU *GitUseCase) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]gitmodels.Commit, error) {
-	return GU.Repo.GetCommitsByBranchName(userLogin, repoName, branchName, offset, limit)
+func (GU *GitUseCase) GetCommitsByCommitHash(params gitmodels.CommitRequest, requestUserID *int) ([]gitmodels.Commit, error) {
+	ReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, params.UserLogin, params.RepoName)
+
+	if ReadyToRead && err == nil {
+		if params.Limit == 0 {
+			params.Limit = 100
+		}
+		return GU.Repo.GetCommitsByCommitHash(params.UserLogin,
+			params.RepoName, params.CommitHash, params.Offset, params.Limit)
+	}
+
+	return nil, entityerrors.AccessDenied()
 }
-func (GU *GitUseCase) GetFileByPath(params gitmodels.FilesCommitRequest) (file gitmodels.FileCommitted, err error) {
-	return GU.Repo.GetFileByPath(params.UserName, params.Reponame, params.HashCommits, params.Path)
+func (GU *GitUseCase) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int, requestUserID *int) ([]gitmodels.Commit, error) {
+	ReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, userLogin, repoName)
+
+	if ReadyToRead && err == nil {
+		return GU.Repo.GetCommitsByBranchName(userLogin, repoName, branchName, offset, limit)
+	}
+
+	return nil, entityerrors.AccessDenied()
+}
+func (GU *GitUseCase) GetFileByPath(params gitmodels.FilesCommitRequest, requestUserID *int) (file gitmodels.FileCommitted, err error) {
+	ReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, params.UserName, params.Reponame)
+
+	if ReadyToRead && err == nil {
+		return GU.Repo.GetFileByPath(params.UserName, params.Reponame, params.HashCommits, params.Path)
+	}
+
+	return gitmodels.FileCommitted{}, entityerrors.AccessDenied()
 }

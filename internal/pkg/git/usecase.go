@@ -6,12 +6,11 @@ import (
 
 type UseCase interface {
 	Create(userid int, repos *gitmodels.Repository) error
-	//Update()
-	GetRepo(userName string, repoName string) (gitmodels.Repository, error)
-	GetRepoList(userName string) ([]gitmodels.Repository, error)
+	GetRepo(userName string, repoName string, requestUserID *int) (gitmodels.Repository, error)
+	GetRepoList(userName string, requestUserID *int) ([]gitmodels.Repository, error)
 	GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error)
-	FilesInCommitByPath(requet gitmodels.FilesCommitRequest) ([]gitmodels.FileInCommit, error)
-	GetCommitsByCommitHash(params gitmodels.CommitRequest) ([]gitmodels.Commit, error)
-	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]gitmodels.Commit, error)
-	GetFileByPath(params gitmodels.FilesCommitRequest) (file gitmodels.FileCommitted, err error)
+	FilesInCommitByPath(requset gitmodels.FilesCommitRequest, requesrUserID *int) ([]gitmodels.FileInCommit, error)
+	GetCommitsByCommitHash(params gitmodels.CommitRequest, requestUserID *int) ([]gitmodels.Commit, error)
+	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int, requestUserID *int) ([]gitmodels.Commit, error)
+	GetFileByPath(params gitmodels.FilesCommitRequest, requestUserID *int) (file gitmodels.FileCommitted, err error)
 }
