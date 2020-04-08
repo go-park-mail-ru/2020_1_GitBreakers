@@ -48,15 +48,15 @@ func (repo UserRepo) GetUserByIdWithoutPass(id int) (models.User, error) {
 }
 
 func (repo UserRepo) GetUserByLoginWithPass(login string) (models.User, error) {
-	storedUser := models.User{}
-	err := repo.db.Get(&storedUser, "SELECT id, login, email, password,name, avatar_path FROM users WHERE login = $1", login)
+	User := models.User{}
+	err := repo.db.Get(&User, "SELECT id, login, email, password,name, avatar_path FROM users WHERE login = $1", login)
 	switch {
 	case err == sql.ErrNoRows:
-		return storedUser, entityerrors.DoesNotExist()
+		return User, entityerrors.DoesNotExist()
 	case err != nil:
-		return storedUser, errors.Wrap(err, "error while scanning in repository")
+		return User, errors.Wrap(err, "error while scanning in repository")
 	}
-	return storedUser, nil
+	return User, nil
 }
 func (repo UserRepo) GetByLoginWithoutPass(login string) (models.User, error) {
 	storedUser, err := repo.GetUserByLoginWithPass(login)
