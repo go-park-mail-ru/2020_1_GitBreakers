@@ -2,12 +2,15 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/bcrypt"
+	"reflect"
 	"testing"
 )
 
@@ -43,25 +46,121 @@ func (s *Suite) SetupSuite() {
 func TestInit(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
-func (s *Suite) TestGetUserByIdWithPass() {
-	// good query
+func (s *Suite) TestGetUserByLoginWithPass() {
+	user := s.user
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	require.NoError(s.T(), err)
+	user.Password = string(hash)
 	rows := s.mock.
 		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(s.user.Id, s.user.Login, s.user.Email, s.user.Password, s.user.Name, s.user.Image)
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.
 		ExpectQuery("SELECT").
-		WithArgs(s.user.Login).
+		WithArgs(user.Login).
 		WillReturnRows(rows)
 
-	item, err := s.repo.GetUserByLoginWithPass(s.user.Login)
-	if err != nil {
-		s.T().Errorf("unexpected err: %s", err)
-		return
+	UserFromDB, err := s.repo.GetUserByLoginWithPass(user.Login)
+	require.Nil(s.T(), err)
+
+	if !reflect.DeepEqual(UserFromDB, user) {
+		s.Assert()
 	}
+
+	s.mock.ExpectQuery("SELECT").WithArgs(user.Login).
+		WillReturnError(sql.ErrNoRows)
+	_, err = s.repo.GetUserByLoginWithPass(user.Login)
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+
+}
+func (s *Suite) TestGetUserByLoginWithoutPass() {
+	user := s.user
+
+	rows := s.mock.
+		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+
+	s.mock.
+		ExpectQuery("SELECT").
+		WithArgs(user.Login).
+		WillReturnRows(rows)
+
+	UserFromDB, err := s.repo.GetByLoginWithoutPass(user.Login)
+
+	require.NotEqual(s.T(), UserFromDB.Password, user.Password)
+	require.Equal(s.T(), UserFromDB.Password, "")
 	if err := s.mock.ExpectationsWereMet(); err != nil {
 		s.T().Errorf("there were unfulfilled expectations: %s", err)
 		return
 	}
-	fmt.Println(item)
+	someErr := errors.New("some db error")
+	s.mock.ExpectQuery("SELECT").WithArgs(user.Login).
+		WillReturnError(someErr)
+
+	_, err = s.repo.GetUserByLoginWithPass(user.Login)
+	if reflect.DeepEqual(UserFromDB, user) {
+		s.Assert()
+	}
+
+	require.Equal(s.T(), errors.Cause(err), someErr)
 }
+func (s *Suite) TestGetUserByIdWithoutPass() {
+	user := s.user
+
+	rows := s.mock.
+		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+
+	s.mock.
+		ExpectQuery("SELECT").
+		WithArgs(user.Id).
+		WillReturnRows(rows)
+
+	UserFromDB, err := s.repo.GetUserByIdWithoutPass(user.Id)
+
+	require.NotEqual(s.T(), UserFromDB.Password, user.Password)
+	require.Equal(s.T(), UserFromDB.Password, "")
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	someErr := errors.New("some db error")
+	s.mock.ExpectQuery("SELECT").WithArgs(user.Id).
+		WillReturnError(someErr)
+
+	_, err = s.repo.GetUserByIdWithoutPass(user.Id)
+	if reflect.DeepEqual(UserFromDB, user) {
+		s.Assert()
+	}
+
+	require.Equal(s.T(), errors.Cause(err), someErr)
+}
+
+func (s *Suite) TestGetUserByIdWithPass() {
+	user := s.user
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	require.NoError(s.T(), err)
+	user.Password = string(hash)
+	rows := s.mock.
+		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+
+	s.mock.
+		ExpectQuery("SELECT").
+		WithArgs(user.Id).
+		WillReturnRows(rows)
+
+	UserFromDB, err := s.repo.GetUserByIdWithPass(user.Id)
+	require.Nil(s.T(), err)
+
+	if !reflect.DeepEqual(UserFromDB, user) {
+		s.Assert()
+	}
+
+	s.mock.ExpectQuery("SELECT").WithArgs(user.Id).
+		WillReturnError(sql.ErrNoRows)
+	_, err = s.repo.GetUserByIdWithPass(user.Id)
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+
+}
+
