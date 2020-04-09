@@ -21,7 +21,7 @@ type Suite struct {
 	mock sqlmock.Sqlmock
 }
 
-func (s *Suite) SetupSuite() {
+func (s *Suite) SetupTest() {
 	var (
 		db  *sql.DB
 		err error
@@ -89,10 +89,7 @@ func (s *Suite) TestGetUserByLoginWithoutPass() {
 
 	require.NotEqual(s.T(), UserFromDB.Password, user.Password)
 	require.Equal(s.T(), UserFromDB.Password, "")
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-		return
-	}
+
 	someErr := errors.New("some db error")
 	s.mock.ExpectQuery("SELECT").WithArgs(user.Login).
 		WillReturnError(someErr)
@@ -119,10 +116,7 @@ func (s *Suite) TestGetUserByIdWithoutPass() {
 
 	require.NotEqual(s.T(), UserFromDB.Password, user.Password)
 	require.Equal(s.T(), UserFromDB.Password, "")
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-		return
-	}
+
 	someErr := errors.New("some db error")
 	s.mock.ExpectQuery("SELECT").WithArgs(user.Id).
 		WillReturnError(someErr)
@@ -134,7 +128,7 @@ func (s *Suite) TestGetUserByIdWithoutPass() {
 
 	require.Equal(s.T(), errors.Cause(err), someErr)
 }
-
+//
 func (s *Suite) TestGetUserByIdWithPass() {
 	user := s.user
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -162,7 +156,7 @@ func (s *Suite) TestGetUserByIdWithPass() {
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
 }
-
+//
 func (s *Suite) TestIsExists() {
 	user := s.user
 	rows := s.mock.NewRows([]string{"is_exsist"})
@@ -173,11 +167,9 @@ func (s *Suite) TestIsExists() {
 	isExsist, err := s.repo.IsExists(user)
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), isExsist, true)
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
-}
 
+}
+//
 func (s *Suite) TestUpdate() {
 	user := s.user
 	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
@@ -201,11 +193,9 @@ func (s *Suite) TestUpdate() {
 
 	require.Equal(s.T(), err, entityerrors.Invalid())
 
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
-}
 
+}
+//
 func (s *Suite) TestUserCanUpdate() {
 	user := s.user
 	rows := s.mock.NewRows([]string{""})
@@ -241,7 +231,7 @@ func (s *Suite) TestUserCanUpdate() {
 	}
 
 }
-
+//
 func (s *Suite) TestGetLoginById() {
 	user := s.user
 	rows := s.mock.NewRows([]string{"login"})
@@ -256,9 +246,7 @@ func (s *Suite) TestGetLoginById() {
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), loginFromDB, user.Login)
 
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
+
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Id).
@@ -268,9 +256,7 @@ func (s *Suite) TestGetLoginById() {
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
+
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Id).
@@ -280,12 +266,10 @@ func (s *Suite) TestGetLoginById() {
 
 	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
+
 
 }
-
+//
 func (s *Suite) TestGetIdByLogin() {
 	user := s.user
 	rows := s.mock.NewRows([]string{"id"})
@@ -300,9 +284,7 @@ func (s *Suite) TestGetIdByLogin() {
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), loginFromDB, user.Id)
 
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
+
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Login).
@@ -312,9 +294,7 @@ func (s *Suite) TestGetIdByLogin() {
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
+
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Id).
@@ -341,9 +321,4 @@ func (s *Suite) TestCreate() {
 
 	err := s.repo.Create(user)
 	require.Nil(s.T(), err)
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
-
-
 }

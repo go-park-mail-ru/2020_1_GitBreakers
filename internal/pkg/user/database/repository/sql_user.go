@@ -115,8 +115,8 @@ func (repo UserRepo) IsExists(user models.User) (bool, error) {
 }
 func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
 	usercount := 0
-	err := repo.db.Get(&usercount,
-		`SELECT count(*) from users where login = $1 OR email = $2`, user.Login, user.Email)
+	err := repo.db.QueryRow(
+		`SELECT count(*) from users where login = $1 OR email = $2`, user.Login, user.Email).Scan(&usercount)
 	if err != nil {
 		return false, err
 	}
