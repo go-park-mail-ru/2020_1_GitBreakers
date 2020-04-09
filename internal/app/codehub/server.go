@@ -80,13 +80,13 @@ func StartNew() {
 			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin"},
 	})
 
-	redisConn := redis.NewClient(&redis.Options{
+	redisClient := redis.NewClient(&redis.Options{
 		Addr:     conf.REDIS_ADDR, // use default Addr
 		Password: conf.REDIS_PASS, // no password set
 		DB:       0,               // use default db
-	}).Conn()
+	})
 
-	res, err := redisConn.Ping().Result()
+	res, err := redisClient.Ping().Result()
 	if err != nil {
 		msg := "error with redis: " + err.Error()
 		customLogger.Error(msg)
@@ -101,20 +101,24 @@ func StartNew() {
 		false,
 		conf.COOKIE_EXPIRE_HOURS*3600)
 
-	userSetHandler, m, repoHandler := initNewHandler(db, redisConn, customLogger, conf)
+	withCsrfRouter := r.PathPrefix("").Subrouter()
+	withCsrfRouter.Use(csrfMiddleware)
+
+	userSetHandler, m, repoHandler := initNewHandler(db, redisClient, customLogger, conf)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
+	api.Use(csrfMiddleware)
 	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
-	r.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodGet)
+	withCsrfRouter.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodPost)
 	r.HandleFunc("/whoami", userSetHandler.GetInfo).Methods(http.MethodGet)
-	r.HandleFunc("/profile", userSetHandler.Update).Methods(http.MethodPut)
+	withCsrfRouter.HandleFunc("/profile", userSetHandler.Update).Methods(http.MethodPut)
 	r.HandleFunc("/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
-	r.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
+	withCsrfRouter.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 
-	r.HandleFunc("/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
+	withCsrfRouter.HandleFunc("/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 	r.HandleFunc("/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
 	r.HandleFunc("/repolist", repoHandler.GetRepoList).Methods(http.MethodGet)
 	r.HandleFunc("/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
@@ -122,8 +126,6 @@ func StartNew() {
 	r.HandleFunc("/{username}/{reponame}/commits/{branchname}", repoHandler.GetCommitsList).Methods(http.MethodGet)
 	r.HandleFunc("/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
 	r.HandleFunc("/{username}/{reponame}/{branchname}/commits", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
-
-	r.Use(csrfMiddleware)
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
@@ -136,7 +138,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
+func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
 	sessRepos := sessRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := userRepo.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}

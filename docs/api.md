@@ -51,7 +51,7 @@ required email, login(>3 симв), password(>5 симв)
 
 ### 1.3 Логаут
 
-Запрос: `/logout` типа `GET`
+Запрос: `/logout` типа `POST`
 
 Ответ:  
 1. 200 OK+уберет куки session_id

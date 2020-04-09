@@ -11,12 +11,12 @@ import (
 )
 
 type SessionRedis struct {
-	redisDb    *redis.Conn
+	redisDb    *redis.Client
 	BasePrefix string
 }
 
-func NewSessionRedis(conn *redis.Conn, prefix string) SessionRedis {
-	return SessionRedis{conn, prefix}
+func NewSessionRedis(client *redis.Client, prefix string) SessionRedis {
+	return SessionRedis{client, prefix}
 }
 
 func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (string, error) {
