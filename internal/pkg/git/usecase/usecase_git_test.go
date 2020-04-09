@@ -46,5 +46,29 @@ func TestGitUseCase_GetRepo(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, repoFromDb, someRepo)
 	})
+}
 
+func TestGitUseCase_Create(t *testing.T) {
+
+	t.Run("Get repo", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := git.NewMockRepository(ctrl)
+		//username := "keker"
+		//repoName := "mdasher"
+		userid := 12
+
+		m.EXPECT().
+			Create(someRepo).
+			Return(int64(45242), nil)
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		err := useCase.Create(userid, &someRepo)
+		require.Nil(t, err)
+
+	})
 }
