@@ -89,8 +89,8 @@ func (repo UserRepo) Create(newUser models.User) error {
 //id юзера не меняется, достаточно скинуть в него новые данные
 func (repo UserRepo) Update(usrUpd models.User) error {
 	result, err := repo.db.Exec(
-		"UPDATE users SET login = $2, email = $3,name=$4,avatar_path=$5,password=$6 WHERE id = $1",
-		usrUpd.Id, usrUpd.Login, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
+		"UPDATE users SET  email = $2,name=$3,avatar_path=$4,password=$5 WHERE id = $1",
+		usrUpd.Id, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
 	if err != nil {
 		return errors.Wrap(err, "error with update data")
 	}
@@ -116,7 +116,7 @@ func (repo UserRepo) IsExists(user models.User) (bool, error) {
 func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
 	usercount := 0
 	err := repo.db.Get(&usercount,
-		`select count(*) from users where login = $1 OR email = $2`, user.Login, user.Email)
+		`SELECT count(*) from users where login = $1 OR email = $2`, user.Login, user.Email)
 	if err != nil {
 		return false, err
 	}
@@ -174,6 +174,7 @@ func (repo UserRepo) CheckPass(login string, newpass string) (bool, error) {
 	}
 	return true, nil
 }
+
 func (repo UserRepo) UpdateAvatarPath(User models.User, Name string) error {
 	User.Image = repo.hostToSave + repo.defaultImagePath + Name
 	if err := repo.Update(User); err != nil {
@@ -188,14 +189,14 @@ func (repo UserRepo) UploadAvatar(Name string, Content []byte) error {
 	return nil
 }
 
-func (repo UserRepo) GetLoginById(id int) (string, error) {
+func (repo UserRepo) GetLoginByID(id int) (string, error) {
 	var login string
 	err := repo.db.QueryRow("SELECT login FROM users WHERE id = $1", id).Scan(&login)
 	switch {
 	case err == sql.ErrNoRows:
 		return login, entityerrors.DoesNotExist()
 	case err != nil:
-		return login, errors.Wrap(err, "error in user GetLoginById")
+		return login, errors.Wrap(err, "error in user GetLoginByID")
 	}
 	return login, err
 }
@@ -207,7 +208,7 @@ func (repo UserRepo) GetIdByLogin(login string) (int, error) {
 	case err == sql.ErrNoRows:
 		return id, entityerrors.DoesNotExist()
 	case err != nil:
-		return id, errors.Wrap(err, "error in user GetLoginById")
+		return id, errors.Wrap(err, "error in user GetLoginByID")
 	}
 	return id, nil
 }

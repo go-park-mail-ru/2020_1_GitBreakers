@@ -115,7 +115,6 @@ func (s *Suite) TestGetUserByIdWithoutPass() {
 		ExpectQuery("SELECT").
 		WithArgs(user.Id).
 		WillReturnRows(rows)
-
 	UserFromDB, err := s.repo.GetUserByIdWithoutPass(user.Id)
 
 	require.NotEqual(s.T(), UserFromDB.Password, user.Password)
@@ -164,3 +163,167 @@ func (s *Suite) TestGetUserByIdWithPass() {
 
 }
 
+func (s *Suite) TestIsExists() {
+	user := s.user
+	rows := s.mock.NewRows([]string{"is_exsist"})
+	rows.AddRow(true)
+	s.mock.ExpectQuery("SELECT  ").
+		WithArgs(user.Login, user.Email).
+		WillReturnRows(rows)
+	isExsist, err := s.repo.IsExists(user)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), isExsist, true)
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func (s *Suite) TestUpdate() {
+	user := s.user
+	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(user.Id, user.Email, user.Name, user.Image, user.Password).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := s.repo.Update(user)
+	require.Nil(s.T(), err)
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(user.Id, user.Email, user.Name, user.Image, user.Password).
+		WillReturnResult(sqlmock.NewResult(1, 0))
+
+	err = s.repo.Update(user)
+
+	require.Equal(s.T(), err, entityerrors.Invalid())
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func (s *Suite) TestUserCanUpdate() {
+	user := s.user
+	rows := s.mock.NewRows([]string{""})
+	rows.AddRow(1)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login, user.Email).
+		WillReturnRows(rows)
+
+	isCanUpdate, err := s.repo.UserCanUpdate(user)
+
+	require.Nil(s.T(), err)
+	require.True(s.T(), isCanUpdate)
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	rows = s.mock.NewRows([]string{""})
+	rows.AddRow(2)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login, user.Email).
+		WillReturnRows(rows)
+
+	isCanUpdate, err = s.repo.UserCanUpdate(user)
+
+	require.Nil(s.T(), err, )
+	require.False(s.T(), isCanUpdate)
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+}
+
+func (s *Suite) TestGetLoginById() {
+	user := s.user
+	rows := s.mock.NewRows([]string{"login"})
+	rows.AddRow(user.Login)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Id).
+		WillReturnRows(rows)
+
+	loginFromDB, err := s.repo.GetLoginByID(user.Id)
+
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), loginFromDB, user.Login)
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Id).
+		WillReturnError(sql.ErrNoRows)
+
+	loginFromDB, err = s.repo.GetLoginByID(user.Id)
+
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Id).
+		WillReturnError(errors.New("some errors"))
+
+	loginFromDB, err = s.repo.GetLoginByID(user.Id)
+
+	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+}
+
+func (s *Suite) TestGetIdByLogin() {
+	user := s.user
+	rows := s.mock.NewRows([]string{"id"})
+	rows.AddRow(user.Id)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login).
+		WillReturnRows(rows)
+
+	loginFromDB, err := s.repo.GetIdByLogin(user.Login)
+
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), loginFromDB, user.Id)
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login).
+		WillReturnError(sql.ErrNoRows)
+
+	loginFromDB, err = s.repo.GetIdByLogin(user.Login)
+
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Id).
+		WillReturnError(errors.New("some errors"))
+
+	loginFromDB, err = s.repo.GetIdByLogin(user.Login)
+
+	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+
+
+
+}
