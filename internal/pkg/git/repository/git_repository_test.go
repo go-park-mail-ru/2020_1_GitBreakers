@@ -6,7 +6,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitModels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -107,4 +109,100 @@ func (s *Suite) TestRepositoryCreate() {
 	id, err := s.gitRepository.Create(repo)
 	require.Nil(s.T(), err)
 	require.EqualValues(s.T(), id, repo.Id)
+}
+
+func (s *Suite) TestRepositoryCreateNegativeRepoExistInDb() {
+	repo := s.gitRepoModel
+	user := s.gitRepoUserModel
+
+	defer func() {
+		if err := os.RemoveAll(gitTestRepoDir + "/" + user.Name); err != nil {
+			s.Failf("error while removing repo test dir %s, err=%+v\n", user.Name, err)
+		}
+	}()
+
+	repoExitsInDbRow := s.mock.NewRows([]string{"exists"})
+	repoExitsInDbRow.AddRow(true)
+
+	s.mock.ExpectBegin()
+
+	s.mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(repo.OwnerId, repo.Name).WillReturnRows(repoExitsInDbRow)
+
+	s.mock.ExpectRollback()
+
+	_, err := s.gitRepository.Create(repo)
+	require.NotNil(s.T(), errors.Cause(err), entityerrors.AlreadyExist())
+}
+
+func (s *Suite) TestCheckReadAccess() {
+	repo := s.gitRepoModel
+	user := s.gitRepoUserModel
+
+	haveReadAccessDbRow := s.mock.NewRows([]string{"exists"})
+	haveReadAccessDbRow.AddRow(true)
+
+	s.mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(user.Login, repo.Name, user.Id).WillReturnRows(haveReadAccessDbRow)
+
+	haveReadAccess, err := s.gitRepository.CheckReadAccess(&user.Id, user.Login, repo.Name)
+	require.Nil(s.T(), err)
+	require.EqualValues(s.T(), haveReadAccess, true)
+}
+
+func (s *Suite) TestCheckReadAccessNegative() {
+	repo := s.gitRepoModel
+	user := s.gitRepoUserModel
+
+	haveReadAccessDbRow := s.mock.NewRows([]string{"exists"})
+	haveReadAccessDbRow.AddRow(false)
+
+	s.mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(user.Login, repo.Name, user.Id).WillReturnRows(haveReadAccessDbRow)
+
+	haveReadAccess, err := s.gitRepository.CheckReadAccess(&user.Id, user.Login, repo.Name)
+	require.Nil(s.T(), err)
+	require.EqualValues(s.T(), haveReadAccess, false)
+}
+
+func (s *Suite) TestGetById() {
+	repo := s.gitRepoModel
+
+	repoDbRow := s.mock.NewRows([]string{
+		"id",
+		"owner_id",
+		"name",
+		"description",
+		"is_public",
+		"is_fork",
+		"created_at",
+	})
+	repoDbRow.AddRow(
+		repo.Id,
+		repo.OwnerId,
+		repo.Name,
+		repo.Description,
+		repo.IsPublic,
+		repo.IsFork,
+		repo.CreatedAt,
+	)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(repo.Id).WillReturnRows(repoDbRow)
+
+	repoModel, err := s.gitRepository.GetById(repo.Id)
+	require.Nil(s.T(), err)
+	require.EqualValues(s.T(), repoModel, repo)
+}
+
+func (s *Suite) TestGetByIdNegativeDoesNotExist() {
+	repo := s.gitRepoModel
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(repo.Id).WillReturnError(sql.ErrNoRows)
+
+	_, err := s.gitRepository.GetById(repo.Id)
+
+	require.NotNil(s.T(), err)
+	require.EqualValues(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 }
