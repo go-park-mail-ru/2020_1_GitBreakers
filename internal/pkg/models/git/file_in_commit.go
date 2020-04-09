@@ -30,6 +30,7 @@ type FileInCommit struct {
 	FileType    string `json:"file_type"`
 	FileMode    string `json:"file_mode"`
 	FileSize    int64  `json:"file_size"`
+	IsBinary    bool   `json:"is_binary"`
 	ContentType string `json:"content_type"` // github.com/h2non/filetype, if FileType != 'blob' then this field will be empty
 	EntryHash   string `json:"entry_hash"`
 }

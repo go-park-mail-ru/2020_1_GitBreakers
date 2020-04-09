@@ -324,18 +324,22 @@ Required: name(alphanumeric),
 ```json
 [
     {
-        "Name": ".s6-svscan",
-        "FileType": "tree",
-        "FileMode": "dir",
-        "ContentType": "",
-        "EntryHash": "720d59ef11a18b3c177e4e85854542b57060f232"
+        "name": "LICENSE",
+        "file_type": "blob",
+        "file_mode": "regular",
+        "file_size": 1054,
+        "is_binary": false,
+        "content_type": "text/plain; charset=utf-8",
+        "entry_hash": "0640c41d4b3b4633682d839f980bcc33fca6e970"
     },
     {
-        "Name": "crond",
-        "FileType": "tree",
-        "FileMode": "regular",
-        "ContentType": "",
-        "EntryHash": "609789152b89b2d1d6a3fc892bb98115db1b8234"
+        "name": "conf",
+        "file_type": "tree",
+        "file_mode": "dir",
+        "file_size": -1,
+        "is_binary": true,
+        "content_type": "",
+        "entry_hash": "9161b4edeb4e928405650145c6ca85f2131a6cff"
     }
 ]
 ```
@@ -350,14 +354,18 @@ Required: name(alphanumeric),
 ```json
 {
     "file_info": {
-        "Name": "golang/database.sql",
-        "FileType": "blob",
-        "FileMode": "regular",
-        "ContentType": "",
-        "EntryHash": "50f1a8d023c356ed5d0ac59285116081dc95528e"
+        "name": "Dockerfile.rpihub",
+        "file_type": "blob",
+        "file_mode": "regular",
+        "file_size": 1413,
+        "is_binary": false,
+        "content_type": "text/plain; charset=utf-8",
+        "entry_hash": "d83a9f5ab53796e6c71491b466840d36184b0376"
     },
     "content": "text from files create table if not exists users\n(\n    nickname text, "
 } 
 ```
+- is_binary всегда false, иначе ошибка (нельзя 
+    посмотреть бинарный файл)
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера, репозитория, файла или коммита)   

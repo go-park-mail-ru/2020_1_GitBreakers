@@ -7,11 +7,11 @@ import (
 	gogitPlumbingObj "github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
-	"github.com/h2non/filetype"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -53,17 +53,19 @@ func convertToGitCommitModel(gogitCommit *gogitPlumbingObj.Commit) git.Commit {
 }
 
 func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
+	buffer := make([]byte, 512)
+
 	entryFileReader, err := gogitFile.Blob.Reader()
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
 
-	fileType, err := filetype.MatchReader(entryFileReader)
+	_, err = entryFileReader.Read(buffer)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	return fileType.MIME.Value, nil
 
+	return http.DetectContentType(buffer), nil
 }
 
 func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, error) {
@@ -432,8 +434,10 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 				userLogin, repoName, commitHash, entry.Hash.String())
 		}
 
+		isBinary := true
 		var fileSize int64 = -1
 		var fileMIMEType string
+
 		if obj.Type() == gogitPlumbing.BlobObject {
 			entryFile, err := treeByPath.TreeEntryFile(&entry)
 			if err != nil {
@@ -441,6 +445,14 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 					"while getting tree entry file reader with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
 					userLogin, repoName, commitHash, entry)
 			}
+
+			isBinary, err = entryFile.IsBinary()
+			if err != nil {
+				return nil, errors.Wrapf(err, "error in repository for git repositories in FilesInCommitByPath "+
+					"while checking IsBinary for file with userLogin=%s, repoName=%s, commitHash=%s, entry=%+v",
+					userLogin, repoName, commitHash, entry)
+			}
+
 			fileSize = entryFile.Size
 			fileMIMEType, err = getMimeTypeOfFile(entryFile)
 			if err != nil {
@@ -455,6 +467,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 			FileType:    obj.Type().String(),
 			FileMode:    git.FileMode(entry.Mode).String(),
 			FileSize:    fileSize,
+			IsBinary:    isBinary,
 			ContentType: fileMIMEType,
 			EntryHash:   entry.Hash.String(),
 		}
@@ -619,6 +632,7 @@ func (repo Repository) GetFileByPath(userLogin, repoName, commitHash, path strin
 			FileType:    gogitFile.Type().String(),
 			FileMode:    git.FileMode(gogitFile.Mode).String(),
 			FileSize:    gogitFile.Size,
+			IsBinary:    isBinary,
 			ContentType: fileMIMEType,
 			EntryHash:   gogitFile.Hash.String(),
 		},
