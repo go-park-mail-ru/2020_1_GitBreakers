@@ -108,7 +108,6 @@ func (repo UserRepo) IsExists(user models.User) (bool, error) {
 		"SELECT EXISTS(SELECT 1 FROM users WHERE login = $1 OR email = $2) as is_exists",
 		user.Login, user.Email).Scan(&isExists)
 	if err != nil {
-		//user.Password = ""
 		return isExists, errors.Wrapf(err, "error in user IsExists with user=%+v", user)
 	}
 	return isExists, nil
@@ -145,7 +144,6 @@ func (repo UserRepo) DeleteById(id int) error {
 	return nil
 }
 
-//todo дублирование deleteByLogin and deleteById
 func (repo UserRepo) DeleteByLogin(login string) error {
 	result, err := repo.db.Exec("DELETE FROM users WHERE login = $1", login)
 	if err != nil {

@@ -128,6 +128,7 @@ func (s *Suite) TestGetUserByIdWithoutPass() {
 
 	require.Equal(s.T(), errors.Cause(err), someErr)
 }
+
 //
 func (s *Suite) TestGetUserByIdWithPass() {
 	user := s.user
@@ -156,6 +157,7 @@ func (s *Suite) TestGetUserByIdWithPass() {
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
 }
+
 //
 func (s *Suite) TestIsExists() {
 	user := s.user
@@ -169,6 +171,7 @@ func (s *Suite) TestIsExists() {
 	require.Equal(s.T(), isExsist, true)
 
 }
+
 //
 func (s *Suite) TestUpdate() {
 	user := s.user
@@ -193,8 +196,8 @@ func (s *Suite) TestUpdate() {
 
 	require.Equal(s.T(), err, entityerrors.Invalid())
 
-
 }
+
 //
 func (s *Suite) TestUserCanUpdate() {
 	user := s.user
@@ -231,6 +234,7 @@ func (s *Suite) TestUserCanUpdate() {
 	}
 
 }
+
 //
 func (s *Suite) TestGetLoginById() {
 	user := s.user
@@ -246,8 +250,6 @@ func (s *Suite) TestGetLoginById() {
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), loginFromDB, user.Login)
 
-
-
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Id).
 		WillReturnError(sql.ErrNoRows)
@@ -255,8 +257,6 @@ func (s *Suite) TestGetLoginById() {
 	loginFromDB, err = s.repo.GetLoginByID(user.Id)
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
-
-
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Id).
@@ -266,9 +266,8 @@ func (s *Suite) TestGetLoginById() {
 
 	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
-
-
 }
+
 //
 func (s *Suite) TestGetIdByLogin() {
 	user := s.user
@@ -284,8 +283,6 @@ func (s *Suite) TestGetIdByLogin() {
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), loginFromDB, user.Id)
 
-
-
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Login).
 		WillReturnError(sql.ErrNoRows)
@@ -293,8 +290,6 @@ func (s *Suite) TestGetIdByLogin() {
 	loginFromDB, err = s.repo.GetIdByLogin(user.Login)
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
-
-
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Id).
@@ -321,4 +316,108 @@ func (s *Suite) TestCreate() {
 
 	err := s.repo.Create(user)
 	require.Nil(s.T(), err)
+}
+func (s *Suite) TestDeleteByLogin() {
+	user := s.user
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Login).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := s.repo.DeleteByLogin(user.Login)
+
+	require.Nil(s.T(), err)
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Login).
+		WillReturnResult(sqlmock.NewResult(50, 0))
+
+	err = s.repo.DeleteByLogin(user.Login)
+
+	require.Error(s.T(), err)
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Login).
+		WillReturnError(entityerrors.DoesNotExist())
+
+	err = s.repo.DeleteByLogin(user.Login)
+
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+}
+
+func (s *Suite) TestDeleteById() {
+	user := s.user
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Id).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := s.repo.DeleteById(user.Id)
+
+	require.Nil(s.T(), err)
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Id).
+		WillReturnResult(sqlmock.NewResult(50, 0))
+
+	err = s.repo.DeleteById(user.Id)
+
+	require.Error(s.T(), err)
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Id).
+		WillReturnError(entityerrors.DoesNotExist())
+
+	err = s.repo.DeleteById(user.Id)
+
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+}
+func (s *Suite) TestCheckPass() {
+	user := s.user
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	user.Password = string(hashedPassword[:])
+
+	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login).
+		WillReturnRows(rows)
+
+	isCorrect, err := s.repo.CheckPass(user.Login, s.user.Password)
+	require.True(s.T(), isCorrect)
+	require.Nil(s.T(), err)
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Id).
+		WillReturnResult(sqlmock.NewResult(50, 0))
+
+	err = s.repo.DeleteById(user.Id)
+
+	require.Error(s.T(), err)
+
+	s.mock.ExpectExec("DELETE").
+		WithArgs(user.Id).
+		WillReturnError(entityerrors.DoesNotExist())
+
+	err = s.repo.DeleteById(user.Id)
+
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+}
+
+func (s *Suite) TestUpdateAvatarPath() {
+	user := s.user
+
+	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
+	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+
+	s.mock.ExpectExec("UPDATE").
+		WithArgs(user.Id, user.Email, user.Name, s.repo.hostToSave+s.repo.defaultImagePath+user.Image, user.Password).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	 err := s.repo.UpdateAvatarPath(user, user.Image)
+
+	require.Nil(s.T(), err)
+
 }
