@@ -69,6 +69,11 @@ func (s *redisTestSuite) TestGetSessById() {
 	require.Equal(s.T(), s.session, storedSession)
 }
 
+func (s *redisTestSuite) TestGetSessByIdNegative() {
+	_, err := s.redisRepository.GetSessById(s.session.Id)
+	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+}
+
 func (s *redisTestSuite) TestDeleteById() {
 	value, err := s.redisRepository.convertToString(s.session)
 	require.NoError(s.T(), err)
