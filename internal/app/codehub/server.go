@@ -3,6 +3,7 @@ package codehub
 import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
 	gitDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/delivery"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
@@ -94,7 +95,16 @@ func StartNew() {
 		customLogger.Println("Connected to redis: ", res)
 	}
 
+	csrfMiddleware := middleware.CreateCsrfMiddleware(
+		[]byte(conf.CSRF_SECRET_KEY),
+		conf.ALLOWED_ORIGINS,
+		false,
+		conf.COOKIE_EXPIRE_HOURS*3600)
+
 	userSetHandler, m, repoHandler := initNewHandler(db, redisConn, customLogger, conf)
+
+	api := r.PathPrefix("/api/v1").Subrouter()
+	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
@@ -113,13 +123,13 @@ func StartNew() {
 	r.HandleFunc("/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
 	r.HandleFunc("/{username}/{reponame}/{branchname}/commits", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
+	r.Use(csrfMiddleware)
+
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 
-
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)(m.AuthMiddleware(r))
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
-
 
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
 		log.Fatal(err)
@@ -129,11 +139,13 @@ func StartNew() {
 func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
 	sessRepos := sessRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := userRepo.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
-	sessUCase := sessUC.SessionUC{&sessRepos}
-	//todo expiretime в конфиге
-	sessDelivery := sessDeliv.SessionHttp{&sessUCase, 48 * time.Hour}
+	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
+	sessDelivery := sessDeliv.SessionHttp{
+		SessUC:     &sessUCase,
+		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
+	}
 
-	userUCase := userUC.UCUser{&userRepos}
+	userUCase := userUC.UCUser{RepUser: &userRepos}
 
 	userDelivery := userDeliv.UserHttp{
 		SessHttp: &sessDelivery,
@@ -143,9 +155,13 @@ func initNewHandler(db *sqlx.DB, redis *redis.Conn, logger logger.SimpleLogger, 
 
 	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 
-	gitUseCase := usecase.GitUseCase{&repogit}
+	gitUseCase := usecase.GitUseCase{Repo: &repogit}
 
-	gitDelivery := gitDeliv.GitDelivery{&gitUseCase, &logger, &userUCase}
+	gitDelivery := gitDeliv.GitDelivery{
+		UC:     &gitUseCase,
+		Logger: &logger,
+		UserUC: &userUCase,
+	}
 
 	m := middleware.Middleware{
 		SessDeliv: &sessDelivery,

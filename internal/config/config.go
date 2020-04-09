@@ -7,20 +7,22 @@ import (
 )
 
 type Config struct {
-	REDIS_ADDR         string
-	POSTGRES_USER      string
-	POSTGRES_PASS      string
-	POSTGRES_DBNAME    string
-	MAX_DB_OPEN_CONN   int
-	MAIN_LISTEN_PORT   string
-	ALLOWED_ORIGINS    []string
-	REDIS_PASS         string
-	LOGFILE            string
-	HOST_TO_SAVE       string
-	GIT_USER_REPOS_DIR string
+	REDIS_ADDR          string
+	POSTGRES_USER       string
+	POSTGRES_PASS       string
+	POSTGRES_DBNAME     string
+	MAX_DB_OPEN_CONN    int
+	MAIN_LISTEN_PORT    string
+	ALLOWED_ORIGINS     []string
+	REDIS_PASS          string
+	LOGFILE             string
+	HOST_TO_SAVE        string
+	GIT_USER_REPOS_DIR  string
+	CSRF_SECRET_KEY     string
+	COOKIE_EXPIRE_HOURS int
 }
 
-// New returns a new Config struct(!!!пароль не задан по дефолту)
+// New returns a new Config struct(!!!пароль не задан по дефолту и csrf secret key)
 func New() *Config {
 	return &Config{
 		REDIS_ADDR:       getEnv("REDIS_ADDR", "localhost:6379"),
@@ -34,7 +36,9 @@ func New() *Config {
 		LOGFILE:          getEnv("LOGFILE", "logfile.log"),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://localhost:3000", "http://89.208.198.186:80", "http://89.208.198.186:3000"}, ","),
-		GIT_USER_REPOS_DIR: getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
+		GIT_USER_REPOS_DIR:  getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
+		CSRF_SECRET_KEY:     getEnv("CSRF_SECRET_KEY", ""),
+		COOKIE_EXPIRE_HOURS: getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
 	}
 }
 
