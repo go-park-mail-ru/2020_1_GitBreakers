@@ -146,8 +146,8 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 			newRepo)
 	}
 
-	_, err = tx.Exec("INSERT INTO users_git_repositories (repository_id, user_id) VALUES ($1, $2)",
-		newRepoId, newRepo.OwnerId)
+	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id,repository_id) VALUES ($1, $2)",
+		newRepo.OwnerId, newRepoId)
 	if err != nil {
 		return -1, errors.Wrapf(err, "cannot create new git repository entity in database, newRepo=%+v", newRepo)
 	}
@@ -186,7 +186,7 @@ func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, o
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while performing query in repository "+
-			"for git repositories in GetReposByUserLogin with userLogin=%s, requesterId=%+v offset=%d, limit=$d",
+			"for git repositories in GetReposByUserLogin with userLogin=%s, requesterId=%+v offset=%d, limit=%d",
 			userLogin, requesterId, offset, limit)
 	}
 
@@ -209,7 +209,7 @@ func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, o
 			&gitRepo.IsPublic)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
-				"while scanning in GetReposByUserLogin userLogin=%s, offset=%d, limit=$d", userLogin, offset, limit)
+				"while scanning in GetReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
 		}
 		gitRepos = append(gitRepos, gitRepo)
 	}
@@ -233,7 +233,7 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while performing query in repository "+
-			"for git repositories in GetAnyReposByUserLogin with userLogin=%s, offset=%d, limit=$d",
+			"for git repositories in GetAnyReposByUserLogin with userLogin=%s, offset=%d, limit=%d",
 			userLogin, offset, limit)
 	}
 
@@ -256,7 +256,7 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 			&gitRepo.IsPublic)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
-				"while scanning in GetAnyReposByUserLogin userLogin=%s, offset=%d, limit=$d", userLogin, offset, limit)
+				"while scanning in GetAnyReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
 		}
 		gitRepos = append(gitRepos, gitRepo)
 	}
@@ -568,7 +568,7 @@ func (repo Repository) GetFileByPath(userLogin, repoName, commitHash, path strin
 	defer func() {
 		if err != nil && err != entityerrors.DoesNotExist() && err != entityerrors.Invalid() {
 			err = errors.Wrapf(err, "error in repository for git repositories in GetFileByPath "+
-				"with userLogin=%s, repoName=%s, commitHash=%s, path=%",
+				"with userLogin=%s, repoName=%s, commitHash=%s, path=%s",
 				userLogin, repoName, commitHash, path)
 		}
 	}()
