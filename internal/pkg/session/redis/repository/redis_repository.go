@@ -12,19 +12,40 @@ import (
 
 type SessionRedis struct {
 	redisDb    *redis.Client
-	BasePrefix string
+	basePrefix string
 }
 
 func NewSessionRedis(client *redis.Client, prefix string) SessionRedis {
 	return SessionRedis{client, prefix}
 }
 
-func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (string, error) {
-	session.Id = uuid.NewV4().String()
-	key := repo.BasePrefix + session.Id
+func (repo *SessionRedis) createKey(sessionId string) string {
+	return repo.basePrefix + sessionId
+}
+
+func (repo *SessionRedis) convertToString(session models.Session) (string, error) {
 	sessionJSON, err := json.Marshal(session)
 	if err != nil {
 		return "", errors.Wrapf(err, "session_repository: JSON Marshal failed for %+v", session)
+	}
+	return string(sessionJSON), nil
+}
+
+func (repo *SessionRedis) convertFromString(sessionString string) (models.Session, error) {
+	var storedSession models.Session
+	if err := json.Unmarshal([]byte(sessionString), &storedSession); err != nil {
+		return storedSession, errors.Wrapf(err,
+			"session_repository: JSON Unmarshal failed with sessionString=%v", sessionString)
+	}
+	return storedSession, nil
+}
+
+func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (string, error) {
+	session.Id = uuid.NewV4().String()
+	key := repo.createKey(session.Id)
+	sessionJSON, err := repo.convertToString(session)
+	if err != nil {
+		return "", errors.WithStack(err)
 	}
 	if err := repo.redisDb.Set(key, string(sessionJSON), expire).Err(); err != nil {
 		return "", errors.Wrapf(err, "session_repository: redis Set failed for %+v", session)
@@ -34,7 +55,7 @@ func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (
 
 func (repo *SessionRedis) GetSessById(sessionId string) (models.Session, error) {
 	storedSession := models.Session{}
-	key := repo.BasePrefix + sessionId
+	key := repo.createKey(sessionId)
 	sessionJSON, err := repo.redisDb.Get(key).Result()
 	switch {
 	case err == redis.Nil:
@@ -45,16 +66,15 @@ func (repo *SessionRedis) GetSessById(sessionId string) (models.Session, error) 
 			"session_repository: redis Get failed with sessionId=%v", sessionId)
 	}
 
-	if err := json.Unmarshal([]byte(sessionJSON), &storedSession); err != nil {
-		return storedSession, errors.Wrapf(err,
-			"session_repository: JSON Unmarshal failed with sessionId=%v", sessionId)
+	if storedSession, err = repo.convertFromString(sessionJSON); err != nil {
+		return storedSession, errors.WithStack(err)
 	}
 
 	return storedSession, nil
 }
 
 func (repo *SessionRedis) DeleteById(sid string) error {
-	deletedKeysCount, err := repo.redisDb.Del(sid).Result()
+	deletedKeysCount, err := repo.redisDb.Del(repo.createKey(sid)).Result()
 	switch {
 	case err != nil:
 		return errors.Wrapf(err, "session_repository: redis Del failed with sid=%v", sid)

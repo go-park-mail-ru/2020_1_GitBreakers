@@ -19,7 +19,7 @@ import (
 
 var gitTestRepoDir = os.TempDir() + "/" + uuid.NewV4().String()
 
-type Suite struct {
+type gitRepoTestSuite struct {
 	suite.Suite
 	gitRepository    Repository
 	gitRepoModel     gitModels.Repository
@@ -27,7 +27,7 @@ type Suite struct {
 	mock             sqlmock.Sqlmock
 }
 
-func (s *Suite) SetupSuite() {
+func (s *gitRepoTestSuite) SetupSuite() {
 	var (
 		db  *sql.DB
 		err error
@@ -60,14 +60,14 @@ func (s *Suite) SetupSuite() {
 }
 
 func TestInit(t *testing.T) {
-	suite.Run(t, new(Suite))
+	suite.Run(t, new(gitRepoTestSuite))
 	if err := os.RemoveAll(gitTestRepoDir); err != nil {
 		fmt.Printf("error while removing test dir %s, err=%+v\n", gitTestRepoDir, err)
 		t.Fail()
 	}
 }
 
-func (s *Suite) TestRepositoryCreate() {
+func (s *gitRepoTestSuite) TestRepositoryCreate() {
 	repo := s.gitRepoModel
 	user := s.gitRepoUserModel
 
@@ -111,7 +111,7 @@ func (s *Suite) TestRepositoryCreate() {
 	require.EqualValues(s.T(), id, repo.Id)
 }
 
-func (s *Suite) TestRepositoryCreateNegativeRepoExistInDb() {
+func (s *gitRepoTestSuite) TestRepositoryCreateNegativeRepoExistInDb() {
 	repo := s.gitRepoModel
 	user := s.gitRepoUserModel
 
@@ -135,7 +135,7 @@ func (s *Suite) TestRepositoryCreateNegativeRepoExistInDb() {
 	require.NotNil(s.T(), errors.Cause(err), entityerrors.AlreadyExist())
 }
 
-func (s *Suite) TestCheckReadAccess() {
+func (s *gitRepoTestSuite) TestCheckReadAccess() {
 	repo := s.gitRepoModel
 	user := s.gitRepoUserModel
 
@@ -150,7 +150,7 @@ func (s *Suite) TestCheckReadAccess() {
 	require.EqualValues(s.T(), haveReadAccess, true)
 }
 
-func (s *Suite) TestCheckReadAccessNegative() {
+func (s *gitRepoTestSuite) TestCheckReadAccessNegative() {
 	repo := s.gitRepoModel
 	user := s.gitRepoUserModel
 
@@ -165,7 +165,7 @@ func (s *Suite) TestCheckReadAccessNegative() {
 	require.EqualValues(s.T(), haveReadAccess, false)
 }
 
-func (s *Suite) TestGetById() {
+func (s *gitRepoTestSuite) TestGetById() {
 	repo := s.gitRepoModel
 
 	repoDbRow := s.mock.NewRows([]string{
@@ -195,7 +195,7 @@ func (s *Suite) TestGetById() {
 	require.EqualValues(s.T(), repoModel, repo)
 }
 
-func (s *Suite) TestGetByIdNegativeDoesNotExist() {
+func (s *gitRepoTestSuite) TestGetByIdNegativeDoesNotExist() {
 	repo := s.gitRepoModel
 
 	s.mock.ExpectQuery("SELECT").
