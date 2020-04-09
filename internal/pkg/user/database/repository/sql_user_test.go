@@ -323,7 +323,27 @@ func (s *Suite) TestGetIdByLogin() {
 	loginFromDB, err = s.repo.GetIdByLogin(user.Login)
 
 	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
+}
 
+func (s *Suite) TestCreate() {
+	user := s.user
+	rows := s.mock.NewRows([]string{"is_exsists"})
+	rows.AddRow(false)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login, user.Email).
+		WillReturnRows(rows)
+
+	s.mock.ExpectExec("INSERT").
+		WithArgs(user.Login, user.Email, user.Password,
+			user.Name, s.repo.hostToSave+s.repo.defaultImagePath+s.repo.defaultAvatar).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := s.repo.Create(user)
+	require.Nil(s.T(), err)
+	if err := s.mock.ExpectationsWereMet(); err != nil {
+		s.T().Errorf("there were unfulfilled expectations: %s", err)
+	}
 
 
 }
