@@ -93,19 +93,19 @@ func (mr *MockRepoUserMockRecorder) GetByLoginWithoutPass(login interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByLoginWithoutPass", reflect.TypeOf((*MockRepoUser)(nil).GetByLoginWithoutPass), login)
 }
 
-// GetLoginById mocks base method
-func (m *MockRepoUser) GetLoginById(id int) (string, error) {
+// GetLoginByID mocks base method
+func (m *MockRepoUser) GetLoginByID(id int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLoginById", id)
+	ret := m.ctrl.Call(m, "GetLoginByID", id)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetLoginById indicates an expected call of GetLoginById
+// GetLoginByID indicates an expected call of GetLoginByID
 func (mr *MockRepoUserMockRecorder) GetLoginById(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoginById", reflect.TypeOf((*MockRepoUser)(nil).GetLoginById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoginByID", reflect.TypeOf((*MockRepoUser)(nil).GetLoginByID), id)
 }
 
 // GetIdByLogin mocks base method
