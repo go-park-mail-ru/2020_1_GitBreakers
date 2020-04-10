@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
@@ -11,7 +11,7 @@ import (
 )
 
 var someUser = models.User{
-	Id:       12,
+	ID:       12,
 	Password: "sjfsfser242df",
 	Name:     "Kekkers",
 	Login:    "alahahbar",
@@ -25,7 +25,7 @@ func TestUCUser_Create(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().IsExists(someUser).Return(true, nil)
 
@@ -44,9 +44,9 @@ func TestUCUser_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().DeleteById(someUser.Id).Return(nil)
+		m.EXPECT().DeleteById(someUser.ID).Return(nil)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -59,11 +59,11 @@ func TestUCUser_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		someErr := errors.New("some error")
 
-		m.EXPECT().DeleteById(someUser.Id).Return(someErr)
+		m.EXPECT().DeleteById(someUser.ID).Return(someErr)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -80,7 +80,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).Return(false, nil)
 
@@ -96,7 +96,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).
 			Return(true, entityerrors.DoesNotExist())
@@ -118,15 +118,15 @@ func TestUCUser_GetByID(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.Id).Return(someUser, nil)
+		m.EXPECT().GetUserByIdWithoutPass(someUser.ID).Return(someUser, nil)
 
 		useCase := UCUser{
 			RepUser: m,
 		}
 
-		userFromDB, err := useCase.GetByID(someUser.Id)
+		userFromDB, err := useCase.GetByID(someUser.ID)
 		assert.Equal(t, someUser, userFromDB)
 		assert.NoError(t, err)
 	})
@@ -138,7 +138,7 @@ func TestUCUser_GetByLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().GetByLoginWithoutPass(someUser.Login).Return(someUser, nil)
 
@@ -158,9 +158,9 @@ func TestUCUser_Update(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.Id).
+		m.EXPECT().GetUserByIdWithoutPass(someUser.ID).
 			Return(someUser, entityerrors.DoesNotExist()).
 			Times(1)
 
@@ -168,18 +168,18 @@ func TestUCUser_Update(t *testing.T) {
 			RepUser: m,
 		}
 
-		err := useCase.Update(someUser.Id, someUser)
+		err := useCase.Update(someUser.ID, someUser)
 		assert.Error(t, err)
 	})
 	t.Run("update ok", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		someUser.Password = "low"
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.Id).
+		m.EXPECT().GetUserByIdWithoutPass(someUser.ID).
 			Return(someUser, nil).
 			Times(1)
 
@@ -195,7 +195,7 @@ func TestUCUser_Update(t *testing.T) {
 			RepUser: m,
 		}
 
-		err := useCase.Update(someUser.Id, someUser)
+		err := useCase.Update(someUser.ID, someUser)
 		assert.NoError(t, err)
 	})
 }

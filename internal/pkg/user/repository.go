@@ -5,16 +5,16 @@ import (
 )
 
 type RepoUser interface {
-	GetUserByIdWithPass(id int) (models.User, error)
-	GetUserByIdWithoutPass(id int) (models.User, error)
+	GetUserByIDWithPass(ID int) (models.User, error)
+	GetUserByIDWithoutPass(ID int) (models.User, error)
 	GetUserByLoginWithPass(login string) (models.User, error)
 	GetByLoginWithoutPass(login string) (models.User, error)
-	GetLoginByID(id int) (string, error)
-	GetIdByLogin(login string) (int, error)
+	GetLoginByID(ID int) (string, error)
+	GetIDByLogin(login string) (int, error)
 	Create(newUser models.User) error
 	Update(usrUpd models.User) error
 	IsExists(user models.User) (bool, error)
-	DeleteById(id int) error
+	DeleteByID(ID int) error
 	CheckPass(login string, newpass string) (bool, error)
 	UploadAvatar(Name string, Content []byte) error
 	UpdateAvatarPath(User models.User, Name string) error

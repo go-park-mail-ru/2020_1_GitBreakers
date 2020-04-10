@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/mocks"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -10,8 +10,8 @@ import (
 )
 
 var someRepo = gitmodels.Repository{
-	Id:          50,
-	OwnerId:     12,
+	ID:          50,
+	OwnerID:     12,
 	Name:        "PythonProject",
 	Description: "repo for work",
 	IsFork:      false,
@@ -25,7 +25,7 @@ func TestGitUseCase_GetRepo(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := git.NewMockRepository(ctrl)
+		m := mocks.NewMockRepository(ctrl)
 		username := "keker"
 		repoName := "mdasher"
 		userid := 5
@@ -54,7 +54,7 @@ func TestGitUseCase_Create(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := git.NewMockRepository(ctrl)
+		m := mocks.NewMockRepository(ctrl)
 		//username := "keker"
 		//repoName := "mdasher"
 		userid := 12

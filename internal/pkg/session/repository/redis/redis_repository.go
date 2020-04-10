@@ -1,4 +1,4 @@
-package repository
+package redis
 
 import (
 	"encoding/json"
@@ -41,8 +41,8 @@ func (repo *SessionRedis) convertFromString(sessionString string) (models.Sessio
 }
 
 func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (string, error) {
-	session.Id = uuid.NewV4().String()
-	key := repo.createKey(session.Id)
+	session.ID = uuid.NewV4().String()
+	key := repo.createKey(session.ID)
 	sessionJSON, err := repo.convertToString(session)
 	if err != nil {
 		return "", errors.WithStack(err)
@@ -50,10 +50,10 @@ func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (
 	if err := repo.redisDb.Set(key, string(sessionJSON), expire).Err(); err != nil {
 		return "", errors.Wrapf(err, "session_repository: redis Set failed for %+v", session)
 	}
-	return session.Id, nil
+	return session.ID, nil
 }
 
-func (repo *SessionRedis) GetSessById(sessionId string) (models.Session, error) {
+func (repo *SessionRedis) GetSessByID(sessionId string) (models.Session, error) {
 	storedSession := models.Session{}
 	key := repo.createKey(sessionId)
 	sessionJSON, err := repo.redisDb.Get(key).Result()
@@ -73,7 +73,7 @@ func (repo *SessionRedis) GetSessById(sessionId string) (models.Session, error) 
 	return storedSession, nil
 }
 
-func (repo *SessionRedis) DeleteById(sid string) error {
+func (repo *SessionRedis) DeleteByID(sid string) error {
 	deletedKeysCount, err := repo.redisDb.Del(repo.createKey(sid)).Result()
 	switch {
 	case err != nil:

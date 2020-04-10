@@ -12,7 +12,7 @@ type GitUseCase struct {
 }
 
 func (GU *GitUseCase) Create(userid int, repos *gitmodels.Repository) error {
-	repos.OwnerId = userid
+	repos.OwnerID = userid
 	_, err := GU.Repo.Create(*repos)
 	switch {
 	case err == entityerrors.AlreadyExist():

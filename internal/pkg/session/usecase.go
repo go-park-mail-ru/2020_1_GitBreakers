@@ -8,5 +8,5 @@ import (
 type UCSession interface {
 	Create(session models.Session, expire time.Duration) (string, error)
 	Delete(sessionID string) error
-	GetByID(sid string) (models.Session, error)
+	GetByID(sessionID string) (models.Session, error)
 }

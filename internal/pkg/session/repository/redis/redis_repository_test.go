@@ -1,4 +1,4 @@
-package repository
+package redis
 
 import (
 	"github.com/alicebob/miniredis/v2"
@@ -39,8 +39,8 @@ func (s *redisTestSuite) SetupSuite() {
 
 func (s *redisTestSuite) SetupTest() {
 	s.session = models.Session{
-		Id:     uuid.NewV4().String(),
-		UserId: rand.Int(),
+		ID:     uuid.NewV4().String(),
+		UserID: rand.Int(),
 	}
 }
 
@@ -52,7 +52,7 @@ func (s *redisTestSuite) TestCreate() {
 	retSession, err := s.redisRepository.convertFromString(sessStr)
 	require.NoError(s.T(), err)
 
-	s.session.Id = retSession.Id
+	s.session.ID = retSession.ID
 
 	require.Equal(s.T(), s.session, retSession)
 }
@@ -61,16 +61,16 @@ func (s *redisTestSuite) TestGetSessById() {
 	value, err := s.redisRepository.convertToString(s.session)
 	require.NoError(s.T(), err)
 
-	s.client.Set(s.redisRepository.createKey(s.session.Id), value, time.Hour)
+	s.client.Set(s.redisRepository.createKey(s.session.ID), value, time.Hour)
 
-	storedSession, err := s.redisRepository.GetSessById(s.session.Id)
+	storedSession, err := s.redisRepository.GetSessByID(s.session.ID)
 	require.NoError(s.T(), err)
 
 	require.Equal(s.T(), s.session, storedSession)
 }
 
 func (s *redisTestSuite) TestGetSessByIdNegative() {
-	_, err := s.redisRepository.GetSessById(s.session.Id)
+	_, err := s.redisRepository.GetSessByID(s.session.ID)
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 }
 
@@ -78,14 +78,14 @@ func (s *redisTestSuite) TestDeleteById() {
 	value, err := s.redisRepository.convertToString(s.session)
 	require.NoError(s.T(), err)
 
-	s.client.Set(s.redisRepository.createKey(s.session.Id), value, time.Hour)
+	s.client.Set(s.redisRepository.createKey(s.session.ID), value, time.Hour)
 	require.NoError(s.T(), err)
 
-	err = s.redisRepository.DeleteById(s.session.Id)
+	err = s.redisRepository.DeleteByID(s.session.ID)
 	require.NoError(s.T(), err)
 }
 
 func (s *redisTestSuite) TestDeleteByIdNegative() {
-	err := s.redisRepository.DeleteById(s.session.Id)
+	err := s.redisRepository.DeleteByID(s.session.ID)
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 }

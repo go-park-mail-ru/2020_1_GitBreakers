@@ -64,7 +64,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := UsHttp.SessHttp.Create(UserFromDB.Id)
+	cookie, err := UsHttp.SessHttp.Create(UserFromDB.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		UsHttp.Logger.HttpLogError(r.Context(), "session", "create", errors.Cause(err))
@@ -143,7 +143,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := UsHttp.SessHttp.Create(User.Id)
+	cookie, err := UsHttp.SessHttp.Create(User.ID)
 	if err != nil {
 		UsHttp.Logger.HttpLogError(r.Context(), " session", "create", errors.Cause(err))
 		w.WriteHeader(http.StatusInternalServerError)

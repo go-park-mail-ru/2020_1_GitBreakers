@@ -2,7 +2,7 @@
 // Source: repository.go
 
 // Package mock_git is a generated GoMock package.
-package git
+package mocks
 
 import (
 	git "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
@@ -33,19 +33,19 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// GetById mocks base method
-func (m *MockRepository) GetById(id int) (git.Repository, error) {
+// GetByID mocks base method
+func (m *MockRepository) GetByID(id int) (git.Repository, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetById", id)
+	ret := m.ctrl.Call(m, "GetByID", id)
 	ret0, _ := ret[0].(git.Repository)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetById indicates an expected call of GetById
+// GetByID indicates an expected call of GetByID
 func (mr *MockRepositoryMockRecorder) GetById(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockRepository)(nil).GetById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockRepository)(nil).GetByID), id)
 }
 
 // GetByName mocks base method
