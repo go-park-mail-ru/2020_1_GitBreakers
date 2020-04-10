@@ -77,7 +77,7 @@ func StartNew() {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            false,
 		AllowedHeaders: []string{"Content-Type", "User-Agent",
-			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin"},
+			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
 	redisClient := redis.NewClient(&redis.Options{

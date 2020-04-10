@@ -245,6 +245,7 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(&res); err != nil {

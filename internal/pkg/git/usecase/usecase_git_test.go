@@ -31,15 +31,15 @@ var someUser = models.User{
 }
 
 func TestGitUseCase_GetRepo(t *testing.T) {
+	username := "keker"
+	repoName := "mdasher"
+	userid := 5
 
 	t.Run("Get repo", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		m := mocks.NewMockRepository(ctrl)
-		username := "keker"
-		repoName := "mdasher"
-		userid := 5
 
 		m.EXPECT().
 			CheckReadAccess(&userid, username, repoName).
@@ -56,6 +56,27 @@ func TestGitUseCase_GetRepo(t *testing.T) {
 		repoFromDb, err := useCase.GetRepo(username, repoName, &userid)
 		require.Nil(t, err)
 		require.Equal(t, repoFromDb, someRepo)
+	})
+	t.Run("Get repo", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		m.EXPECT().
+			CheckReadAccess(&userid, username, repoName).
+			Return(false, nil)
+
+
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		repoFromDb, err := useCase.GetRepo(username, repoName, &userid)
+
+		require.Equal(t, repoFromDb, gitmodels.Repository{})
+		require.Equal(t, err, entityerrors.AccessDenied())
 	})
 }
 
@@ -286,6 +307,7 @@ func TestGitUseCase_GetCommitsByCommitHash(t *testing.T) {
 		require.Equal(t, commitslist, commitslistFromDB)
 
 	})
+
 	t.Run("Get commits by commit hash", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -311,6 +333,112 @@ func TestGitUseCase_GetCommitsByCommitHash(t *testing.T) {
 		require.Nil(t, commitslistFromDB)
 
 		require.Equal(t, err, entityerrors.AccessDenied())
+
+	})
+}
+func TestGitUseCase_GetCommitsByBranchName(t *testing.T) {
+	const commitsCount int = 5
+
+	commitslist := make([]gitmodels.Commit, commitsCount)
+
+	for i := range commitslist {
+		err := faker.FakeData(&commitslist[i])
+		require.Nil(t, err)
+	}
+
+	t.Run("Get commits by branchname ok", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+		branchName := "deploy"
+		offset := 5
+		limit := 40
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
+				Return(true, nil).Times(1),
+			m.EXPECT().
+				GetCommitsByBranchName(someUser.Login, someRepo.Name, branchName, offset, limit).
+				Return(commitslist, nil).Times(1))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		commitslistFromDB, err := useCase.
+			GetCommitsByBranchName(someUser.Login, someRepo.Name, branchName, offset, limit, &someUser.ID)
+
+		require.Nil(t, err)
+
+		require.Equal(t, commitslist, commitslistFromDB)
+
+	})
+	t.Run("Get commits by branchname access denied", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+		branchName := "deploy"
+		offset := 5
+		limit := 40
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
+				Return(false, nil).Times(1),
+			m.EXPECT().
+				GetCommitsByBranchName(someUser.Login, someRepo.Name, branchName, offset, limit).
+				Return(commitslist, nil).Times(0))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		commitslistFromDB, err := useCase.
+			GetCommitsByBranchName(someUser.Login, someRepo.Name, branchName, offset, limit, &someUser.ID)
+
+		require.Nil(t, commitslistFromDB)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
+	})
+
+}
+func TestGitUseCase_GetFileByPath(t *testing.T) {
+	const commitsCount int = 5
+
+	commitslist := make([]gitmodels.Commit, commitsCount)
+
+	for i := range commitslist {
+		err := faker.FakeData(&commitslist[i])
+		require.Nil(t, err)
+	}
+
+	t.Run("Get file ok", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+		branchName := "deploy"
+		offset := 5
+		limit := 40
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
+				Return(true, nil).Times(1),
+			m.EXPECT().
+				GetCommitsByBranchName(someUser.Login, someRepo.Name, branchName, offset, limit).
+				Return(commitslist, nil).Times(1))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		commitslistFromDB, err := useCase.
+			GetCommitsByBranchName(someUser.Login, someRepo.Name, branchName, offset, limit, &someUser.ID)
+
+		require.Nil(t, err)
+
+		require.Equal(t, commitslist, commitslistFromDB)
 
 	})
 }
