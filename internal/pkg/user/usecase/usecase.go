@@ -96,6 +96,11 @@ func (UC *UCUser) UploadAvatar(User models.User, fileName *multipart.FileHeader,
 	if err := UC.RepUser.UploadAvatar(fileName.Filename, byteImage); err != nil {
 		return errors.Wrap(err, "err in repo UploadAvatar")
 	}
+	User, err = UC.RepUser.GetUserByLoginWithPass(User.Login)
+
+	if err != nil {
+		return errors.Wrap(err,"err in GetUserByLoginWithPass")
+	}
 
 	if err := UC.RepUser.UpdateAvatarPath(User, fileName.Filename); err != nil {
 		return errors.Wrap(err, "err in repo UpdateAvatarPath")
