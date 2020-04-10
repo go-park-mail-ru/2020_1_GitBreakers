@@ -134,6 +134,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		w.WriteHeader(http.StatusInternalServerError)
 		UsHttp.Logger.HttpLogError(r.Context(), "", "GetByLogin", errors.Cause(err))
+		return
 	}
 
 	isUser, err := UsHttp.UserUC.CheckPass(User.Login, input.Password)
@@ -253,7 +254,6 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 	slug := mux.Vars(r)["login"]
 	userData, err := UsHttp.UserUC.GetByLogin(slug)
 
-
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		UsHttp.Logger.HttpLogWarning(r.Context(), "user", "GetByLogin", errors.Cause(err).Error())
@@ -265,7 +265,6 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-
 
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		UsHttp.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
