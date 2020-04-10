@@ -242,3 +242,75 @@ func TestGitUseCase_FilesInCommitByPath(t *testing.T) {
 	})
 
 }
+func TestGitUseCase_GetCommitsByCommitHash(t *testing.T) {
+	const commitsCount int = 5
+
+	commitslist := make([]gitmodels.Commit, commitsCount)
+
+	for i := range commitslist {
+		err := faker.FakeData(&commitslist[i])
+		require.Nil(t, err)
+	}
+	commitRequest := gitmodels.CommitRequest{
+		UserLogin:  "keksik",
+		RepoName:   "batya",
+		CommitHash: "fwfw5290rf3024",
+		Offset:     0,
+		Limit:      100,
+	}
+
+	t.Run("Get commits by commit hash", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, commitRequest.UserLogin, commitRequest.RepoName).
+				Return(true, nil).Times(1),
+			m.EXPECT().
+				GetCommitsByCommitHash(commitRequest.UserLogin,
+					commitRequest.RepoName, commitRequest.CommitHash,
+					commitRequest.Offset, commitRequest.Limit).
+				Return(commitslist, nil).Times(1))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		commitslistFromDB, err := useCase.GetCommitsByCommitHash(commitRequest, &someUser.ID)
+
+		require.Nil(t, err)
+
+		require.Equal(t, commitslist, commitslistFromDB)
+
+	})
+	t.Run("Get commits by commit hash", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, commitRequest.UserLogin, commitRequest.RepoName).
+				Return(false, nil).Times(1),
+			m.EXPECT().
+				GetCommitsByCommitHash(commitRequest.UserLogin,
+					commitRequest.RepoName, commitRequest.CommitHash,
+					commitRequest.Offset, commitRequest.Limit).
+				Return(commitslist, nil).Times(0))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		commitslistFromDB, err := useCase.GetCommitsByCommitHash(commitRequest, &someUser.ID)
+
+		require.Nil(t, commitslistFromDB)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
+
+	})
+}
