@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
@@ -25,7 +25,7 @@ func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, defHost string) U
 		hostToSave:       defHost,
 	}
 }
-func (repo UserRepo) GetUserByIdWithPass(id int) (models.User, error) {
+func (repo UserRepo) GetUserByIDWithPass(id int) (models.User, error) {
 	User := models.User{}
 	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", id)
 
@@ -38,8 +38,8 @@ func (repo UserRepo) GetUserByIdWithPass(id int) (models.User, error) {
 
 	return User, nil
 }
-func (repo UserRepo) GetUserByIdWithoutPass(id int) (models.User, error) {
-	storedUser, err := repo.GetUserByIdWithPass(id)
+func (repo UserRepo) GetUserByIDWithoutPass(id int) (models.User, error) {
+	storedUser, err := repo.GetUserByIDWithPass(id)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -90,7 +90,7 @@ func (repo UserRepo) Create(newUser models.User) error {
 func (repo UserRepo) Update(usrUpd models.User) error {
 	result, err := repo.db.Exec(
 		"UPDATE users SET  email = $2,name=$3,avatar_path=$4,password=$5 WHERE id = $1",
-		usrUpd.Id, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
+		usrUpd.ID, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
 	if err != nil {
 		return errors.Wrap(err, "error with update data")
 	}
@@ -126,15 +126,15 @@ func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
 	}
 }
 
-func (repo UserRepo) DeleteById(id int) error {
+func (repo UserRepo) DeleteByID(id int) error {
 	result, err := repo.db.Exec("DELETE FROM users WHERE id = $1", id)
 	if err != nil {
-		return errors.Wrapf(err, "error in user DeleteById with id=%v", id)
+		return errors.Wrapf(err, "error in user DeleteByID with id=%v", id)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return errors.Wrapf(err, "error in user DeleteById with id=%v", id)
+		return errors.Wrapf(err, "error in user DeleteByID with id=%v", id)
 	}
 
 	if rowsAffected == 0 {
@@ -199,7 +199,7 @@ func (repo UserRepo) GetLoginByID(id int) (string, error) {
 	return login, err
 }
 
-func (repo UserRepo) GetIdByLogin(login string) (int, error) {
+func (repo UserRepo) GetIDByLogin(login string) (int, error) {
 	var id int
 	err := repo.db.QueryRow("SELECT id FROM users WHERE login = $1", login).Scan(&id)
 	switch {

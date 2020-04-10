@@ -33,7 +33,7 @@ func (s *gitRepoTestSuite) SetupSuite() {
 		err error
 	)
 	s.gitRepoUserModel = models.User{
-		Id:       1,
+		ID:       1,
 		Password: "123456789",
 		Name:     "heehheheh",
 		Login:    "kekmdda",
@@ -41,8 +41,8 @@ func (s *gitRepoTestSuite) SetupSuite() {
 		Email:    "testik@email.test",
 	}
 	s.gitRepoModel = gitModels.Repository{
-		Id:          1,
-		OwnerId:     s.gitRepoUserModel.Id,
+		ID:          1,
+		OwnerID:     s.gitRepoUserModel.ID,
 		Name:        "test_repo",
 		Description: "test repository",
 		IsFork:      false,
@@ -81,7 +81,7 @@ func (s *gitRepoTestSuite) TestRepositoryCreate() {
 	repoExitsInDbRow.AddRow(false)
 
 	repoRow := s.mock.NewRows([]string{"id"})
-	repoRow.AddRow(repo.Id)
+	repoRow.AddRow(repo.ID)
 
 	userRow := s.mock.NewRows([]string{"login"})
 	userRow.AddRow(user.Login)
@@ -89,26 +89,26 @@ func (s *gitRepoTestSuite) TestRepositoryCreate() {
 	s.mock.ExpectBegin()
 
 	s.mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(repo.OwnerId, repo.Name).WillReturnRows(repoExitsInDbRow)
+		WithArgs(repo.OwnerID, repo.Name).WillReturnRows(repoExitsInDbRow)
 
 	s.mock.ExpectQuery("INSERT").
 		WithArgs(
-			repo.OwnerId,
+			repo.OwnerID,
 			repo.Name,
 			repo.Description,
 			repo.IsPublic,
 			repo.IsFork,
 		).WillReturnRows(repoRow)
 
-	s.mock.ExpectExec("INSERT").WithArgs(repo.OwnerId, repo.Id).
+	s.mock.ExpectExec("INSERT").WithArgs(repo.OwnerID, repo.ID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	s.mock.ExpectQuery("SELECT").WithArgs(user.Id).WillReturnRows(userRow)
+	s.mock.ExpectQuery("SELECT").WithArgs(user.ID).WillReturnRows(userRow)
 	s.mock.ExpectCommit()
 
 	id, err := s.gitRepository.Create(repo)
 	require.Nil(s.T(), err)
-	require.EqualValues(s.T(), id, repo.Id)
+	require.EqualValues(s.T(), id, repo.ID)
 }
 
 func (s *gitRepoTestSuite) TestRepositoryCreateNegativeRepoExistInDb() {
@@ -127,7 +127,7 @@ func (s *gitRepoTestSuite) TestRepositoryCreateNegativeRepoExistInDb() {
 	s.mock.ExpectBegin()
 
 	s.mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(repo.OwnerId, repo.Name).WillReturnRows(repoExitsInDbRow)
+		WithArgs(repo.OwnerID, repo.Name).WillReturnRows(repoExitsInDbRow)
 
 	s.mock.ExpectRollback()
 
@@ -143,9 +143,9 @@ func (s *gitRepoTestSuite) TestCheckReadAccess() {
 	haveReadAccessDbRow.AddRow(true)
 
 	s.mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(user.Login, repo.Name, user.Id).WillReturnRows(haveReadAccessDbRow)
+		WithArgs(user.Login, repo.Name, user.ID).WillReturnRows(haveReadAccessDbRow)
 
-	haveReadAccess, err := s.gitRepository.CheckReadAccess(&user.Id, user.Login, repo.Name)
+	haveReadAccess, err := s.gitRepository.CheckReadAccess(&user.ID, user.Login, repo.Name)
 	require.Nil(s.T(), err)
 	require.EqualValues(s.T(), haveReadAccess, true)
 }
@@ -158,9 +158,9 @@ func (s *gitRepoTestSuite) TestCheckReadAccessNegative() {
 	haveReadAccessDbRow.AddRow(false)
 
 	s.mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(user.Login, repo.Name, user.Id).WillReturnRows(haveReadAccessDbRow)
+		WithArgs(user.Login, repo.Name, user.ID).WillReturnRows(haveReadAccessDbRow)
 
-	haveReadAccess, err := s.gitRepository.CheckReadAccess(&user.Id, user.Login, repo.Name)
+	haveReadAccess, err := s.gitRepository.CheckReadAccess(&user.ID, user.Login, repo.Name)
 	require.Nil(s.T(), err)
 	require.EqualValues(s.T(), haveReadAccess, false)
 }
@@ -178,8 +178,8 @@ func (s *gitRepoTestSuite) TestGetById() {
 		"created_at",
 	})
 	repoDbRow.AddRow(
-		repo.Id,
-		repo.OwnerId,
+		repo.ID,
+		repo.OwnerID,
 		repo.Name,
 		repo.Description,
 		repo.IsPublic,
@@ -188,9 +188,9 @@ func (s *gitRepoTestSuite) TestGetById() {
 	)
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(repo.Id).WillReturnRows(repoDbRow)
+		WithArgs(repo.ID).WillReturnRows(repoDbRow)
 
-	repoModel, err := s.gitRepository.GetById(repo.Id)
+	repoModel, err := s.gitRepository.GetByID(repo.ID)
 	require.Nil(s.T(), err)
 	require.EqualValues(s.T(), repoModel, repo)
 }
@@ -199,9 +199,9 @@ func (s *gitRepoTestSuite) TestGetByIdNegativeDoesNotExist() {
 	repo := s.gitRepoModel
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(repo.Id).WillReturnError(sql.ErrNoRows)
+		WithArgs(repo.ID).WillReturnError(sql.ErrNoRows)
 
-	_, err := s.gitRepository.GetById(repo.Id)
+	_, err := s.gitRepository.GetByID(repo.ID)
 
 	require.NotNil(s.T(), err)
 	require.EqualValues(s.T(), errors.Cause(err), entityerrors.DoesNotExist())

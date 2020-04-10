@@ -2,7 +2,7 @@
 // Source: usecase.go
 
 // Package mock_user is a generated GoMock package.
-package user
+package mocks
 
 import (
 	models "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"

@@ -13,7 +13,7 @@ type SessionHttp struct {
 }
 
 func (UC *SessionHttp) Create(userID int) (http.Cookie, error) {
-	baseSess := models.Session{UserId: userID}
+	baseSess := models.Session{UserID: userID}
 	cretedSess, err := UC.SessUC.Create(baseSess, UC.ExpireTime)
 	if err != nil {
 		return http.Cookie{}, err

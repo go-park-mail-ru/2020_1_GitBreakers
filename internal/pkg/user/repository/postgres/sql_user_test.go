@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
@@ -27,7 +27,7 @@ func (s *Suite) SetupTest() {
 		err error
 	)
 	s.user = models.User{
-		Id:       1,
+		ID:       1,
 		Password: "123456789",
 		Name:     "heehheheh",
 		Login:    "kekmdda",
@@ -53,7 +53,7 @@ func (s *Suite) TestGetUserByLoginWithPass() {
 	user.Password = string(hash)
 	rows := s.mock.
 		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.
 		ExpectQuery("SELECT").
@@ -78,7 +78,7 @@ func (s *Suite) TestGetUserByLoginWithoutPass() {
 
 	rows := s.mock.
 		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.
 		ExpectQuery("SELECT").
@@ -106,22 +106,22 @@ func (s *Suite) TestGetUserByIdWithoutPass() {
 
 	rows := s.mock.
 		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.
 		ExpectQuery("SELECT").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnRows(rows)
-	UserFromDB, err := s.repo.GetUserByIdWithoutPass(user.Id)
+	UserFromDB, err := s.repo.GetUserByIDWithoutPass(user.ID)
 
 	require.NotEqual(s.T(), UserFromDB.Password, user.Password)
 	require.Equal(s.T(), UserFromDB.Password, "")
 
 	someErr := errors.New("some db error")
-	s.mock.ExpectQuery("SELECT").WithArgs(user.Id).
+	s.mock.ExpectQuery("SELECT").WithArgs(user.ID).
 		WillReturnError(someErr)
 
-	_, err = s.repo.GetUserByIdWithoutPass(user.Id)
+	_, err = s.repo.GetUserByIDWithoutPass(user.ID)
 	if reflect.DeepEqual(UserFromDB, user) {
 		s.Assert()
 	}
@@ -137,23 +137,23 @@ func (s *Suite) TestGetUserByIdWithPass() {
 	user.Password = string(hash)
 	rows := s.mock.
 		NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.
 		ExpectQuery("SELECT").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnRows(rows)
 
-	UserFromDB, err := s.repo.GetUserByIdWithPass(user.Id)
+	UserFromDB, err := s.repo.GetUserByIDWithPass(user.ID)
 	require.Nil(s.T(), err)
 
 	if !reflect.DeepEqual(UserFromDB, user) {
 		s.Assert()
 	}
 
-	s.mock.ExpectQuery("SELECT").WithArgs(user.Id).
+	s.mock.ExpectQuery("SELECT").WithArgs(user.ID).
 		WillReturnError(sql.ErrNoRows)
-	_, err = s.repo.GetUserByIdWithPass(user.Id)
+	_, err = s.repo.GetUserByIDWithPass(user.ID)
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
 }
@@ -176,10 +176,10 @@ func (s *Suite) TestIsExists() {
 func (s *Suite) TestUpdate() {
 	user := s.user
 	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.ExpectExec("UPDATE").
-		WithArgs(user.Id, user.Email, user.Name, user.Image, user.Password).
+		WithArgs(user.ID, user.Email, user.Name, user.Image, user.Password).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := s.repo.Update(user)
@@ -189,7 +189,7 @@ func (s *Suite) TestUpdate() {
 	}
 
 	s.mock.ExpectExec("UPDATE").
-		WithArgs(user.Id, user.Email, user.Name, user.Image, user.Password).
+		WithArgs(user.ID, user.Email, user.Name, user.Image, user.Password).
 		WillReturnResult(sqlmock.NewResult(1, 0))
 
 	err = s.repo.Update(user)
@@ -242,27 +242,27 @@ func (s *Suite) TestGetLoginById() {
 	rows.AddRow(user.Login)
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnRows(rows)
 
-	loginFromDB, err := s.repo.GetLoginByID(user.Id)
+	loginFromDB, err := s.repo.GetLoginByID(user.ID)
 
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), loginFromDB, user.Login)
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnError(sql.ErrNoRows)
 
-	loginFromDB, err = s.repo.GetLoginByID(user.Id)
+	loginFromDB, err = s.repo.GetLoginByID(user.ID)
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnError(errors.New("some errors"))
 
-	loginFromDB, err = s.repo.GetLoginByID(user.Id)
+	loginFromDB, err = s.repo.GetLoginByID(user.ID)
 
 	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
@@ -272,30 +272,30 @@ func (s *Suite) TestGetLoginById() {
 func (s *Suite) TestGetIdByLogin() {
 	user := s.user
 	rows := s.mock.NewRows([]string{"id"})
-	rows.AddRow(user.Id)
+	rows.AddRow(user.ID)
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Login).
 		WillReturnRows(rows)
 
-	loginFromDB, err := s.repo.GetIdByLogin(user.Login)
+	loginFromDB, err := s.repo.GetIDByLogin(user.Login)
 
 	require.Nil(s.T(), err)
-	require.Equal(s.T(), loginFromDB, user.Id)
+	require.Equal(s.T(), loginFromDB, user.ID)
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Login).
 		WillReturnError(sql.ErrNoRows)
 
-	loginFromDB, err = s.repo.GetIdByLogin(user.Login)
+	loginFromDB, err = s.repo.GetIDByLogin(user.Login)
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnError(errors.New("some errors"))
 
-	loginFromDB, err = s.repo.GetIdByLogin(user.Login)
+	loginFromDB, err = s.repo.GetIDByLogin(user.Login)
 
 	require.NotEqual(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 }
@@ -349,26 +349,26 @@ func (s *Suite) TestDeleteById() {
 	user := s.user
 
 	s.mock.ExpectExec("DELETE").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err := s.repo.DeleteById(user.Id)
+	err := s.repo.DeleteByID(user.ID)
 
 	require.Nil(s.T(), err)
 
 	s.mock.ExpectExec("DELETE").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnResult(sqlmock.NewResult(50, 0))
 
-	err = s.repo.DeleteById(user.Id)
+	err = s.repo.DeleteByID(user.ID)
 
 	require.Error(s.T(), err)
 
 	s.mock.ExpectExec("DELETE").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnError(entityerrors.DoesNotExist())
 
-	err = s.repo.DeleteById(user.Id)
+	err = s.repo.DeleteByID(user.ID)
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 }
@@ -379,7 +379,7 @@ func (s *Suite) TestCheckPass() {
 	user.Password = string(hashedPassword[:])
 
 	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.ExpectQuery("SELECT").
 		WithArgs(user.Login).
@@ -390,18 +390,18 @@ func (s *Suite) TestCheckPass() {
 	require.Nil(s.T(), err)
 
 	s.mock.ExpectExec("DELETE").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnResult(sqlmock.NewResult(50, 0))
 
-	err = s.repo.DeleteById(user.Id)
+	err = s.repo.DeleteByID(user.ID)
 
 	require.Error(s.T(), err)
 
 	s.mock.ExpectExec("DELETE").
-		WithArgs(user.Id).
+		WithArgs(user.ID).
 		WillReturnError(entityerrors.DoesNotExist())
 
-	err = s.repo.DeleteById(user.Id)
+	err = s.repo.DeleteByID(user.ID)
 
 	require.Equal(s.T(), errors.Cause(err), entityerrors.DoesNotExist())
 }
@@ -410,10 +410,10 @@ func (s *Suite) TestUpdateAvatarPath() {
 	user := s.user
 
 	rows := s.mock.NewRows([]string{"id", "login", "email", "password", "name", "avatar_path"})
-	rows.AddRow(user.Id, user.Login, user.Email, user.Password, user.Name, user.Image)
+	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.ExpectExec("UPDATE").
-		WithArgs(user.Id, user.Email, user.Name, s.repo.hostToSave+s.repo.defaultImagePath+user.Image, user.Password).
+		WithArgs(user.ID, user.Email, user.Name, s.repo.hostToSave+s.repo.defaultImagePath+user.Image, user.Password).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	 err := s.repo.UpdateAvatarPath(user, user.Image)
