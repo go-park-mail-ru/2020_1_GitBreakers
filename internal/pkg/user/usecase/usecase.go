@@ -42,7 +42,7 @@ func (UC *UCUser) Delete(user models.User) error {
 }
 
 func (UC *UCUser) Update(userid int, newUserData models.User) error {
-	oldUserData, err := UC.RepUser.GetUserByIDWithoutPass(userid)
+	oldUserData, err := UC.RepUser.GetUserByIDWithPass(userid)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
