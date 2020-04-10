@@ -1,8 +1,11 @@
 package usecase
 
 import (
+	"github.com/bxcodec/faker/v3"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/mocks"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -17,6 +20,14 @@ var someRepo = gitmodels.Repository{
 	IsFork:      false,
 	CreatedAt:   time.Now(),
 	IsPublic:    true,
+}
+var someUser = models.User{
+	ID:       12,
+	Password: "2392g3r39rri3ty33FSG3",
+	Name:     "ssgsgsgsdg",
+	Login:    "tiktak",
+	Image:    "standart.png",
+	Email:    "keksik@yandex.mda",
 }
 
 func TestGitUseCase_GetRepo(t *testing.T) {
@@ -55,8 +66,6 @@ func TestGitUseCase_Create(t *testing.T) {
 		defer ctrl.Finish()
 
 		m := mocks.NewMockRepository(ctrl)
-		//username := "keker"
-		//repoName := "mdasher"
 		userid := 12
 
 		m.EXPECT().
@@ -71,4 +80,165 @@ func TestGitUseCase_Create(t *testing.T) {
 		require.Nil(t, err)
 
 	})
+}
+func TestGitUseCase_GetRepoList(t *testing.T) {
+
+	t.Run("Get repo list", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+		const repoCount int = 7
+		repolist := make([]gitmodels.Repository, repoCount)
+		for i := range repolist {
+			err := faker.FakeData(&repolist[i])
+			require.Nil(t, err)
+		}
+
+		gomock.InOrder(m.EXPECT().
+			GetAnyReposByUserLogin(someUser.Login, 0, 100).
+			Return(repolist, nil).Times(1),
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, gomock.Any(), gomock.Any()).
+				Return(true, nil).Times(repoCount))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		repolistFromDB, err := useCase.GetRepoList(someUser.Login, &someUser.ID)
+		require.Nil(t, err)
+		require.Equal(t, repolist, repolistFromDB)
+
+	})
+}
+
+func TestGitUseCase_GetBranchList(t *testing.T) {
+	const branchCount int = 5
+
+	branchlist := make([]gitmodels.Branch, branchCount)
+
+	for i := range branchlist {
+		err := faker.FakeData(&branchlist[i])
+		require.Nil(t, err)
+	}
+
+	t.Run("Get branch list", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
+				Return(true, nil).Times(1),
+			m.EXPECT().
+				GetBranchesByName(someUser.Login, someRepo.Name).
+				Return(branchlist, nil).Times(1))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		repolistFromDB, err := useCase.GetBranchList(&someUser.ID, someUser.Login, someRepo.Name)
+		require.Nil(t, err)
+		require.Equal(t, branchlist, repolistFromDB)
+
+	})
+
+	t.Run("Not get branch list", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
+				Return(false, nil).Times(1),
+			m.EXPECT().
+				GetBranchesByName(someUser.Login, someRepo.Name).
+				Return(branchlist, nil).Times(0))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		repolistFromDB, err := useCase.GetBranchList(&someUser.ID, someUser.Login, someRepo.Name)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
+
+		require.Nil(t, repolistFromDB)
+
+	})
+}
+
+func TestGitUseCase_FilesInCommitByPath(t *testing.T) {
+	const filesCount int = 5
+
+	fileslist := make([]gitmodels.FileInCommit, filesCount)
+
+	for i := range fileslist {
+		err := faker.FakeData(&fileslist[i])
+		require.Nil(t, err)
+	}
+	commitRequest := gitmodels.FilesCommitRequest{
+		UserName:    "keksik",
+		Reponame:    "tortik",
+		HashCommits: "gerkti3592go2290244g353",
+		Path:        "/",
+	}
+
+	t.Run("Get files list", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, commitRequest.UserName, commitRequest.Reponame).
+				Return(true, nil).Times(1),
+			m.EXPECT().
+				FilesInCommitByPath(commitRequest.UserName, commitRequest.Reponame, commitRequest.HashCommits, commitRequest.Path).
+				Return(fileslist, nil).Times(1))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		fileslistFromDB, err := useCase.FilesInCommitByPath(commitRequest, &someUser.ID)
+
+		require.Nil(t, err)
+
+		require.Equal(t, fileslist, fileslistFromDB)
+
+	})
+	t.Run("Get null files list", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepository(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				CheckReadAccess(&someUser.ID, commitRequest.UserName, commitRequest.Reponame).
+				Return(false, nil).Times(1),
+			m.EXPECT().
+				FilesInCommitByPath(commitRequest.UserName, commitRequest.Reponame, commitRequest.HashCommits, commitRequest.Path).
+				Return(fileslist, nil).Times(0))
+
+		useCase := GitUseCase{
+			Repo: m,
+		}
+
+		fileslistFromDB, err := useCase.FilesInCommitByPath(commitRequest, &someUser.ID)
+
+		require.Nil(t, fileslistFromDB)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
+
+	})
+
 }
