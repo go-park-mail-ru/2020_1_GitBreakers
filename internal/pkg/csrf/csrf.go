@@ -12,5 +12,6 @@ func GetNewCsrfToken(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	w.Header().Set("Access-Control-Expose-Headers", TokenHeaderName)
 	w.Header().Set(TokenHeaderName, csrf.Token(r))
 }
