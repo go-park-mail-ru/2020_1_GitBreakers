@@ -2,9 +2,12 @@ package logger
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -17,6 +20,7 @@ type Logger interface {
 	HttpInfo(ctx context.Context, msg string, status int)
 	HttpLogWarning(ctx context.Context, pkg string, funcName string, warn string)
 	HttpLogError(ctx context.Context, pkg string, funcName string, err error)
+	HttpLogCallerError(ctx context.Context, objForPkgPath interface{}, err error)
 	HttpLogInfo(ctx context.Context, msg string)
 	LogError(err error, msg string)
 }
@@ -102,7 +106,23 @@ func (logger SimpleLogger) HttpLogError(ctx context.Context, pkg string, funcNam
 		"id":       logger.GetRequestIdFromContext(ctx),
 		"package":  pkg,
 		"function": funcName,
-	}).Error(err)
+	}).Error(errors.Cause(err))
+}
+
+func (logger SimpleLogger) HttpLogCallerError(ctx context.Context, objForPkgPath interface{}, err error) {
+	// Get some frame information about caller (because first arg of runtime.Callers equals 2
+	pc := make([]uintptr, 1)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	callerFrame, _ := frames.Next()
+
+	logger.WithFields(logrus.Fields{
+		"id":       logger.GetRequestIdFromContext(ctx),
+		"package":  reflect.TypeOf(objForPkgPath).PkgPath(),
+		"file":     callerFrame.File,
+		"function": callerFrame.Function,
+		"line":     callerFrame.Line,
+	}).Error(errors.Cause(err))
 }
 
 func (logger SimpleLogger) HttpLogInfo(ctx context.Context, msg string) {
@@ -112,5 +132,5 @@ func (logger SimpleLogger) HttpLogInfo(ctx context.Context, msg string) {
 }
 
 func (logger SimpleLogger) LogError(err error, msg string) {
-	logger.WithError(err).Error(msg)
+	logger.WithError(errors.Cause(err)).Error(msg)
 }

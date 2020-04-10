@@ -60,14 +60,15 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 
 	UserFromDB, err := UsHttp.UserUC.GetByLogin(User.Login)
 	if err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	cookie, err := UsHttp.SessHttp.Create(UserFromDB.ID)
 	if err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
-		UsHttp.Logger.HttpLogError(r.Context(), "session", "create", errors.Cause(err))
 		return
 	}
 
@@ -98,6 +99,7 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
 		return
 	case err != nil:
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -132,8 +134,8 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		UsHttp.Logger.HttpLogError(r.Context(), "", "GetByLogin", errors.Cause(err))
 		return
 	case err != nil:
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
-		UsHttp.Logger.HttpLogError(r.Context(), "", "GetByLogin", errors.Cause(err))
 		return
 	}
 
@@ -146,7 +148,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := UsHttp.SessHttp.Create(User.ID)
 	if err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), " session", "create", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -169,7 +171,7 @@ func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := UsHttp.SessHttp.Delete(cookie.Value); err != nil {
-		UsHttp.Logger.HttpInfo(r.Context(), "failed to delete", http.StatusInternalServerError)
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 	}
 
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
@@ -194,13 +196,13 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
-		UsHttp.Logger.HttpInfo(r.Context(), "error with getting userid", http.StatusInternalServerError)
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(&User); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -229,7 +231,7 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		if err := image.Close(); err != nil {
-			UsHttp.Logger.HttpLogWarning(r.Context(), "mime/multipart", "Close", errors.Cause(err).Error())
+			UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}()
@@ -237,19 +239,20 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	currUser := r.Context().Value("UserID")
 	User, err := UsHttp.UserUC.GetByID(currUser.(int))
 	if err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "user", "GetByID", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err := UsHttp.UserUC.UploadAvatar(User, header, image); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "user", "UploadAvatar", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	UsHttp.Logger.HttpLogInfo(r.Context(), "new avatar loaded")
 }
+
 func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 	slug := mux.Vars(r)["login"]
 	userData, err := UsHttp.UserUC.GetByLogin(slug)
@@ -260,14 +263,14 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
-		UsHttp.Logger.HttpLogError(r.Context(), "user", "GetByLogin", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
 	}
 
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
