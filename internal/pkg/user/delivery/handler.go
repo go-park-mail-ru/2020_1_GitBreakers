@@ -172,6 +172,8 @@ func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
 
 	if err := UsHttp.SessHttp.Delete(cookie.Value); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
@@ -204,6 +206,7 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(&User); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)

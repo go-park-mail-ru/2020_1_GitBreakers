@@ -608,14 +608,6 @@ func TestUserHttp_Logout(t *testing.T) {
 
 	require.Nil(t, err)
 
-	//var testUserEmpty = models.User{
-	//	Password: "52jkfgit389535dfe3",
-	//	Name:     "",
-	//	Login:    "dimaPetyaVasya",
-	//	Image:    "",
-	//	Email:    "bezbab@mail.ru",
-	//}
-
 	t.Run("Logout unauthorized", func(t *testing.T) {
 		gomock.InOrder(
 			s.EXPECT().
@@ -630,6 +622,231 @@ func TestUserHttp_Logout(t *testing.T) {
 			Handler(middlewareMock).
 			Method(http.MethodPost).
 			URL("/logout").
+			Expect(t).
+			Status(http.StatusUnauthorized).
+			End()
+	})
+
+	t.Run("Logout session not exsist", func(t *testing.T) {
+		gomock.InOrder(
+			s.EXPECT().
+				Delete(gomock.Any()).
+				Return(nil).
+				Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Logout, true)
+
+		apitest.New("Logout session not exsist").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/logout").
+			Expect(t).
+			Status(http.StatusUnauthorized).
+			End()
+	})
+	t.Run("Logout ok", func(t *testing.T) {
+		gomock.InOrder(
+			s.EXPECT().
+				Delete("4ri39r3u438r3u438fhj3f384jf3438").
+				Return(nil).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Logout, true)
+
+		apitest.New("Logout unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/logout").
+			Cookie("session_id", "4ri39r3u438r3u438fhj3f384jf3438").
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	})
+
+	t.Run("Logout session not delete", func(t *testing.T) {
+		gomock.InOrder(
+			s.EXPECT().
+				Delete("4ri39r3u438r3u438fhj3f384jf3438").
+				Return(errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Logout, true)
+
+		apitest.New("Logout unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/logout").
+			Cookie("session_id", "4ri39r3u438r3u438fhj3f384jf3438").
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+}
+func TestUserHttp_GetInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := userMock.NewMockUCUser(ctrl)
+	s := sessMock.NewMockSessDelivery(ctrl)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+
+	userHandlers.UserUC = m
+	userHandlers.SessHttp = s
+	userHandlers.Logger = &newlogger
+
+	testInput := models.User{}
+	err := faker.FakeData(&testInput)
+
+	require.Nil(t, err)
+
+	t.Run("Getinto unauthorized", func(t *testing.T) {
+		gomock.InOrder(
+			s.EXPECT().
+				Delete(gomock.Any()).
+				Return(nil).
+				Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, false)
+
+		apitest.New("Logout unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/logout").
+			Expect(t).
+			Status(http.StatusUnauthorized).
+			End()
+	})
+
+	t.Run("Getinto ok", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				GetByID(gomock.Any()).
+				Return(testInput, nil).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, true)
+
+		apitest.New("Getinto ok").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/whoami").
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	})
+
+	t.Run("Getinto entity does not exsist", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				GetByID(gomock.Any()).
+				Return(testInput, entityerrors.DoesNotExist()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, true)
+
+		apitest.New("Getinto entity does not exsist").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/whoami").
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+
+	t.Run("Getinto some error in DB", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				GetByID(gomock.Any()).
+				Return(testInput, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, true)
+
+		apitest.New("Getinto entity does not exsist").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/whoami").
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+
+	t.Run("Getinto some error in DB", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				GetByID(gomock.Any()).
+				Return(testInput, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, true)
+
+		apitest.New("Getinto some error in DB").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/whoami").
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+}
+func TestUserHttp_UploadAvatar(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := userMock.NewMockUCUser(ctrl)
+	s := sessMock.NewMockSessDelivery(ctrl)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+
+	userHandlers.UserUC = m
+	userHandlers.SessHttp = s
+	userHandlers.Logger = &newlogger
+
+	testInput := models.User{}
+	err := faker.FakeData(&testInput)
+
+	require.Nil(t, err)
+
+	t.Run("Upload avatar unauthorized", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				GetByID(gomock.Any()).
+				Return(testInput, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, true)
+
+		apitest.New("Upload avatar unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/whoami").
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+
+	t.Run("Upload avatar unauthorized", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				GetByID(gomock.Any()).
+				Return(testInput, nil).
+				Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.UploadAvatar, false)
+
+		apitest.New("Upload avatar unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/avatar").
 			Expect(t).
 			Status(http.StatusUnauthorized).
 			End()
