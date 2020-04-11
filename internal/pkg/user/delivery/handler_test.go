@@ -530,4 +530,108 @@ func TestUserHttp_Update(t *testing.T) {
 			Status(http.StatusOK).
 			End()
 	})
+	t.Run("Update invalid json", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				Update(gomock.Any(), testUserEmpty).
+				Return(nil).
+				Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Update, true)
+
+		apitest.New("Update invalid json").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/profile").
+			Body(fmt.Sprintf(`{ email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusBadRequest).
+			End()
+	})
+	t.Run("Update already exsist", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				Update(gomock.Any(), testUserEmpty).
+				Return(entityerrors.AlreadyExist()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Update, true)
+
+		apitest.New("Update already exsist").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/profile").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusConflict).
+			End()
+	})
+	t.Run("Update some err in Update func", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				Update(gomock.Any(), testUserEmpty).
+				Return(errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Update, true)
+
+		apitest.New("Update some err in Update func").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/profile").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+}
+func TestUserHttp_Logout(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := userMock.NewMockUCUser(ctrl)
+	s := sessMock.NewMockSessDelivery(ctrl)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+
+	userHandlers.UserUC = m
+	userHandlers.SessHttp = s
+	userHandlers.Logger = &newlogger
+
+	testInput := models.User{}
+	err := faker.FakeData(&testInput)
+
+	require.Nil(t, err)
+
+	//var testUserEmpty = models.User{
+	//	Password: "52jkfgit389535dfe3",
+	//	Name:     "",
+	//	Login:    "dimaPetyaVasya",
+	//	Image:    "",
+	//	Email:    "bezbab@mail.ru",
+	//}
+
+	t.Run("Logout unauthorized", func(t *testing.T) {
+		gomock.InOrder(
+			s.EXPECT().
+				Delete(gomock.Any()).
+				Return(nil).
+				Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Logout, false)
+
+		apitest.New("Logout unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/logout").
+			Expect(t).
+			Status(http.StatusUnauthorized).
+			End()
+	})
 }
