@@ -232,6 +232,14 @@ func TestUserHttp_Create(t *testing.T) {
 
 	require.Nil(t, err)
 
+	var testUserEmpty = models.User{
+		Password: "52jkfgit389535dfe3",
+		Name:     "",
+		Login:    "dimaPetyaVasya",
+		Image:    "",
+		Email:    "bezbab@mail.ru",
+	}
+
 	t.Run("Signup already auth", func(t *testing.T) {
 		m.EXPECT().
 			Create(testInput).
@@ -287,13 +295,6 @@ func TestUserHttp_Create(t *testing.T) {
 	})
 
 	t.Run("Signup good create", func(t *testing.T) {
-		var testUserEmpty = models.User{
-			Password: "52jkfgit389535dfe3",
-			Name:     "",
-			Login:    "dimaPetyaVasya",
-			Image:    "",
-			Email:    "bezbab@mail.ru",
-		}
 		sessionCookie := http.Cookie{
 			Name:     "session-id",
 			Value:    "25425fg3f3535",
@@ -329,4 +330,204 @@ func TestUserHttp_Create(t *testing.T) {
 			End()
 	})
 
+	t.Run("Signup invalid json", func(t *testing.T) {
+
+		gomock.InOrder(
+			m.EXPECT().
+				Create(testUser).
+				Return(nil).Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Create, false)
+
+		apitest.New("Signup invalid json").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/signup").
+			Body(fmt.Sprintf(`{ "email: "%s", "password": "%s", "login": "%s" }`,
+				testUser.Email, testUser.Password, testUser.Login)).
+			Expect(t).
+			Status(http.StatusBadRequest).
+			End()
+	})
+
+	t.Run("Signup already exsist", func(t *testing.T) {
+
+		gomock.InOrder(
+			m.EXPECT().
+				Create(testUserEmpty).
+				Return(entityerrors.AlreadyExist()).Times(1),
+			m.EXPECT().
+				GetByLogin(testUser.Login).
+				Return(testUser, nil).Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Create, false)
+
+		apitest.New("Signup already exsist").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/signup").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusConflict).
+			End()
+	})
+	t.Run("Signup error in create", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				Create(testUserEmpty).
+				Return(errors.New("some error")).
+				Times(1),
+			m.EXPECT().
+				GetByLogin(testUser.Login).
+				Return(testUser, nil).Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Create, false)
+
+		apitest.New("Signup error in create").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/signup").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+	t.Run("Signup some err in getByLogin func", func(t *testing.T) {
+
+		gomock.InOrder(
+			m.EXPECT().
+				Create(testUserEmpty).
+				Return(nil).
+				Times(1),
+			m.EXPECT().
+				GetByLogin(testUser.Login).
+				Return(testUser, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Create, false)
+
+		apitest.New("Signup some err in getByLogin func").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/signup").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+	t.Run("Signup some err in Sess Create func", func(t *testing.T) {
+
+		sessionCookie := http.Cookie{
+			Name:     "session-id",
+			Value:    "25425fg3f3535",
+			Path:     "/",
+			Domain:   "89.208.198.186",
+			Expires:  time.Now(),
+			MaxAge:   0,
+			Secure:   false,
+			HttpOnly: false,
+		}
+
+		gomock.InOrder(
+			m.EXPECT().
+				Create(testUserEmpty).
+				Return(nil).
+				Times(1),
+			m.EXPECT().
+				GetByLogin(testUser.Login).
+				Return(testUser, nil).
+				Times(1),
+			s.EXPECT().
+				Create(testUser.ID).
+				Return(sessionCookie, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Create, false)
+
+		apitest.New("Signup some err in Sess Create func").
+			Handler(middlewareMock).
+			Method(http.MethodPost).
+			URL("/signup").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+
+}
+func TestUserHttp_Update(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := userMock.NewMockUCUser(ctrl)
+	s := sessMock.NewMockSessDelivery(ctrl)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+
+	userHandlers.UserUC = m
+	userHandlers.SessHttp = s
+	userHandlers.Logger = &newlogger
+
+	testInput := models.User{}
+	err := faker.FakeData(&testInput)
+
+	require.Nil(t, err)
+
+	var testUserEmpty = models.User{
+		Password: "52jkfgit389535dfe3",
+		Name:     "",
+		Login:    "dimaPetyaVasya",
+		Image:    "",
+		Email:    "bezbab@mail.ru",
+	}
+
+	t.Run("Update unauthorized", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				Update(gomock.Eq(10), testUser).
+				Return(nil).
+				Times(0),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Update, false)
+
+		apitest.New("Update unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/profile").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusUnauthorized).
+			End()
+	})
+
+	t.Run("Update ok", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				Update(gomock.Any(), testUserEmpty).
+				Return(nil).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Update, true)
+
+		apitest.New("Update ok").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/profile").
+			Body(fmt.Sprintf(`{ "email": "%s", "password": "%s", "login": "%s" }`,
+				testUserEmpty.Email, testUserEmpty.Password, testUserEmpty.Login)).
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	})
 }
