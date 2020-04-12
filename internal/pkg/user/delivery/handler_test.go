@@ -814,22 +814,27 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 
 	require.Nil(t, err)
 
-	t.Run("Upload avatar unauthorized", func(t *testing.T) {
+	t.Run("Upload avatar empty image", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
 				GetByID(gomock.Any()).
-				Return(testInput, errors.New("some error")).
-				Times(1),
+				Return(testUser, nil).
+				Times(0),
+			m.EXPECT().
+				UploadAvatar(testUser, nil, nil).
+				Return(nil).
+				Times(0),
 		)
 
-		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfo, true)
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.UploadAvatar, true)
 
 		apitest.New("Upload avatar unauthorized").
+			Debug().
 			Handler(middlewareMock).
-			Method(http.MethodGet).
-			URL("/whoami").
+			Method(http.MethodPut).
+			URL("/avatar").
 			Expect(t).
-			Status(http.StatusInternalServerError).
+			Status(http.StatusBadRequest).
 			End()
 	})
 
@@ -849,6 +854,97 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 			URL("/avatar").
 			Expect(t).
 			Status(http.StatusUnauthorized).
+			End()
+	})
+}
+func TestUserHttp_GetInfoByLogin(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := userMock.NewMockUCUser(ctrl)
+	s := sessMock.NewMockSessDelivery(ctrl)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+
+	userHandlers.UserUC = m
+	userHandlers.SessHttp = s
+	userHandlers.Logger = &newlogger
+
+	testInput := models.User{}
+	err := faker.FakeData(&testInput)
+
+	require.Nil(t, err)
+
+	t.Run("Get info by login", func(t *testing.T) {
+		someLogin := "keksik"
+		err := faker.FakeData(&someLogin)
+
+		require.Nil(t, err)
+
+		gomock.InOrder(
+			m.EXPECT().
+				GetByLogin(someLogin).
+				Return(testUser, nil).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, "login", someLogin)
+
+		apitest.New("Get info by login").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/profile/" + someLogin).
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	})
+
+	t.Run("Get info login doesn't exsist", func(t *testing.T) {
+		someLogin := "keksik"
+		err := faker.FakeData(&someLogin)
+
+		require.Nil(t, err)
+
+		gomock.InOrder(
+			m.EXPECT().
+				GetByLogin(someLogin).
+				Return(models.User{}, entityerrors.DoesNotExist()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, "login", someLogin)
+
+		apitest.New("Get info login doesn't exsist").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/profile/" + someLogin).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+	t.Run("Get info login some error", func(t *testing.T) {
+		someLogin := "keksik"
+		err := faker.FakeData(&someLogin)
+
+		require.Nil(t, err)
+
+		gomock.InOrder(
+			m.EXPECT().
+				GetByLogin(someLogin).
+				Return(models.User{}, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, "login", someLogin)
+
+		apitest.New("Get info login doesn't exsist").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/profile/" + someLogin).
+			Expect(t).
+			Status(http.StatusInternalServerError).
 			End()
 	})
 }
