@@ -542,6 +542,7 @@ func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName st
 		return nil, errors.Wrapf(err, "error in repository for git repositories in GetCommitsByBranchName "+
 			"with userLogin=%s, repoName=%s, branchName=%s", userLogin, repoName, branchName)
 	}
+
 	gogitBranch, err := gogitRepo.Reference(gogitPlumbing.NewBranchReferenceName(branchName), true)
 	switch {
 	case err == gogitPlumbing.ErrReferenceNotFound:
@@ -578,7 +579,7 @@ func (repo Repository) GetFileByPath(userLogin, repoName, commitHash, path strin
 	case err == gogit.ErrRepositoryNotExists:
 		return file, entityerrors.DoesNotExist()
 	case err != nil:
-		return file, err
+		return file, errors.WithStack(err)
 	}
 
 	gogitCommit, err := gogitRepo.CommitObject(gogitPlumbing.NewHash(commitHash))
