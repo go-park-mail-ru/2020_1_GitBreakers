@@ -328,7 +328,11 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория или ветки)  
 ### 4.4 Получить список файлов по коммиту 
-Запрос: `/{username}/{reponame}/files/{commithash}` типа `GET`  
+Запрос: `/{username}/{reponame}/files/{commithash}` типа `GET`
+с параметрами:
+- `path` - путь до папки с файлами, например `./`, или `files/`.
+Если параметр пустой, то считается, что  `path=./` 
+   
 Образец:  
 `89.208.198.186:8080/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`
 Ответ:  
