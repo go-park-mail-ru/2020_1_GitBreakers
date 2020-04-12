@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -35,6 +36,78 @@ func TestUCUser_Create(t *testing.T) {
 
 		err := useCase.Create(someUser)
 		assert.Equal(t, err, entityerrors.AlreadyExist())
+	})
+
+	t.Run("Create some error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		someError := errors.New("some error")
+
+		m.EXPECT().IsExists(someUser).Return(true, someError).Times(1)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Create(someUser)
+
+		assert.Equal(t, someError, errors.Cause(err))
+	})
+
+	t.Run("Create good", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				IsExists(someUser).
+				Return(false, nil).
+				Times(1),
+			m.EXPECT().
+				Create(gomock.Any()).
+				Return(nil).
+				Times(1),
+		)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Create(someUser)
+
+		require.Nil(t, err)
+	})
+	t.Run("Create err in creating", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		someErr := errors.New("some error")
+
+		gomock.InOrder(
+			m.EXPECT().
+				IsExists(someUser).
+				Return(false, nil).
+				Times(1),
+			m.EXPECT().
+				Create(gomock.Any()).
+				Return(someErr).
+				Times(1),
+		)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Create(someUser)
+
+		require.NotNil(t, err)
 	})
 
 }
@@ -171,6 +244,7 @@ func TestUCUser_Update(t *testing.T) {
 		err := useCase.Update(someUser.ID, someUser)
 		assert.Error(t, err)
 	})
+
 	t.Run("update ok", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -198,5 +272,31 @@ func TestUCUser_Update(t *testing.T) {
 		err := useCase.Update(someUser.ID, someUser)
 		assert.NoError(t, err)
 	})
-}
 
+	t.Run("update full valid with conflict", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
+			Return(someUser, nil).
+			Times(1)
+
+		m.EXPECT().UserCanUpdate(gomock.Any()).
+			Return(false, nil).
+			Times(1)
+
+		m.EXPECT().Update(gomock.Any()).
+			Return(nil).
+			Times(0)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Update(someUser.ID, someUser)
+
+		require.Equal(t, entityerrors.AlreadyExist(), errors.Cause(err))
+	})
+}
