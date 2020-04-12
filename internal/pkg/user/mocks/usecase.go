@@ -63,17 +63,17 @@ func (mr *MockUCUserMockRecorder) Delete(user interface{}) *gomock.Call {
 }
 
 // Update mocks base method
-func (m *MockUCUser) Update(userid int, user models.User) error {
+func (m *MockUCUser) Update(userID int, user models.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", userid, user)
+	ret := m.ctrl.Call(m, "Update", userID, user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update
-func (mr *MockUCUserMockRecorder) Update(userid, user interface{}) *gomock.Call {
+func (mr *MockUCUserMockRecorder) Update(userID, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUCUser)(nil).Update), userid, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUCUser)(nil).Update), userID, user)
 }
 
 // GetByLogin mocks base method
@@ -92,18 +92,18 @@ func (mr *MockUCUserMockRecorder) GetByLogin(login interface{}) *gomock.Call {
 }
 
 // GetByID mocks base method
-func (m *MockUCUser) GetByID(userId int) (models.User, error) {
+func (m *MockUCUser) GetByID(userID int) (models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByID", userId)
+	ret := m.ctrl.Call(m, "GetByID", userID)
 	ret0, _ := ret[0].(models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetByID indicates an expected call of GetByID
-func (mr *MockUCUserMockRecorder) GetByID(userId interface{}) *gomock.Call {
+func (mr *MockUCUserMockRecorder) GetByID(userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUCUser)(nil).GetByID), userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUCUser)(nil).GetByID), userID)
 }
 
 // CheckPass mocks base method

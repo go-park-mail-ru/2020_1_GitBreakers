@@ -46,7 +46,7 @@ func TestUCUser_Delete(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().DeleteById(someUser.ID).Return(nil)
+		m.EXPECT().DeleteByID(someUser.ID).Return(nil)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -63,7 +63,7 @@ func TestUCUser_Delete(t *testing.T) {
 
 		someErr := errors.New("some error")
 
-		m.EXPECT().DeleteById(someUser.ID).Return(someErr)
+		m.EXPECT().DeleteByID(someUser.ID).Return(someErr)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -120,7 +120,7 @@ func TestUCUser_GetByID(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.ID).Return(someUser, nil)
+		m.EXPECT().GetUserByIDWithoutPass(someUser.ID).Return(someUser, nil)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -160,7 +160,7 @@ func TestUCUser_Update(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.ID).
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
 			Return(someUser, entityerrors.DoesNotExist()).
 			Times(1)
 
@@ -179,7 +179,7 @@ func TestUCUser_Update(t *testing.T) {
 
 		someUser.Password = "low"
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.ID).
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
 			Return(someUser, nil).
 			Times(1)
 
