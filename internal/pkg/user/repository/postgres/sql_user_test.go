@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/bcrypt"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -315,8 +316,19 @@ func (s *Suite) TestCreate() {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := s.repo.Create(user)
+
 	require.Nil(s.T(), err)
+
+	s.mock.ExpectQuery("SELECT").
+		WithArgs(user.Login, user.Email).
+		WillReturnError(errors.New("some error"))
+
+	err = s.repo.Create(user)
+
+	require.Error(s.T(), err)
+
 }
+
 func (s *Suite) TestDeleteByLogin() {
 	user := s.user
 
@@ -416,8 +428,15 @@ func (s *Suite) TestUpdateAvatarPath() {
 		WithArgs(user.ID, user.Email, user.Name, s.repo.hostToSave+s.repo.defaultImagePath+user.Image, user.Password).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	 err := s.repo.UpdateAvatarPath(user, user.Image)
+	err := s.repo.UpdateAvatarPath(user, user.Image)
 
 	require.Nil(s.T(), err)
+}
+func (s *Suite) TestUploadAvatar() {
+	name := "kek"
+	content := []byte("kekekser")
+	err := s.repo.UploadAvatar(name, content)
+	defer os.Remove(`.` + s.repo.defaultImagePath + name)
 
+	require.Nil(s.T(), err)
 }
