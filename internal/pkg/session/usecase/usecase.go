@@ -15,10 +15,10 @@ func (sessUC *SessionUC) Create(session models.Session, expire time.Duration) (s
 }
 
 func (sessUC *SessionUC) Delete(sessionID string) error {
-	return sessUC.RepoSession.DeleteById(sessionID)
+	return sessUC.RepoSession.DeleteByID(sessionID)
 
 }
 
 func (sessUC *SessionUC) GetByID(sid string) (models.Session, error) {
-	return sessUC.RepoSession.GetSessById(sid)
+	return sessUC.RepoSession.GetSessByID(sid)
 }

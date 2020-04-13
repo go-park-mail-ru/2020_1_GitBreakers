@@ -9,7 +9,7 @@ type UserDelivery interface {
 	Login(writer io.Writer, reader *io.Reader)
 	Create(writer io.Writer, reader *io.Reader)
 	Logout(writer io.Writer, reader *io.Reader)
-	Getinfo(writer io.Writer, reader *io.Reader)
+	GetInfo(writer io.Writer, reader *io.Reader)
 	UploadAvatar(writer io.Writer, reader *io.Reader)
 	GetInfoByLogin(writer io.Writer, reader *io.Reader)
 }

@@ -7,6 +7,6 @@ import (
 
 type SessRepo interface {
 	Create(session models.Session, expire time.Duration) (string, error)
-	GetSessById(sessionId string) (models.Session, error)
-	DeleteById(sid string) error
+	GetSessByID(sessionID string) (models.Session, error)
+	DeleteByID(sessionID string) error
 }

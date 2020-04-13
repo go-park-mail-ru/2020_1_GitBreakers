@@ -5,10 +5,10 @@ import (
 )
 
 type Repository interface {
-	GetById(id int) (git.Repository, error)
+	GetByID(id int) (git.Repository, error)
 	GetByName(userLogin, repoName string) (git.Repository, error)
 	Create(repos git.Repository) (id int64, err error)
-	//DeleteById(id int) error // TODO
+	//DeleteByID(id int) error // TODO
 	//DeleteByName(userId int, repoName string) error // TODO
 	CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error)
 	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)

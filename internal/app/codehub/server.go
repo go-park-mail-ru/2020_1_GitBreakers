@@ -8,12 +8,12 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
-	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/delivery"
-	sessRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/repository"
-	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/redis/usecase"
-	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/delivery"
-	userRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/repository"
-	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/database/usecase"
+	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
+	redisRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository/redis"
+	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
+	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
+	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/go-redis/redis/v7"
@@ -31,21 +31,25 @@ import (
 func StartNew() {
 	conf := config.New()
 	customLogger := logger.SimpleLogger{}
+
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
-		logrus.Error("Failed to open logfile:", err)
+		logrus.Errorln("Failed to open logfile:", err)
 		f = os.Stdout
 	}
+
 	customLogger = logger.NewTextFormatSimpleLogger(f)
+
 	defer func() {
 		if f != os.Stdout {
 			if err := f.Close(); err != nil {
-				log.Println("Failed to close logfile: " + err.Error())
+				logrus.Errorln("Failed to close logfile:", err)
 			}
 		}
 	}()
+
 	if _, err = fmt.Fprintf(f, ">>>>>>>>>>>>%v<<<<<<<<<<<<\n", time.Now()); err != nil {
-		msg := "Failed to write server start timestamp in log output: " + err.Error()
+		msg := fmt.Sprintln("Failed to write server start timestamp in log output:", err)
 		customLogger.Error(msg)
 		log.Fatal(msg)
 	}
@@ -56,15 +60,15 @@ func StartNew() {
 
 	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
-		msg := "Failed to start db: " + err.Error()
+		msg := fmt.Sprintln("Failed to start db:", err)
 		customLogger.Error(msg)
 		log.Fatal(msg)
 	} else {
-		customLogger.Println("Connected to postgres ", err)
+		customLogger.Println("Connected to postgres:", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
-			customLogger.Info("Failed to close db: " + err.Error())
+			customLogger.Infoln("Failed to close db:", err)
 		}
 	}()
 
@@ -77,7 +81,7 @@ func StartNew() {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            false,
 		AllowedHeaders: []string{"Content-Type", "User-Agent",
-			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin"},
+			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
 	redisClient := redis.NewClient(&redis.Options{
@@ -88,12 +92,14 @@ func StartNew() {
 
 	res, err := redisClient.Ping().Result()
 	if err != nil {
-		msg := "error with redis: " + err.Error()
+		msg := fmt.Sprintln("error with redis:", err)
 		customLogger.Error(msg)
 		log.Fatal(msg)
 	} else {
-		customLogger.Println("Connected to redis: ", res)
+		customLogger.Println("Connected to redis:", res)
 	}
+
+	r.Use(middleware.JsonContentTypeMiddleware, middleware.ProtectHeadersMiddleware)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
@@ -139,8 +145,8 @@ func StartNew() {
 }
 
 func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
-	sessRepos := sessRepo.NewSessionRedis(redis, "codehub/session/")
-	userRepos := userRepo.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
+	sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
+	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
 	sessDelivery := sessDeliv.SessionHttp{
 		SessUC:     &sessUCase,

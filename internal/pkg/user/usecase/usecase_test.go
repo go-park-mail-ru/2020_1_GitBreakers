@@ -2,16 +2,17 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 var someUser = models.User{
-	Id:       12,
+	ID:       12,
 	Password: "sjfsfser242df",
 	Name:     "Kekkers",
 	Login:    "alahahbar",
@@ -25,7 +26,7 @@ func TestUCUser_Create(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().IsExists(someUser).Return(true, nil)
 
@@ -37,6 +38,78 @@ func TestUCUser_Create(t *testing.T) {
 		assert.Equal(t, err, entityerrors.AlreadyExist())
 	})
 
+	t.Run("Create some error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		someError := errors.New("some error")
+
+		m.EXPECT().IsExists(someUser).Return(true, someError).Times(1)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Create(someUser)
+
+		assert.Equal(t, someError, errors.Cause(err))
+	})
+
+	t.Run("Create good", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		gomock.InOrder(
+			m.EXPECT().
+				IsExists(someUser).
+				Return(false, nil).
+				Times(1),
+			m.EXPECT().
+				Create(gomock.Any()).
+				Return(nil).
+				Times(1),
+		)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Create(someUser)
+
+		require.Nil(t, err)
+	})
+	t.Run("Create err in creating", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		someErr := errors.New("some error")
+
+		gomock.InOrder(
+			m.EXPECT().
+				IsExists(someUser).
+				Return(false, nil).
+				Times(1),
+			m.EXPECT().
+				Create(gomock.Any()).
+				Return(someErr).
+				Times(1),
+		)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Create(someUser)
+
+		require.NotNil(t, err)
+	})
+
 }
 func TestUCUser_Delete(t *testing.T) {
 
@@ -44,9 +117,9 @@ func TestUCUser_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().DeleteById(someUser.Id).Return(nil)
+		m.EXPECT().DeleteByID(someUser.ID).Return(nil)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -59,11 +132,11 @@ func TestUCUser_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		someErr := errors.New("some error")
 
-		m.EXPECT().DeleteById(someUser.Id).Return(someErr)
+		m.EXPECT().DeleteByID(someUser.ID).Return(someErr)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -80,7 +153,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).Return(false, nil)
 
@@ -96,7 +169,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).
 			Return(true, entityerrors.DoesNotExist())
@@ -118,15 +191,15 @@ func TestUCUser_GetByID(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.Id).Return(someUser, nil)
+		m.EXPECT().GetUserByIDWithoutPass(someUser.ID).Return(someUser, nil)
 
 		useCase := UCUser{
 			RepUser: m,
 		}
 
-		userFromDB, err := useCase.GetByID(someUser.Id)
+		userFromDB, err := useCase.GetByID(someUser.ID)
 		assert.Equal(t, someUser, userFromDB)
 		assert.NoError(t, err)
 	})
@@ -138,7 +211,7 @@ func TestUCUser_GetByLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().GetByLoginWithoutPass(someUser.Login).Return(someUser, nil)
 
@@ -158,9 +231,9 @@ func TestUCUser_Update(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.Id).
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
 			Return(someUser, entityerrors.DoesNotExist()).
 			Times(1)
 
@@ -168,18 +241,19 @@ func TestUCUser_Update(t *testing.T) {
 			RepUser: m,
 		}
 
-		err := useCase.Update(someUser.Id, someUser)
+		err := useCase.Update(someUser.ID, someUser)
 		assert.Error(t, err)
 	})
+
 	t.Run("update ok", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := user.NewMockRepoUser(ctrl)
+		m := mocks.NewMockRepoUser(ctrl)
 
 		someUser.Password = "low"
 
-		m.EXPECT().GetUserByIdWithoutPass(someUser.Id).
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
 			Return(someUser, nil).
 			Times(1)
 
@@ -195,8 +269,34 @@ func TestUCUser_Update(t *testing.T) {
 			RepUser: m,
 		}
 
-		err := useCase.Update(someUser.Id, someUser)
+		err := useCase.Update(someUser.ID, someUser)
 		assert.NoError(t, err)
 	})
-}
 
+	t.Run("update full valid with conflict", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		m := mocks.NewMockRepoUser(ctrl)
+
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
+			Return(someUser, nil).
+			Times(1)
+
+		m.EXPECT().UserCanUpdate(gomock.Any()).
+			Return(false, nil).
+			Times(1)
+
+		m.EXPECT().Update(gomock.Any()).
+			Return(nil).
+			Times(0)
+
+		useCase := UCUser{
+			RepUser: m,
+		}
+
+		err := useCase.Update(someUser.ID, someUser)
+
+		require.Equal(t, entityerrors.AlreadyExist(), errors.Cause(err))
+	})
+}

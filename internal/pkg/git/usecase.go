@@ -5,7 +5,7 @@ import (
 )
 
 type UseCase interface {
-	Create(userid int, repos *gitmodels.Repository) error
+	Create(userID int, repos *gitmodels.Repository) error
 	GetRepo(userName string, repoName string, requestUserID *int) (gitmodels.Repository, error)
 	GetRepoList(userName string, requestUserID *int) ([]gitmodels.Repository, error)
 	GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error)

@@ -2,7 +2,7 @@
 // Source: repository.go
 
 // Package mock_user is a generated GoMock package.
-package user
+package mocks
 
 import (
 	models "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
@@ -33,34 +33,34 @@ func (m *MockRepoUser) EXPECT() *MockRepoUserMockRecorder {
 	return m.recorder
 }
 
-// GetUserByIdWithPass mocks base method
-func (m *MockRepoUser) GetUserByIdWithPass(id int) (models.User, error) {
+// GetUserByIDWithPass mocks base method
+func (m *MockRepoUser) GetUserByIDWithPass(ID int) (models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByIdWithPass", id)
+	ret := m.ctrl.Call(m, "GetUserByIDWithPass", ID)
 	ret0, _ := ret[0].(models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserByIdWithPass indicates an expected call of GetUserByIdWithPass
-func (mr *MockRepoUserMockRecorder) GetUserByIdWithPass(id interface{}) *gomock.Call {
+// GetUserByIDWithPass indicates an expected call of GetUserByIDWithPass
+func (mr *MockRepoUserMockRecorder) GetUserByIDWithPass(ID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByIdWithPass", reflect.TypeOf((*MockRepoUser)(nil).GetUserByIdWithPass), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByIDWithPass", reflect.TypeOf((*MockRepoUser)(nil).GetUserByIDWithPass), ID)
 }
 
-// GetUserByIdWithoutPass mocks base method
-func (m *MockRepoUser) GetUserByIdWithoutPass(id int) (models.User, error) {
+// GetUserByIDWithoutPass mocks base method
+func (m *MockRepoUser) GetUserByIDWithoutPass(ID int) (models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByIdWithoutPass", id)
+	ret := m.ctrl.Call(m, "GetUserByIDWithoutPass", ID)
 	ret0, _ := ret[0].(models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserByIdWithoutPass indicates an expected call of GetUserByIdWithoutPass
-func (mr *MockRepoUserMockRecorder) GetUserByIdWithoutPass(id interface{}) *gomock.Call {
+// GetUserByIDWithoutPass indicates an expected call of GetUserByIDWithoutPass
+func (mr *MockRepoUserMockRecorder) GetUserByIDWithoutPass(ID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByIdWithoutPass", reflect.TypeOf((*MockRepoUser)(nil).GetUserByIdWithoutPass), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByIDWithoutPass", reflect.TypeOf((*MockRepoUser)(nil).GetUserByIDWithoutPass), ID)
 }
 
 // GetUserByLoginWithPass mocks base method
@@ -94,33 +94,33 @@ func (mr *MockRepoUserMockRecorder) GetByLoginWithoutPass(login interface{}) *go
 }
 
 // GetLoginByID mocks base method
-func (m *MockRepoUser) GetLoginByID(id int) (string, error) {
+func (m *MockRepoUser) GetLoginByID(ID int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLoginByID", id)
+	ret := m.ctrl.Call(m, "GetLoginByID", ID)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetLoginByID indicates an expected call of GetLoginByID
-func (mr *MockRepoUserMockRecorder) GetLoginById(id interface{}) *gomock.Call {
+func (mr *MockRepoUserMockRecorder) GetLoginByID(ID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoginByID", reflect.TypeOf((*MockRepoUser)(nil).GetLoginByID), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLoginByID", reflect.TypeOf((*MockRepoUser)(nil).GetLoginByID), ID)
 }
 
-// GetIdByLogin mocks base method
-func (m *MockRepoUser) GetIdByLogin(login string) (int, error) {
+// GetIDByLogin mocks base method
+func (m *MockRepoUser) GetIDByLogin(login string) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetIdByLogin", login)
+	ret := m.ctrl.Call(m, "GetIDByLogin", login)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetIdByLogin indicates an expected call of GetIdByLogin
-func (mr *MockRepoUserMockRecorder) GetIdByLogin(login interface{}) *gomock.Call {
+// GetIDByLogin indicates an expected call of GetIDByLogin
+func (mr *MockRepoUserMockRecorder) GetIDByLogin(login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIdByLogin", reflect.TypeOf((*MockRepoUser)(nil).GetIdByLogin), login)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIDByLogin", reflect.TypeOf((*MockRepoUser)(nil).GetIDByLogin), login)
 }
 
 // Create mocks base method
@@ -166,18 +166,18 @@ func (mr *MockRepoUserMockRecorder) IsExists(user interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExists", reflect.TypeOf((*MockRepoUser)(nil).IsExists), user)
 }
 
-// DeleteById mocks base method
-func (m *MockRepoUser) DeleteById(id int) error {
+// DeleteByID mocks base method
+func (m *MockRepoUser) DeleteByID(ID int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteById", id)
+	ret := m.ctrl.Call(m, "DeleteByID", ID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteById indicates an expected call of DeleteById
-func (mr *MockRepoUserMockRecorder) DeleteById(id interface{}) *gomock.Call {
+// DeleteByID indicates an expected call of DeleteByID
+func (mr *MockRepoUserMockRecorder) DeleteByID(ID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteById", reflect.TypeOf((*MockRepoUser)(nil).DeleteById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByID", reflect.TypeOf((*MockRepoUser)(nil).DeleteByID), ID)
 }
 
 // CheckPass mocks base method

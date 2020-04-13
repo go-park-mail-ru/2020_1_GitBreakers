@@ -35,14 +35,14 @@ func (UC *UCUser) Create(user models.User) error {
 }
 
 func (UC *UCUser) Delete(user models.User) error {
-	if err := UC.RepUser.DeleteById(user.Id); err != nil {
+	if err := UC.RepUser.DeleteByID(user.ID); err != nil {
 		return errors.Wrap(err, "can't delete user")
 	}
 	return nil
 }
 
 func (UC *UCUser) Update(userid int, newUserData models.User) error {
-	oldUserData, err := UC.RepUser.GetUserByIdWithoutPass(userid)
+	oldUserData, err := UC.RepUser.GetUserByIDWithPass(userid)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
@@ -75,7 +75,7 @@ func (UC *UCUser) GetByLogin(login string) (models.User, error) {
 	return UC.RepUser.GetByLoginWithoutPass(login)
 }
 func (UC *UCUser) GetByID(userId int) (models.User, error) {
-	return UC.RepUser.GetUserByIdWithoutPass(userId)
+	return UC.RepUser.GetUserByIDWithoutPass(userId)
 }
 func (UC *UCUser) CheckPass(login string, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(login, pass)
@@ -95,6 +95,11 @@ func (UC *UCUser) UploadAvatar(User models.User, fileName *multipart.FileHeader,
 
 	if err := UC.RepUser.UploadAvatar(fileName.Filename, byteImage); err != nil {
 		return errors.Wrap(err, "err in repo UploadAvatar")
+	}
+	User, err = UC.RepUser.GetUserByLoginWithPass(User.Login)
+
+	if err != nil {
+		return errors.Wrap(err,"err in GetUserByLoginWithPass")
 	}
 
 	if err := UC.RepUser.UpdateAvatarPath(User, fileName.Filename); err != nil {
