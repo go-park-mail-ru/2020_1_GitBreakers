@@ -423,6 +423,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 				Return(branchlist, entityerrors.AccessDenied()).
 				Times(1), )
 
+
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)

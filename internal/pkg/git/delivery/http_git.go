@@ -286,7 +286,6 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
 }
 
