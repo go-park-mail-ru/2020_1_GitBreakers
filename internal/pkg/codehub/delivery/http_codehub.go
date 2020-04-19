@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"net/http"
 )
@@ -29,7 +30,7 @@ func (GD *Http_Codehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	//todo check that work correctly
+
 	newStar := models.Star{AuthorID: userID}
 
 	if err := json.NewDecoder(r.Body).Decode(&newStar); err != nil {
@@ -103,7 +104,17 @@ func (GD *Http_Codehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	}
 	//todo switch err(not found,access denied...)
 	err := GD.CodeHubUC.CreateIssue(newIssue)
-	if err != nil {
+
+	switch {
+	case err == entityerrors.AccessDenied():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err == entityerrors.DoesNotExist():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -129,7 +140,9 @@ func (GD *Http_Codehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newIssue := models.Issue{AuthorID: userID}
+	newIssue := models.Issue{}
+	oldIssue:=models.Issue{}
+	GD.CodeHubUC.GetIssuesList()
 
 	if err := json.NewDecoder(r.Body).Decode(&newIssue); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -143,7 +156,6 @@ func (GD *Http_Codehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 
 	GD.Logger.HttpLogInfo(r.Context(), "issues updated")
 }

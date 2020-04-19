@@ -10,6 +10,7 @@ type UCCodeHub interface {
 	GetStarredRepo(userID int) ([]gitmodels.Repository, error)
 	CreateIssue(issue models.Issue) error
 	UpdateIssue(issue models.Issue) error
-	CloseIssue(issueID int) error
-	GetIssuesList(repoID int) ([]models.Issue, error)
+	CloseIssue(issueID int, userID int) error
+	GetIssuesList(repoID int, userID int) ([]models.Issue, error)
+	GetIssues(issueID int, userID int) (models.Issue, error)
 }
