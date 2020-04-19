@@ -45,3 +45,6 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
     UNIQUE (repository_id, user_id),
     CONSTRAINT users_git_repositories_pk PRIMARY KEY (repository_id, user_id)
 );
+
+alter table git_repositories
+    add stars integer default 0 not null;
