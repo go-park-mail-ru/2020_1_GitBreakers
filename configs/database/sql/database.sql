@@ -47,4 +47,4 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
 );
 
 alter table git_repositories
-    add stars integer default 0 not null;
+    add if not exists stars integer default 0 not null;
