@@ -12,5 +12,5 @@ type UCCodeHub interface {
 	UpdateIssue(issue models.Issue) error
 	CloseIssue(issueID int, userID int) error
 	GetIssuesList(repoID int, userID int) ([]models.Issue, error)
-	GetIssues(issueID int, userID int) (models.Issue, error)
+	GetIssue(issueID int, userID int) (models.Issue, error)
 }

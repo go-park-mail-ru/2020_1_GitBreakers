@@ -77,7 +77,7 @@ func (GD *UCCodeHub) GetIssuesList(repoID int, userID int) ([]models.Issue, erro
 	}
 }
 
-func (GD *UCCodeHub) GetIssues(issueID int, userID int) (models.Issue, error) {
+func (GD *UCCodeHub) GetIssue(issueID int, userID int) (models.Issue, error) {
 	permis, err := GD.repo.CheckAccessIssue(userID, issueID)
 	if err != nil {
 		return models.Issue{}, err
