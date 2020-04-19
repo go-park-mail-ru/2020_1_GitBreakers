@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Issue struct {
 	ID        int       `json:"id" valid:"-" db:"id"`
@@ -12,6 +14,7 @@ type Issue struct {
 	IsClosed  bool      `json:"is_closed" valid:"-" db:"is_closed"`
 	CreatedAt time.Time `json:"omitempty" valid:"-" db:"created_at"`
 }
+
 
 //пока нигде не использую
 type Star struct {

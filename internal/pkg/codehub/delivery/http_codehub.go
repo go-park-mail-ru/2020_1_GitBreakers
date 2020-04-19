@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 	"net/http"
 	"strconv"
 )
@@ -34,13 +35,14 @@ func (GD *Http_Codehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newStar := models.Star{AuthorID: userID}
+	newStar := models.Star{}
 
-	if err := json.NewDecoder(r.Body).Decode(&newStar); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &newStar); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	newStar.AuthorID = userID
 
 	if err := GD.CodeHubUC.ModifyStar(newStar); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -98,14 +100,16 @@ func (GD *Http_Codehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newIssue := models.Issue{AuthorID: userID}
+	newIssue := models.Issue{}
 
-	if err := json.NewDecoder(r.Body).Decode(&newIssue); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &newIssue); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	//todo switch err(not found,access denied...)
+
+	newIssue.AuthorID = userID
+
 	err := GD.CodeHubUC.CreateIssue(newIssue)
 
 	switch {
@@ -145,7 +149,7 @@ func (GD *Http_Codehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	newIssue := models.Issue{}
 
-	if err := json.NewDecoder(r.Body).Decode(&newIssue); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &newIssue); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -255,9 +259,9 @@ func (GD *Http_Codehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oldIssue := models.Issue{}//достаточно скинуть просто id
+	oldIssue := models.Issue{} //достаточно скинуть просто id
 
-	if err := json.NewDecoder(r.Body).Decode(&oldIssue); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &oldIssue); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return

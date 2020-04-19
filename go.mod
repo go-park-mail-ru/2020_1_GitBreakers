@@ -18,6 +18,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
+	github.com/mailru/easyjson v0.7.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.7.0
 	github.com/satori/go.uuid v1.2.0
