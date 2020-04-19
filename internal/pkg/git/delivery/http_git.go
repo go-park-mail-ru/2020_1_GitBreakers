@@ -163,7 +163,7 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 	commitParams := &gitmodels.CommitRequest{
 		UserLogin:  vars["username"],
 		RepoName:   vars["reponame"],
-		CommitHash: vars["branchname"],
+		CommitHash: vars["hash"],
 	}
 
 	decoder := schema.NewDecoder()
