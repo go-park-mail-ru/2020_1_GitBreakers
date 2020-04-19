@@ -7,6 +7,7 @@ var (
 	StatusReadAccess  Permission = "read"
 	StatusWriteAccess Permission = "write"
 	StatusAdminAccess Permission = "admin"
+	StatusOwnerAccess Permission = "owner"
 )
 
 func NoAccess() Permission {
@@ -23,4 +24,8 @@ func WriteAccess() Permission {
 
 func AdminAccess() Permission {
 	return StatusAdminAccess
+}
+
+func OwnerAccess() Permission {
+	return StatusOwnerAccess
 }

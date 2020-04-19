@@ -7,6 +7,7 @@ import (
 	gogitPlumbingObj "github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
@@ -146,8 +147,8 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 			newRepo)
 	}
 
-	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id,repository_id) VALUES ($1, $2)",
-		newRepo.OwnerID, newRepoId)
+	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id, repository_id, role) VALUES ($1, $2)",
+		newRepo.OwnerID, newRepoId, permission_types.OwnerAccess())
 	if err != nil {
 		return -1, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
 	}
