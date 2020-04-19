@@ -15,6 +15,7 @@ type Issue struct {
 
 //пока нигде не использую
 type Star struct {
-	AuthorID int `json:"author"`
-	RepoID   int `json:"repo"`
+	AuthorID int  `json:"-" valid:"-"`
+	RepoID   int  `json:"repo" valid:"-"`
+	Vote     bool `json:"vote" valid:"-"`
 }
