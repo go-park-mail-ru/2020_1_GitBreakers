@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+
+package session;
+
+service Session{
+  rpc Create(CreateReq)returns(CreateResp){}
+}
+
+message CreateReq {
+  int64 UserID = 1;
+}
+message CreateResp {
+  string SessionID = 1;
+}

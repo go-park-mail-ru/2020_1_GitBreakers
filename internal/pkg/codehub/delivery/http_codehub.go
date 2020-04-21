@@ -14,13 +14,13 @@ import (
 	"strconv"
 )
 
-type Http_Codehub struct {
+type HttpCodehub struct {
 	Logger    *logger.SimpleLogger
 	UserUC    user.UCUser
 	CodeHubUC codehub.UCCodeHub
 }
 
-func (GD *Http_Codehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
+func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -54,7 +54,7 @@ func (GD *Http_Codehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (GD *Http_Codehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
+func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -85,7 +85,7 @@ func (GD *Http_Codehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpLogInfo(r.Context(), "repolist got success")
 }
 
-func (GD *Http_Codehub) NewIssue(w http.ResponseWriter, r *http.Request) {
+func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -132,7 +132,7 @@ func (GD *Http_Codehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpLogInfo(r.Context(), "issues created success")
 }
 
-func (GD *Http_Codehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
+func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -204,7 +204,7 @@ func (GD *Http_Codehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpLogInfo(r.Context(), "issues updated")
 }
 
-func (GD *Http_Codehub) GetIssues(w http.ResponseWriter, r *http.Request) {
+func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
@@ -244,7 +244,7 @@ func (GD *Http_Codehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpLogInfo(r.Context(), "issues returned success")
 }
 
-func (GD *Http_Codehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
+func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)

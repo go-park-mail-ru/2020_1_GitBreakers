@@ -8,7 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
-	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
+	http2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery/http"
 	redisRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository/redis"
 	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
 	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
@@ -159,7 +159,7 @@ func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger
 	sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
-	sessDelivery := sessDeliv.SessionHttp{
+	sessDelivery := http2.SessionHttp{
 		SessUC:     &sessUCase,
 		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
 	}
