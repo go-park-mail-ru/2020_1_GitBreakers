@@ -10,7 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.0.0
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/golang/mock v1.4.3
-	github.com/golang/protobuf v1.4.0 // indirect
+	github.com/golang/protobuf v1.4.0
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
@@ -29,5 +29,6 @@ require (
 	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.28.1
+	google.golang.org/protobuf v1.21.0
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 
 package session;
-
+option go_package = ".;session";
 service Session{
   rpc Create(CreateReq)returns(CreateResp){}
 }
