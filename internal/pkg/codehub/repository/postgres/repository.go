@@ -11,6 +11,9 @@ type Repo struct {
 	DB *sqlx.DB
 }
 
+func NewRepository(db *sqlx.DB) Repo {
+	return Repo{DB: db}
+}
 func (R *Repo) AddStar(userID int, repoID int) error {
 	return nil
 }
@@ -20,7 +23,7 @@ func (R *Repo) DelStar(userID int, repoID int) error {
 }
 
 func (R *Repo) GetStarredRepo(userID int) ([]gitmodels.Repository, error) {
-	return nil, nil
+	return []gitmodels.Repository{}, nil
 }
 
 func (R *Repo) CreateIssue(issue models.Issue) error {
@@ -36,15 +39,15 @@ func (R *Repo) CloseIssue(issueID int) error {
 }
 
 func (R *Repo) GetIssuesList(repoID int) ([]models.Issue, error) {
-	return nil, nil
+	return []models.Issue{}, nil
 }
 
 func (R *Repo) CheckAccessIssue(userID, issueID int) (perm.Permission, error) {
-	return "", nil
+	return perm.AdminAccess(), nil
 }
 
 func (R *Repo) CheckAccessRepo(userID, repoID int) (perm.Permission, error) {
-	return "", nil
+	return perm.AdminAccess(), nil
 }
 
 func (R *Repo) GetIssues(issueID int) (models.Issue, error) {

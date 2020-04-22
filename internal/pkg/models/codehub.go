@@ -1,6 +1,7 @@
 package models
 
 import (
+	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"time"
 )
 
@@ -15,10 +16,17 @@ type Issue struct {
 	CreatedAt time.Time `json:"omitempty" valid:"-" db:"created_at"`
 }
 
-
 //пока нигде не использую
 type Star struct {
 	AuthorID int  `json:"-" valid:"-"`
 	RepoID   int  `json:"repo" valid:"-"`
 	Vote     bool `json:"vote" valid:"-"`
 }
+
+//easyjson:json
+type RepoSet []gitmodels.Repository
+
+//easyjson:json
+type IssuesSet []Issue
+
+//easyjson -all path/to/file.go

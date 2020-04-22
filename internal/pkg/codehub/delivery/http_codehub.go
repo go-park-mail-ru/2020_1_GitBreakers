@@ -1,11 +1,9 @@
 package delivery
 
 import (
-	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
@@ -16,7 +14,6 @@ import (
 
 type HttpCodehub struct {
 	Logger    *logger.SimpleLogger
-	UserUC    user.UCUser
 	CodeHubUC codehub.UCCodeHub
 }
 
@@ -76,7 +73,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(repolist); err != nil {
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(repolist, w); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -235,7 +232,13 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(issueslist); err != nil {
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(issueslist, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(issueslist, w); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

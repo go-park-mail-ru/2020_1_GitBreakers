@@ -147,7 +147,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 			newRepo)
 	}
 
-	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id, repository_id, role) VALUES ($1, $2)",
+	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id, repository_id, role) VALUES ($1, $2,$3)",
 		newRepo.OwnerID, newRepoId, permission_types.OwnerAccess())
 	if err != nil {
 		return -1, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)

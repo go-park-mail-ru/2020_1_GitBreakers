@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery"
+	postgresCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
+	usecaseCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
 	gitDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/delivery"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
@@ -109,7 +112,7 @@ func StartNew() {
 	withCsrfRouter := r.PathPrefix("").Subrouter()
 	withCsrfRouter.Use(csrfMiddleware)
 
-	userSetHandler, m, repoHandler := initNewHandler(db, redisClient, customLogger, conf)
+	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, redisClient, customLogger, conf)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
@@ -132,14 +135,13 @@ func StartNew() {
 	r.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
-	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodPost)
-	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodPut)
-	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodGet)
-	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodDelete)
+	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
+	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
+	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
+	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
-	r.HandleFunc("/func/repo/{repoID}/stars", nil).Methods(http.MethodPost)
-	r.HandleFunc("/func/repo/{repoID}/stars", nil).Methods(http.MethodGet)
-	r.HandleFunc("/func/repo/{repoID}/stars", nil).Methods(http.MethodDelete)
+	r.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
+	r.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 	//
 	//r.HandleFunc("/repo/news", nil).Methods(http.MethodGet)
 
@@ -154,7 +156,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
+func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
 	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
@@ -163,22 +165,30 @@ func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger
 		logger.Fatal(err, "not connect to auth server")
 	}
 
+	userUCase := userUC.UCUser{RepUser: &userRepos}
+
+	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+
+	gitUseCase := usecase.GitUseCase{Repo: &repogit}
+	repoCodeHub := postgresCodeHub.NewRepository(db)
+
+	CodeHubUsecase := usecaseCodeHub.UCCodeHub{&repoCodeHub}
+
+	codeHubDelivery := delivery.HttpCodehub{
+		Logger:    &logger,
+		CodeHubUC: &CodeHubUsecase,
+	}
+
 	sessDelivery := http2.SessionHttp{
 		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
 		Client:     &sessClient,
 	}
-
-	userUCase := userUC.UCUser{RepUser: &userRepos}
 
 	userDelivery := userDeliv.UserHttp{
 		SessHttp: &sessDelivery,
 		UserUC:   &userUCase,
 		Logger:   &logger,
 	}
-
-	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
-
-	gitUseCase := usecase.GitUseCase{Repo: &repogit}
 
 	gitDelivery := gitDeliv.GitDelivery{
 		UC:     &gitUseCase,
@@ -191,5 +201,5 @@ func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger
 		UCUser:    &userUCase,
 	}
 
-	return &userDelivery, &m, &gitDelivery
+	return &userDelivery, &m, &gitDelivery, &codeHubDelivery
 }
