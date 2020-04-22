@@ -2,6 +2,7 @@ package codehub
 
 import (
 	"fmt"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
 	gitDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/delivery"
@@ -9,8 +10,6 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	http2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery/http"
-	redisRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository/redis"
-	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
 	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
@@ -156,12 +155,17 @@ func StartNew() {
 }
 
 func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
-	sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
+	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
-	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
+	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
+	sessClient := clients.SessClient{}
+	if err := sessClient.Connect(); err != nil {
+		logger.Fatal(err, "not connect to auth server")
+	}
+
 	sessDelivery := http2.SessionHttp{
-		SessUC:     &sessUCase,
 		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
+		Client:     &sessClient,
 	}
 
 	userUCase := userUC.UCUser{RepUser: &userRepos}

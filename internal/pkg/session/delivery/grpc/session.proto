@@ -1,15 +1,27 @@
 syntax = "proto3";
-
+// protoc --go_out=plugins=grpc:. *.proto
 
 package session;
 option go_package = ".;session";
 service Session{
-  rpc Create(CreateReq)returns(CreateResp){}
+  rpc Create(UserID)returns(SessionID){}
+  rpc Delete(SessionID)returns(Nothing){}
+  rpc Get(SessionID)returns(SessionModel){}
 }
 
-message CreateReq {
+message UserID {
   int64 UserID = 1;
 }
-message CreateResp {
+
+message SessionID {
   string SessionID = 1;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+message SessionModel{
+  string ID = 1;
+  int64 UserID = 2;
 }

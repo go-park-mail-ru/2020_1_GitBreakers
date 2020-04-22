@@ -1,20 +1,19 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"net/http"
 	"time"
 )
 
 type SessionHttp struct {
-	SessUC     session.UCSession
 	ExpireTime time.Duration
+	Client     *clients.SessClient
 }
 
 func (UC *SessionHttp) Create(userID int) (http.Cookie, error) {
-	baseSess := models.Session{UserID: userID}
-	cretedSess, err := UC.SessUC.Create(baseSess, UC.ExpireTime)
+	cretedSess, err := UC.Client.CreateSess(userID)
 	if err != nil {
 		return http.Cookie{}, err
 	}
@@ -30,9 +29,9 @@ func (UC *SessionHttp) Create(userID int) (http.Cookie, error) {
 }
 
 func (UC *SessionHttp) Delete(sessID string) error {
-	return UC.SessUC.Delete(sessID)
+	return UC.Client.DelSess(sessID)
 }
 
 func (UC *SessionHttp) GetBySessID(sessionID string) (models.Session, error) {
-	return UC.SessUC.GetByID(sessionID)
+	return UC.Client.GetSess(sessionID)
 }

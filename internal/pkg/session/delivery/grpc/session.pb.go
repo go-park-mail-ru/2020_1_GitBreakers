@@ -29,7 +29,7 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type CreateReq struct {
+type UserID struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -37,8 +37,8 @@ type CreateReq struct {
 	UserID int64 `protobuf:"varint,1,opt,name=UserID,json=userID,proto3" json:"UserID,omitempty"`
 }
 
-func (x *CreateReq) Reset() {
-	*x = CreateReq{}
+func (x *UserID) Reset() {
+	*x = UserID{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_session_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -46,13 +46,13 @@ func (x *CreateReq) Reset() {
 	}
 }
 
-func (x *CreateReq) String() string {
+func (x *UserID) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateReq) ProtoMessage() {}
+func (*UserID) ProtoMessage() {}
 
-func (x *CreateReq) ProtoReflect() protoreflect.Message {
+func (x *UserID) ProtoReflect() protoreflect.Message {
 	mi := &file_session_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -64,19 +64,19 @@ func (x *CreateReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateReq.ProtoReflect.Descriptor instead.
-func (*CreateReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use UserID.ProtoReflect.Descriptor instead.
+func (*UserID) Descriptor() ([]byte, []int) {
 	return file_session_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CreateReq) GetUserID() int64 {
+func (x *UserID) GetUserID() int64 {
 	if x != nil {
 		return x.UserID
 	}
 	return 0
 }
 
-type CreateResp struct {
+type SessionID struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -84,8 +84,8 @@ type CreateResp struct {
 	SessionID string `protobuf:"bytes,1,opt,name=SessionID,json=sessionID,proto3" json:"SessionID,omitempty"`
 }
 
-func (x *CreateResp) Reset() {
-	*x = CreateResp{}
+func (x *SessionID) Reset() {
+	*x = SessionID{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_session_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -93,13 +93,13 @@ func (x *CreateResp) Reset() {
 	}
 }
 
-func (x *CreateResp) String() string {
+func (x *SessionID) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateResp) ProtoMessage() {}
+func (*SessionID) ProtoMessage() {}
 
-func (x *CreateResp) ProtoReflect() protoreflect.Message {
+func (x *SessionID) ProtoReflect() protoreflect.Message {
 	mi := &file_session_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -111,33 +111,147 @@ func (x *CreateResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateResp.ProtoReflect.Descriptor instead.
-func (*CreateResp) Descriptor() ([]byte, []int) {
+// Deprecated: Use SessionID.ProtoReflect.Descriptor instead.
+func (*SessionID) Descriptor() ([]byte, []int) {
 	return file_session_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateResp) GetSessionID() string {
+func (x *SessionID) GetSessionID() string {
 	if x != nil {
 		return x.SessionID
 	}
 	return ""
 }
 
+type Nothing struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Dummy bool `protobuf:"varint,1,opt,name=dummy,proto3" json:"dummy,omitempty"`
+}
+
+func (x *Nothing) Reset() {
+	*x = Nothing{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_session_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Nothing) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Nothing) ProtoMessage() {}
+
+func (x *Nothing) ProtoReflect() protoreflect.Message {
+	mi := &file_session_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Nothing.ProtoReflect.Descriptor instead.
+func (*Nothing) Descriptor() ([]byte, []int) {
+	return file_session_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Nothing) GetDummy() bool {
+	if x != nil {
+		return x.Dummy
+	}
+	return false
+}
+
+type SessionModel struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ID     string `protobuf:"bytes,1,opt,name=ID,json=iD,proto3" json:"ID,omitempty"`
+	UserID int64  `protobuf:"varint,2,opt,name=UserID,json=userID,proto3" json:"UserID,omitempty"`
+}
+
+func (x *SessionModel) Reset() {
+	*x = SessionModel{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_session_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SessionModel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionModel) ProtoMessage() {}
+
+func (x *SessionModel) ProtoReflect() protoreflect.Message {
+	mi := &file_session_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionModel.ProtoReflect.Descriptor instead.
+func (*SessionModel) Descriptor() ([]byte, []int) {
+	return file_session_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SessionModel) GetID() string {
+	if x != nil {
+		return x.ID
+	}
+	return ""
+}
+
+func (x *SessionModel) GetUserID() int64 {
+	if x != nil {
+		return x.UserID
+	}
+	return 0
+}
+
 var File_session_proto protoreflect.FileDescriptor
 
 var file_session_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
-	0x07, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x23, 0x0a, 0x09, 0x43, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x71, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x44, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x44, 0x22, 0x2a, 0x0a,
-	0x0a, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x53,
-	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
-	0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x32, 0x3e, 0x0a, 0x07, 0x53, 0x65, 0x73,
-	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x33, 0x0a, 0x06, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x12, 0x12,
-	0x2e, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52,
-	0x65, 0x71, 0x1a, 0x13, 0x2e, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x42, 0x0b, 0x5a, 0x09, 0x2e, 0x3b, 0x73,
-	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x07, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x20, 0x0a, 0x06, 0x55, 0x73, 0x65, 0x72,
+	0x49, 0x44, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x44, 0x22, 0x29, 0x0a, 0x09, 0x53, 0x65,
+	0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x12, 0x1c, 0x0a, 0x09, 0x53, 0x65, 0x73, 0x73, 0x69,
+	0x6f, 0x6e, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x65, 0x73, 0x73,
+	0x69, 0x6f, 0x6e, 0x49, 0x44, 0x22, 0x1f, 0x0a, 0x07, 0x4e, 0x6f, 0x74, 0x68, 0x69, 0x6e, 0x67,
+	0x12, 0x14, 0x0a, 0x05, 0x64, 0x75, 0x6d, 0x6d, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x05, 0x64, 0x75, 0x6d, 0x6d, 0x79, 0x22, 0x36, 0x0a, 0x0c, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f,
+	0x6e, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x02, 0x69, 0x44, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x44,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x44, 0x32, 0xa0,
+	0x01, 0x0a, 0x07, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x2f, 0x0a, 0x06, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x12, 0x0f, 0x2e, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x55,
+	0x73, 0x65, 0x72, 0x49, 0x44, 0x1a, 0x12, 0x2e, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e,
+	0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x22, 0x00, 0x12, 0x30, 0x0a, 0x06, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x12, 0x2e, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e,
+	0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x1a, 0x10, 0x2e, 0x73, 0x65, 0x73, 0x73,
+	0x69, 0x6f, 0x6e, 0x2e, 0x4e, 0x6f, 0x74, 0x68, 0x69, 0x6e, 0x67, 0x22, 0x00, 0x12, 0x32, 0x0a,
+	0x03, 0x47, 0x65, 0x74, 0x12, 0x12, 0x2e, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x53,
+	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x1a, 0x15, 0x2e, 0x73, 0x65, 0x73, 0x73, 0x69,
+	0x6f, 0x6e, 0x2e, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x22,
+	0x00, 0x42, 0x0b, 0x5a, 0x09, 0x2e, 0x3b, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -152,16 +266,22 @@ func file_session_proto_rawDescGZIP() []byte {
 	return file_session_proto_rawDescData
 }
 
-var file_session_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_session_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_session_proto_goTypes = []interface{}{
-	(*CreateReq)(nil),  // 0: session.CreateReq
-	(*CreateResp)(nil), // 1: session.CreateResp
+	(*UserID)(nil),       // 0: session.UserID
+	(*SessionID)(nil),    // 1: session.SessionID
+	(*Nothing)(nil),      // 2: session.Nothing
+	(*SessionModel)(nil), // 3: session.SessionModel
 }
 var file_session_proto_depIdxs = []int32{
-	0, // 0: session.Session.Create:input_type -> session.CreateReq
-	1, // 1: session.Session.Create:output_type -> session.CreateResp
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 0: session.Session.Create:input_type -> session.UserID
+	1, // 1: session.Session.Delete:input_type -> session.SessionID
+	1, // 2: session.Session.Get:input_type -> session.SessionID
+	1, // 3: session.Session.Create:output_type -> session.SessionID
+	2, // 4: session.Session.Delete:output_type -> session.Nothing
+	3, // 5: session.Session.Get:output_type -> session.SessionModel
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -174,7 +294,7 @@ func file_session_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_session_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateReq); i {
+			switch v := v.(*UserID); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -186,7 +306,31 @@ func file_session_proto_init() {
 			}
 		}
 		file_session_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateResp); i {
+			switch v := v.(*SessionID); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_session_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Nothing); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_session_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SessionModel); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -204,7 +348,7 @@ func file_session_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_session_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -230,7 +374,9 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SessionClient interface {
-	Create(ctx context.Context, in *CreateReq, opts ...grpc.CallOption) (*CreateResp, error)
+	Create(ctx context.Context, in *UserID, opts ...grpc.CallOption) (*SessionID, error)
+	Delete(ctx context.Context, in *SessionID, opts ...grpc.CallOption) (*Nothing, error)
+	Get(ctx context.Context, in *SessionID, opts ...grpc.CallOption) (*SessionModel, error)
 }
 
 type sessionClient struct {
@@ -241,9 +387,27 @@ func NewSessionClient(cc grpc.ClientConnInterface) SessionClient {
 	return &sessionClient{cc}
 }
 
-func (c *sessionClient) Create(ctx context.Context, in *CreateReq, opts ...grpc.CallOption) (*CreateResp, error) {
-	out := new(CreateResp)
+func (c *sessionClient) Create(ctx context.Context, in *UserID, opts ...grpc.CallOption) (*SessionID, error) {
+	out := new(SessionID)
 	err := c.cc.Invoke(ctx, "/session.Session/Create", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sessionClient) Delete(ctx context.Context, in *SessionID, opts ...grpc.CallOption) (*Nothing, error) {
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, "/session.Session/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sessionClient) Get(ctx context.Context, in *SessionID, opts ...grpc.CallOption) (*SessionModel, error) {
+	out := new(SessionModel)
+	err := c.cc.Invoke(ctx, "/session.Session/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -252,15 +416,23 @@ func (c *sessionClient) Create(ctx context.Context, in *CreateReq, opts ...grpc.
 
 // SessionServer is the server API for Session service.
 type SessionServer interface {
-	Create(context.Context, *CreateReq) (*CreateResp, error)
+	Create(context.Context, *UserID) (*SessionID, error)
+	Delete(context.Context, *SessionID) (*Nothing, error)
+	Get(context.Context, *SessionID) (*SessionModel, error)
 }
 
 // UnimplementedSessionServer can be embedded to have forward compatible implementations.
 type UnimplementedSessionServer struct {
 }
 
-func (*UnimplementedSessionServer) Create(context.Context, *CreateReq) (*CreateResp, error) {
+func (*UnimplementedSessionServer) Create(context.Context, *UserID) (*SessionID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+}
+func (*UnimplementedSessionServer) Delete(context.Context, *SessionID) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (*UnimplementedSessionServer) Get(context.Context, *SessionID) (*SessionModel, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
 
 func RegisterSessionServer(s *grpc.Server, srv SessionServer) {
@@ -268,7 +440,7 @@ func RegisterSessionServer(s *grpc.Server, srv SessionServer) {
 }
 
 func _Session_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateReq)
+	in := new(UserID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -280,7 +452,43 @@ func _Session_Create_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/session.Session/Create",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SessionServer).Create(ctx, req.(*CreateReq))
+		return srv.(SessionServer).Create(ctx, req.(*UserID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Session_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.Session/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionServer).Delete(ctx, req.(*SessionID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Session_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.Session/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionServer).Get(ctx, req.(*SessionID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -292,6 +500,14 @@ var _Session_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Create",
 			Handler:    _Session_Create_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _Session_Delete_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _Session_Get_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

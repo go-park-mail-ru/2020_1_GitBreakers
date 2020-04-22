@@ -1,27 +1,38 @@
 package main
 
 import (
+	"github.com/asaskevich/govalidator"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	session "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery/grpc"
 	redisRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository/redis"
 	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
 	"github.com/go-redis/redis/v7"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 )
 
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
+	govalidator.SetFieldsRequiredByDefault(true)
+}
+
 func main() {
 	s := grpc.NewServer()
+	conf := config.New()
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // use default Addr
-		Password: "",               // no password set
-		DB:       0,                // use default db
+		Addr:     conf.REDIS_ADDR, // use default Addr
+		Password: conf.REDIS_PASS, // no password set
+		DB:       0,               // use default db
 	})
+
 	sessRepos := redisRepo.NewSessionRedis(redisClient, "codehub/session/")
 	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
-	srv := &session.GRPCServer{&sessUCase}
 
-	session.RegisterSessionServer(s, srv)
+	session.NewSessServer(s, &sessUCase)
 
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {
