@@ -29,7 +29,7 @@ func (GD *UCCodeHub) CreateIssue(issue models.Issue) error {
 		return err
 	}
 
-	if permis == perm.WriteAccess() || permis == perm.AdminAccess() {
+	if permis != perm.NoAccess() {//can create if repo not private
 		return GD.Repo.CreateIssue(issue)
 	} else {
 		return entityerrors.AccessDenied()

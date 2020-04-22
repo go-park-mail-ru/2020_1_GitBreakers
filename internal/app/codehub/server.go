@@ -18,7 +18,6 @@ import (
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
-	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -86,21 +85,6 @@ func StartNew() {
 			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     conf.REDIS_ADDR, // use default Addr
-		Password: conf.REDIS_PASS, // no password set
-		DB:       0,               // use default db
-	})
-
-	res, err := redisClient.Ping().Result()
-	if err != nil {
-		msg := fmt.Sprintln("error with redis:", err)
-		customLogger.Error(msg)
-		log.Fatal(msg)
-	} else {
-		customLogger.Println("Connected to redis:", res)
-	}
-
 	r.Use(middleware.JsonContentTypeMiddleware, middleware.ProtectHeadersMiddleware)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
@@ -109,25 +93,25 @@ func StartNew() {
 		false,
 		conf.COOKIE_EXPIRE_HOURS*3600)
 
-	withCsrfRouter := r.PathPrefix("").Subrouter()
-	withCsrfRouter.Use(csrfMiddleware)
+	CsrfRouter := r.PathPrefix("").Subrouter()
+	CsrfRouter.Use(csrfMiddleware)
 
-	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, redisClient, customLogger, conf)
+	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
 	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
-	withCsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
+	CsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
 	r.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
-	withCsrfRouter.HandleFunc("/users/profile", userSetHandler.Update).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
 	r.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
-	withCsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 	r.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
 	r.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
-	withCsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 
 	r.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
@@ -135,12 +119,12 @@ func StartNew() {
 	r.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
-	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
-	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
 	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
-	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
-	r.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
 	r.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 	//
 	//r.HandleFunc("/repo/news", nil).Methods(http.MethodGet)
@@ -156,7 +140,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
+func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
 	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}

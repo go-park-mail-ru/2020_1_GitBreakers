@@ -154,7 +154,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	newIssue.AuthorID = userID //чтобы автора не подменяли
 
-	oldIssue, err := GD.CodeHubUC.GetIssue(newIssue.AuthorID, newIssue.AuthorID)
+	oldIssue, err := GD.CodeHubUC.GetIssue(newIssue.ID, newIssue.AuthorID)
 
 	switch {
 	case err == entityerrors.AccessDenied():

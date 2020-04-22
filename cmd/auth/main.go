@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	session "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery/grpc"
@@ -28,6 +29,14 @@ func main() {
 		Password: conf.REDIS_PASS, // no password set
 		DB:       0,               // use default db
 	})
+	res, err := redisClient.Ping().Result()
+
+	if err != nil {
+		msg := fmt.Sprintln("error with redis:", err)
+		log.Fatal(msg)
+	} else {
+		log.Println(res)
+	}
 
 	sessRepos := redisRepo.NewSessionRedis(redisClient, "codehub/session/")
 	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
