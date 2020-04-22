@@ -132,14 +132,14 @@ func StartNew() {
 	r.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
-	//r.HandleFunc("/repo/issues", nil).Methods(http.MethodPost)
-	//r.HandleFunc("/repo/issues", nil).Methods(http.MethodPut)
-	//r.HandleFunc("/repo/issues", nil).Methods(http.MethodGet)
-	//r.HandleFunc("/repo/issues", nil).Methods(http.MethodDelete)
+	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodPost)
+	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodPut)
+	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodGet)
+	r.HandleFunc("/func/repo/{repoID}/issues", nil).Methods(http.MethodDelete)
 	//
-	//r.HandleFunc("/repo/stars", nil).Methods(http.MethodPost)
-	//r.HandleFunc("/repo/stars", nil).Methods(http.MethodGet)
-	//r.HandleFunc("/repo/stars", nil).Methods(http.MethodDelete)
+	r.HandleFunc("/func/repo/{repoID}/stars", nil).Methods(http.MethodPost)
+	r.HandleFunc("/func/repo/{repoID}/stars", nil).Methods(http.MethodGet)
+	r.HandleFunc("/func/repo/{repoID}/stars", nil).Methods(http.MethodDelete)
 	//
 	//r.HandleFunc("/repo/news", nil).Methods(http.MethodGet)
 
