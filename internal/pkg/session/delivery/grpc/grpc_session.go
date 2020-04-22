@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"time"
@@ -29,12 +30,12 @@ func (h *SessServer) Create(ctx context.Context, req *UserID) (*SessionID, error
 	}
 	return &SessionID{SessionID: sessID}, nil
 }
-func (h *SessServer) Delete(ctx context.Context, req *SessionID) (*Nothing, error) {
+func (h *SessServer) Delete(ctx context.Context, req *SessionID) (*empty.Empty, error) {
 	err := h.UC.Delete(req.GetSessionID())
 	if err != nil {
-		return &Nothing{Dummy: false}, err
+		return &empty.Empty{}, err
 	}
-	return &Nothing{Dummy: true}, nil
+	return &empty.Empty{}, nil
 }
 func (h *SessServer) Get(ctx context.Context, req *SessionID) (*SessionModel, error) {
 	sess, err := h.UC.GetByID(req.GetSessionID())

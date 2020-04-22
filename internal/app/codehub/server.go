@@ -13,7 +13,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	http2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery/http"
-	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
+	http3 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
@@ -140,7 +140,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
+func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*http3.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
 	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
@@ -168,7 +168,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		Client:     &sessClient,
 	}
 
-	userDelivery := userDeliv.UserHttp{
+	userDelivery := http3.UserHttp{
 		SessHttp: &sessDelivery,
 		UserUC:   &userUCase,
 		Logger:   &logger,
