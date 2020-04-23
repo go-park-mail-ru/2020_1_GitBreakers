@@ -22,7 +22,7 @@ func NewSessServer(gserver *grpc.Server, SessionUcase session.UCSession) {
 	reflection.Register(gserver)
 }
 func (h *SessServer) Create(ctx context.Context, req *UserID) (*SessionID, error) {
-	sess := models.Session{UserID: int(req.GetUserID())}
+	sess := models.Session{UserID: req.GetUserID()}
 	//todo duration in hardcode
 	sessID, err := h.UC.Create(sess, 48*time.Hour)
 	if err != nil {

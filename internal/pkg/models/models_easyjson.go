@@ -38,7 +38,7 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		}
 		switch key {
 		case "id":
-			out.ID = int(in.Int())
+			out.ID = int64(in.Int64())
 		case "password":
 			out.Password = string(in.String())
 		case "name":
@@ -66,7 +66,7 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 	{
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
-		out.Int(int(in.ID))
+		out.Int64(int64(in.ID))
 	}
 	if in.Password != "" {
 		const prefix string = ",\"password\":"
@@ -139,7 +139,7 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		}
 		switch key {
 		case "repo":
-			out.RepoID = int(in.Int())
+			out.RepoID = int64(in.Int64())
 		case "vote":
 			out.Vote = bool(in.Bool())
 		default:
@@ -164,7 +164,7 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int(int(in.RepoID))
+		out.Int64(int64(in.RepoID))
 	}
 	{
 		const prefix string = ",\"vote\":"
@@ -292,7 +292,7 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		case "ID":
 			out.ID = string(in.String())
 		case "UserID":
-			out.UserID = int(in.Int())
+			out.UserID = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -315,7 +315,7 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 	{
 		const prefix string = ",\"UserID\":"
 		out.RawString(prefix)
-		out.Int(int(in.UserID))
+		out.Int64(int64(in.UserID))
 	}
 	out.RawByte('}')
 }
@@ -495,11 +495,11 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		}
 		switch key {
 		case "id":
-			out.ID = int(in.Int())
-		case "author":
-			out.AuthorID = int(in.Int())
-		case "repo":
-			out.RepoID = int(in.Int())
+			out.ID = int64(in.Int64())
+		case "author_id":
+			out.AuthorID = int64(in.Int64())
+		case "repo_id":
+			out.RepoID = int64(in.Int64())
 		case "title":
 			out.Title = string(in.String())
 		case "message":
@@ -508,7 +508,7 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			out.Label = string(in.String())
 		case "is_closed":
 			out.IsClosed = bool(in.Bool())
-		case "omitempty":
+		case "created_at":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.CreatedAt).UnmarshalJSON(data))
 			}
@@ -529,17 +529,17 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 	{
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
-		out.Int(int(in.ID))
+		out.Int64(int64(in.ID))
 	}
 	{
-		const prefix string = ",\"author\":"
+		const prefix string = ",\"author_id\":"
 		out.RawString(prefix)
-		out.Int(int(in.AuthorID))
+		out.Int64(int64(in.AuthorID))
 	}
 	{
-		const prefix string = ",\"repo\":"
+		const prefix string = ",\"repo_id\":"
 		out.RawString(prefix)
-		out.Int(int(in.RepoID))
+		out.Int64(int64(in.RepoID))
 	}
 	{
 		const prefix string = ",\"title\":"
@@ -561,8 +561,8 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		out.RawString(prefix)
 		out.Bool(bool(in.IsClosed))
 	}
-	{
-		const prefix string = ",\"omitempty\":"
+	if true {
+		const prefix string = ",\"created_at\":"
 		out.RawString(prefix)
 		out.Raw((in.CreatedAt).MarshalJSON())
 	}

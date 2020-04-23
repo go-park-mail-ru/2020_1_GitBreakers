@@ -73,7 +73,7 @@ func StartNew() {
 		}
 	}()
 
-	db.SetMaxOpenConns(conf.MAX_DB_OPEN_CONN) //10 по дефолту
+	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
 	r := mux.NewRouter()
 	c := cors.New(cors.Options{

@@ -30,7 +30,7 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := res.(int)
+	userID := res.(int64)
 	newRepo := &gitmodels.Repository{IsPublic: true}
 	if err := json.NewDecoder(r.Body).Decode(newRepo); err != nil {
 		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
@@ -110,7 +110,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 	repo, err := GD.UC.GetRepoList(userName, &userRealID)
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
-		GD.Logger.HttpInfo(r.Context(), "access denied for user "+strconv.Itoa(userRealID), http.StatusForbidden)
+		GD.Logger.HttpInfo(r.Context(), "access denied for user "+strconv.Itoa(int(userRealID)), http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -289,8 +289,8 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
 }
 
-func (GD *GitDelivery) idToIntPointer(id interface{}) *int {
-	intID, ok := id.(int)
+func (GD *GitDelivery) idToIntPointer(id interface{}) *int64 {
+	intID, ok := id.(int64)
 	if !ok {
 		return nil
 	} else {

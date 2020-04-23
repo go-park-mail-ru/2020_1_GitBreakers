@@ -38,8 +38,8 @@ func (UC *UCUser) Delete(user models.User) error {
 	return nil
 }
 
-func (UC *UCUser) Update(userid int, newUserData models.User) error {
-	oldUserData, err := UC.RepUser.GetUserByIDWithPass(userid)
+func (UC *UCUser) Update(userID int64, newUserData models.User) error {
+	oldUserData, err := UC.RepUser.GetUserByIDWithPass(userID)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
@@ -71,13 +71,13 @@ func (UC *UCUser) Update(userid int, newUserData models.User) error {
 func (UC *UCUser) GetByLogin(login string) (models.User, error) {
 	return UC.RepUser.GetByLoginWithoutPass(login)
 }
-func (UC *UCUser) GetByID(userId int) (models.User, error) {
-	return UC.RepUser.GetUserByIDWithoutPass(userId)
+func (UC *UCUser) GetByID(userID int64) (models.User, error) {
+	return UC.RepUser.GetUserByIDWithoutPass(userID)
 }
 func (UC *UCUser) CheckPass(login string, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(login, pass)
 }
-func (UC *UCUser) UploadAvatar(UserID int, fileName string, fileData []byte) error {
+func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) error {
 
 	if err := checkFileContentType(fileData); err != nil {
 		return err

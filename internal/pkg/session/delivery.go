@@ -6,7 +6,7 @@ import (
 )
 
 type SessDelivery interface {
-	Create(userID int) (http.Cookie, error)
+	Create(userID int64) (http.Cookie, error)
 	Delete(sessID string) error
 	GetBySessID(sessionID string) (models.Session, error)
 }

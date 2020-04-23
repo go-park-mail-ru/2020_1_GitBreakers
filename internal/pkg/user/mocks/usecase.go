@@ -65,7 +65,7 @@ func (mr *MockUCUserMockRecorder) Delete(user interface{}) *gomock.Call {
 }
 
 // Update mocks base method
-func (m *MockUCUser) Update(userID int, user models.User) error {
+func (m *MockUCUser) Update(userID int64, user models.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", userID, user)
 	ret0, _ := ret[0].(error)
@@ -94,7 +94,7 @@ func (mr *MockUCUserMockRecorder) GetByLogin(login interface{}) *gomock.Call {
 }
 
 // GetByID mocks base method
-func (m *MockUCUser) GetByID(userID int) (models.User, error) {
+func (m *MockUCUser) GetByID(userID int64) (models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", userID)
 	ret0, _ := ret[0].(models.User)
@@ -124,7 +124,7 @@ func (mr *MockUCUserMockRecorder) CheckPass(login, pass interface{}) *gomock.Cal
 }
 
 // UploadAvatar mocks base method
-func (m *MockUCUser) UploadAvatar(UserID int, fileName string, fileData []byte) error {
+func (m *MockUCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UploadAvatar", UserID, fileName, fileData)
 	ret0, _ := ret[0].(error)

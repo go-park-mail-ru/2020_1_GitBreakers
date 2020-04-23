@@ -12,7 +12,7 @@ type SessionHttp struct {
 	Client     *clients.SessClient
 }
 
-func (UC *SessionHttp) Create(userID int) (http.Cookie, error) {
+func (UC *SessionHttp) Create(userID int64) (http.Cookie, error) {
 	cretedSess, err := UC.Client.CreateSess(userID)
 	if err != nil {
 		return http.Cookie{}, err

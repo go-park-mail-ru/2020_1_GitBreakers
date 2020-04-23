@@ -86,7 +86,7 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := res.(int)
+	userId := res.(int64)
 	newUserData := models.User{}
 
 	if err := json.NewDecoder(r.Body).Decode(&newUserData); err != nil {
@@ -191,7 +191,7 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := res.(int)
+	userID := res.(int64)
 	User, err := UsHttp.UserUC.GetByID(userID)
 
 	switch {
@@ -248,9 +248,9 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currUser := r.Context().Value("UserID")
+	currUser := r.Context().Value("UserID").(int64)
 
-	if err := UsHttp.UserUC.UploadAvatar(currUser.(int), header.Filename, binaryImage.Bytes()); err != nil {
+	if err := UsHttp.UserUC.UploadAvatar(currUser, header.Filename, binaryImage.Bytes()); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

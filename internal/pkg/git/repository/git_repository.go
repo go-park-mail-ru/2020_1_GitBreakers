@@ -69,7 +69,7 @@ func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
 	return http.DetectContentType(buffer), nil
 }
 
-func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, error) {
+func isRepoExistsInDb(queryer queryer, ownerId int64, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
@@ -87,7 +87,7 @@ func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
 	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepoPostfix
 }
 
-func (repo Repository) createRepoPath(queryer queryer, ownerId int, repoName string) (string, error) {
+func (repo Repository) createRepoPath(queryer queryer, ownerId int64, repoName string) (string, error) {
 	if repoName == "" {
 		return "", entityerrors.Invalid()
 	}
@@ -168,7 +168,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	return newRepoId, nil
 }
 
-func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error) {
+func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error) {
 	rows, err := repo.db.Query(
 		` SELECT 	repo.id,
 			   			repo.owner_id,
@@ -217,7 +217,7 @@ func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, o
 	return gitRepos, nil
 }
 
-func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error) {
+func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit int64) ([]git.Repository, error) {
 	rows, err := repo.db.Query(`
 		SELECT 	repo.id,
 				repo.owner_id,
@@ -299,7 +299,7 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 	return gitRepo, nil
 }
 
-func (repo Repository) CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error) {
+func (repo Repository) CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error) {
 	var haveAccess bool
 	err := repo.db.QueryRow(`
 		SELECT EXISTS(
@@ -357,7 +357,7 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 	return gitRepoBranches, nil
 }
 
-func (repo Repository) GetByID(id int) (git.Repository, error) {
+func (repo Repository) GetByID(id int64) (git.Repository, error) {
 	var gitRepo git.Repository
 	err := repo.db.QueryRow(`
 			SELECT id,
@@ -478,7 +478,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 	return filesInCommit, nil
 }
 
-func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int) ([]git.Commit, error) {
+func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int64) ([]git.Commit, error) {
 	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
 	switch {
 	case err == gogit.ErrRepositoryNotExists:
@@ -534,7 +534,7 @@ func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash st
 	return gitCommits, nil
 }
 
-func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) {
+func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64) ([]git.Commit, error) {
 	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
 	switch {
 	case err == gogit.ErrRepositoryNotExists:

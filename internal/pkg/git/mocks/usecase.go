@@ -34,7 +34,7 @@ func (m *MockUseCase) EXPECT() *MockUseCaseMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockUseCase) Create(userID int, repos *git.Repository) error {
+func (m *MockUseCase) Create(userID int64, repos *git.Repository) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", userID, repos)
 	ret0, _ := ret[0].(error)
@@ -48,7 +48,7 @@ func (mr *MockUseCaseMockRecorder) Create(userID, repos interface{}) *gomock.Cal
 }
 
 // GetRepo mocks base method
-func (m *MockUseCase) GetRepo(userName, repoName string, requestUserID *int) (git.Repository, error) {
+func (m *MockUseCase) GetRepo(userName string, repoName string, requestUserID *int64) (git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepo", userName, repoName, requestUserID)
 	ret0, _ := ret[0].(git.Repository)
@@ -63,7 +63,7 @@ func (mr *MockUseCaseMockRecorder) GetRepo(userName, repoName, requestUserID int
 }
 
 // GetRepoList mocks base method
-func (m *MockUseCase) GetRepoList(userName string, requestUserID *int) ([]git.Repository, error) {
+func (m *MockUseCase) GetRepoList(userName string, requestUserID *int64) ([]git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepoList", userName, requestUserID)
 	ret0, _ := ret[0].([]git.Repository)
@@ -78,7 +78,7 @@ func (mr *MockUseCaseMockRecorder) GetRepoList(userName, requestUserID interface
 }
 
 // GetBranchList mocks base method
-func (m *MockUseCase) GetBranchList(requestUserID *int, userName, repoName string) ([]git.Branch, error) {
+func (m *MockUseCase) GetBranchList(requestUserID *int64, userName string, repoName string) ([]git.Branch, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBranchList", requestUserID, userName, repoName)
 	ret0, _ := ret[0].([]git.Branch)
@@ -93,7 +93,7 @@ func (mr *MockUseCaseMockRecorder) GetBranchList(requestUserID, userName, repoNa
 }
 
 // FilesInCommitByPath mocks base method
-func (m *MockUseCase) FilesInCommitByPath(requset git.FilesCommitRequest, requesrUserID *int) ([]git.FileInCommit, error) {
+func (m *MockUseCase) FilesInCommitByPath(requset git.FilesCommitRequest, requesrUserID *int64) ([]git.FileInCommit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FilesInCommitByPath", requset, requesrUserID)
 	ret0, _ := ret[0].([]git.FileInCommit)
@@ -108,7 +108,7 @@ func (mr *MockUseCaseMockRecorder) FilesInCommitByPath(requset, requesrUserID in
 }
 
 // GetCommitsByCommitHash mocks base method
-func (m *MockUseCase) GetCommitsByCommitHash(params git.CommitRequest, requestUserID *int) ([]git.Commit, error) {
+func (m *MockUseCase) GetCommitsByCommitHash(params git.CommitRequest, requestUserID *int64) ([]git.Commit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommitsByCommitHash", params, requestUserID)
 	ret0, _ := ret[0].([]git.Commit)
@@ -123,7 +123,7 @@ func (mr *MockUseCaseMockRecorder) GetCommitsByCommitHash(params, requestUserID 
 }
 
 // GetCommitsByBranchName mocks base method
-func (m *MockUseCase) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int, requestUserID *int) ([]git.Commit, error) {
+func (m *MockUseCase) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64, requestUserID *int64) ([]git.Commit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommitsByBranchName", userLogin, repoName, branchName, offset, limit, requestUserID)
 	ret0, _ := ret[0].([]git.Commit)
@@ -138,7 +138,7 @@ func (mr *MockUseCaseMockRecorder) GetCommitsByBranchName(userLogin, repoName, b
 }
 
 // GetFileByPath mocks base method
-func (m *MockUseCase) GetFileByPath(params git.FilesCommitRequest, requestUserID *int) (git.FileCommitted, error) {
+func (m *MockUseCase) GetFileByPath(params git.FilesCommitRequest, requestUserID *int64) (git.FileCommitted, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFileByPath", params, requestUserID)
 	ret0, _ := ret[0].(git.FileCommitted)

@@ -37,9 +37,9 @@ func easyjson97a49f66DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		}
 		switch key {
 		case "id":
-			out.ID = int(in.Int())
+			out.ID = int64(in.Int64())
 		case "owner_id":
-			out.OwnerID = int(in.Int())
+			out.OwnerID = int64(in.Int64())
 		case "name":
 			out.Name = string(in.String())
 		case "description":
@@ -69,12 +69,12 @@ func easyjson97a49f66EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 	{
 		const prefix string = ",\"id\":"
 		out.RawString(prefix[1:])
-		out.Int(int(in.ID))
+		out.Int64(int64(in.ID))
 	}
 	{
 		const prefix string = ",\"owner_id\":"
 		out.RawString(prefix)
-		out.Int(int(in.OwnerID))
+		out.Int64(int64(in.OwnerID))
 	}
 	{
 		const prefix string = ",\"name\":"
@@ -421,9 +421,9 @@ func easyjson97a49f66DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		case "commit_hash":
 			out.CommitHash = string(in.String())
 		case "offset":
-			out.Offset = int(in.Int())
+			out.Offset = int64(in.Int64())
 		case "limit":
-			out.Limit = int(in.Int())
+			out.Limit = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -456,12 +456,12 @@ func easyjson97a49f66EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 	{
 		const prefix string = ",\"offset\":"
 		out.RawString(prefix)
-		out.Int(int(in.Offset))
+		out.Int64(int64(in.Offset))
 	}
 	{
 		const prefix string = ",\"limit\":"
 		out.RawString(prefix)
-		out.Int(int(in.Limit))
+		out.Int64(int64(in.Limit))
 	}
 	out.RawByte('}')
 }

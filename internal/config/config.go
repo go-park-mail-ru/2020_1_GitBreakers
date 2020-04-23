@@ -11,7 +11,7 @@ type Config struct {
 	POSTGRES_USER       string
 	POSTGRES_PASS       string
 	POSTGRES_DBNAME     string
-	MAX_DB_OPEN_CONN    int
+	MAX_DB_OPEN_CONN    int64
 	MAIN_LISTEN_PORT    string
 	ALLOWED_ORIGINS     []string
 	REDIS_PASS          string
@@ -19,7 +19,7 @@ type Config struct {
 	HOST_TO_SAVE        string
 	GIT_USER_REPOS_DIR  string
 	CSRF_SECRET_KEY     string
-	COOKIE_EXPIRE_HOURS int
+	COOKIE_EXPIRE_HOURS int64
 }
 
 // New returns a new Config struct(!!!пароль не задан по дефолту и csrf secret key)
@@ -52,10 +52,10 @@ func getEnv(key string, defaultVal string) string {
 }
 
 //вернет переменную окружения int
-func getEnvAsInt(name string, defaultVal int) int {
+func getEnvAsInt(name string, defaultVal int64) int64 {
 	valueStr := getEnv(name, "")
 	if value, err := strconv.Atoi(valueStr); err == nil {
-		return value
+		return int64(value)
 	}
 
 	return defaultVal

@@ -17,6 +17,6 @@ type CommitRequest struct {
 	UserLogin  string `json:"user_login"`
 	RepoName   string `json:"repo_name"`
 	CommitHash string `json:"commit_hash"`
-	Offset     int    `json:"offset" schema:"offset"`
-	Limit      int    `json:"limit" schema:"limit"`
+	Offset     int64    `json:"offset" schema:"offset"`
+	Limit      int64    `json:"limit" schema:"limit"`
 }

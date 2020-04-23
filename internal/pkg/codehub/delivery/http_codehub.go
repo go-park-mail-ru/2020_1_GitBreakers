@@ -26,7 +26,7 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int)
+	userID, ok := res.(int64)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -60,7 +60,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int)
+	userID, ok := res.(int64)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -91,7 +91,7 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int)
+	userID, ok := res.(int64)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -138,7 +138,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int)
+	userID, ok := res.(int64)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -210,12 +210,12 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := res.(int)
+	userID, ok := res.(int64)
 	if !ok {
 		userID = -1 //соответствует неавторизованному юзеру
 	}
 
-	issueslist, err := GD.CodeHubUC.GetIssuesList(repoID, userID)
+	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID)
 
 	switch {
 	case err == entityerrors.AccessDenied():
@@ -256,7 +256,7 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int)
+	userID, ok := res.(int64)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

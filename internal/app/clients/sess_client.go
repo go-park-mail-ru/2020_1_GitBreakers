@@ -21,7 +21,7 @@ func (c *SessClient) Connect() error {
 	c.conn = conn
 	return nil
 }
-func (c *SessClient) CreateSess(UserID int) (string, error) {
+func (c *SessClient) CreateSess(UserID int64) (string, error) {
 	client := session.NewSessionClient(c.conn)
 	UserIDModel := session.UserID{UserID: int64(UserID)}
 	sessIDModel, err := client.Create(context.Background(), &UserIDModel)
@@ -50,6 +50,6 @@ func (c *SessClient) GetSess(SessID string) (models.Session, error) {
 	}
 	return models.Session{
 		ID:     SessModel.GetID(),
-		UserID: int(SessModel.GetUserID()),
+		UserID: SessModel.GetUserID(),
 	}, nil
 }

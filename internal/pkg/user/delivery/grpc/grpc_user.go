@@ -5,8 +5,10 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"io"
 )
 
 type UserServer struct {
@@ -20,7 +22,7 @@ func NewUserServer(gserver *grpc.Server, UserUseCase user.UCUser) {
 }
 func (h *UserServer) Create(ctx context.Context, in *UserModel) (*empty.Empty, error) {
 	User := models.User{
-		ID:       int(in.GetId()),
+		ID:       in.GetId(),
 		Password: in.GetPassword(),
 		Name:     in.GetName(),
 		Login:    in.GetLogin(),
@@ -36,7 +38,7 @@ func (h *UserServer) GetByLogin(ctx context.Context, in *LoginModel) (*UserModel
 	return &userModel, err
 }
 func (h *UserServer) UpdateUser(ctx context.Context, in *UserUpdateModel) (*empty.Empty, error) {
-	UserID := int(in.GetUserID())
+	UserID := in.GetUserID()
 	User := h.transfToModelsUser(in.GetUserData())
 	return nil, h.UC.Update(UserID, User)
 }
@@ -45,18 +47,33 @@ func (h *UserServer) CheckPass(ctx context.Context, in *CheckPassModel) (*CheckP
 	return &CheckPassResp{IsCorrect: isCorrect}, err
 }
 func (h *UserServer) GetByID(ctx context.Context, in *UserIDModel) (*UserModel, error) {
-	User, err := h.UC.GetByID(int(in.GetUserID()))
+	User, err := h.UC.GetByID(in.GetUserID())
 	userModel := h.transfToUserModelGRPC(&User)
 	return &userModel, err
 }
-func (h *UserServer) UploadAvatar(UserGrpc_UploadAvatarServer) error {
-	return nil
+func (h *UserServer) UploadAvatar(stream UserGrpc_UploadAvatarServer) error {
+	for {
+		_, err := stream.Recv()
+		switch {
+		case err == io.EOF:
+			goto END
+		case err != nil:
+			err = errors.Wrapf(err,
+				"failed unexpectadely while reading chunks from stream")
+			return err
+		}
+	}
+END:
+	// once the transmission finished, send the
+	// confirmation
+	err := stream.SendAndClose(&empty.Empty{})
+	return err
 }
 
 //функции вспомогательные для преобразования from/to models.User UserModel(GRPC)
 func (h *UserServer) transfToModelsUser(in *UserModel) models.User {
 	return models.User{
-		ID:       int(in.GetId()),
+		ID:       in.GetId(),
 		Password: in.GetPassword(),
 		Name:     in.GetName(),
 		Login:    in.GetLogin(),

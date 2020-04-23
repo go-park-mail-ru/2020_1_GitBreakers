@@ -19,7 +19,7 @@ func (GD *UCCodeHub) ModifyStar(star models.Star) error {
 	}
 }
 
-func (GD *UCCodeHub) GetStarredRepo(userID int) (models.RepoSet, error) {
+func (GD *UCCodeHub) GetStarredRepo(userID int64) (models.RepoSet, error) {
 	return GD.Repo.GetStarredRepo(userID)
 }
 
@@ -50,7 +50,7 @@ func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
 
 }
 
-func (GD *UCCodeHub) CloseIssue(issueID int, userID int) error {
+func (GD *UCCodeHub) CloseIssue(issueID int64, userID int64) error {
 	permis, err := GD.Repo.CheckAccessIssue(userID, issueID)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (GD *UCCodeHub) CloseIssue(issueID int, userID int) error {
 	}
 }
 
-func (GD *UCCodeHub) GetIssuesList(repoID int, userID int) (models.IssuesSet, error) {
+func (GD *UCCodeHub) GetIssuesList(repoID int64, userID int64) (models.IssuesSet, error) {
 	permis, err := GD.Repo.CheckAccessRepo(userID, repoID)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (GD *UCCodeHub) GetIssuesList(repoID int, userID int) (models.IssuesSet, er
 	}
 }
 
-func (GD *UCCodeHub) GetIssue(issueID int, userID int) (models.Issue, error) {
+func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error) {
 	permis, err := GD.Repo.CheckAccessIssue(userID, issueID)
 	if err != nil {
 		return models.Issue{}, err

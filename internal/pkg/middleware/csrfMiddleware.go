@@ -8,7 +8,7 @@ import (
 
 const CookieName string = "codehub_csrf"
 
-func CreateCsrfMiddleware(secret []byte, trustedOrigins []string, secure bool, maxAge int) func(http.Handler) http.Handler {
+func CreateCsrfMiddleware(secret []byte, trustedOrigins []string, secure bool, maxAge int64) (func(http.Handler) http.Handler) {
 	return csrf.Protect(secret,
 		csrf.RequestHeader(ownCsrf.TokenHeaderName),
 		csrf.TrustedOrigins(trustedOrigins),
@@ -16,6 +16,6 @@ func CreateCsrfMiddleware(secret []byte, trustedOrigins []string, secure bool, m
 		csrf.CookieName(CookieName),
 		csrf.SameSite(csrf.SameSiteNoneMode),
 		csrf.HttpOnly(true),
-		csrf.MaxAge(maxAge),
+		csrf.MaxAge(int(maxAge)),
 		csrf.Path("/"))
 }

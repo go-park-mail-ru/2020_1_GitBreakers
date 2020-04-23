@@ -2,5 +2,5 @@ package models
 
 type Session struct {
 	ID     string
-	UserID int
+	UserID int64
 }

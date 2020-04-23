@@ -34,7 +34,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetByID mocks base method
-func (m *MockRepository) GetByID(id int) (git.Repository, error) {
+func (m *MockRepository) GetByID(id int64) (git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", id)
 	ret0, _ := ret[0].(git.Repository)
@@ -79,7 +79,7 @@ func (mr *MockRepositoryMockRecorder) Create(repos interface{}) *gomock.Call {
 }
 
 // CheckReadAccess mocks base method
-func (m *MockRepository) CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error) {
+func (m *MockRepository) CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckReadAccess", currentUserId, userLogin, repoName)
 	ret0, _ := ret[0].(bool)
@@ -109,7 +109,7 @@ func (mr *MockRepositoryMockRecorder) GetBranchesByName(userLogin, repoName inte
 }
 
 // GetAnyReposByUserLogin mocks base method
-func (m *MockRepository) GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error) {
+func (m *MockRepository) GetAnyReposByUserLogin(userLogin string, offset, limit int64) ([]git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAnyReposByUserLogin", userLogin, offset, limit)
 	ret0, _ := ret[0].([]git.Repository)
@@ -124,7 +124,7 @@ func (mr *MockRepositoryMockRecorder) GetAnyReposByUserLogin(userLogin, offset, 
 }
 
 // GetReposByUserLogin mocks base method
-func (m *MockRepository) GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error) {
+func (m *MockRepository) GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetReposByUserLogin", requesterId, userLogin, offset, limit)
 	ret0, _ := ret[0].([]git.Repository)
@@ -169,7 +169,7 @@ func (mr *MockRepositoryMockRecorder) GetFileByPath(userLogin, repoName, commitH
 }
 
 // GetCommitsByCommitHash mocks base method
-func (m *MockRepository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int) ([]git.Commit, error) {
+func (m *MockRepository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int64) ([]git.Commit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommitsByCommitHash", userLogin, repoName, commitHash, offset, limit)
 	ret0, _ := ret[0].([]git.Commit)
@@ -184,7 +184,7 @@ func (mr *MockRepositoryMockRecorder) GetCommitsByCommitHash(userLogin, repoName
 }
 
 // GetCommitsByBranchName mocks base method
-func (m *MockRepository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) {
+func (m *MockRepository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64) ([]git.Commit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommitsByBranchName", userLogin, repoName, branchName, offset, limit)
 	ret0, _ := ret[0].([]git.Commit)
