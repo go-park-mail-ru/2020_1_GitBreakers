@@ -7,7 +7,9 @@ package mocks
 import (
 	models "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gomock "github.com/golang/mock/gomock"
+	"io"
 	multipart "mime/multipart"
+	"os"
 	reflect "reflect"
 )
 
@@ -122,9 +124,9 @@ func (mr *MockUCUserMockRecorder) CheckPass(login, pass interface{}) *gomock.Cal
 }
 
 // UploadAvatar mocks base method
-func (m *MockUCUser) UploadAvatar(User models.User, fileName *multipart.FileHeader, file multipart.File) error {
+func (m *MockUCUser) UploadAvatar(UserID int, fileName string, fileData []byte) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadAvatar", User, fileName, file)
+	ret := m.ctrl.Call(m, "UploadAvatar", UserID, fileName, fileData)
 	ret0, _ := ret[0].(error)
 	return ret0
 }

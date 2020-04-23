@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"io"
 	"net/http"
 	"time"
 )
@@ -239,15 +241,16 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	currUser := r.Context().Value("UserID")
-	User, err := UsHttp.UserUC.GetByID(currUser.(int))
-	if err != nil {
+	binaryImage := bytes.NewBuffer(nil)
+	if _, err := io.Copy(binaryImage, image); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err := UsHttp.UserUC.UploadAvatar(User, header, image); err != nil {
+	currUser := r.Context().Value("UserID")
+
+	if err := UsHttp.UserUC.UploadAvatar(currUser.(int), header.Filename, binaryImage.Bytes()); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
