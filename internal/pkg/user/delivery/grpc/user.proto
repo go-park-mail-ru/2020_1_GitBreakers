@@ -14,13 +14,13 @@ service UserGrpc{
 }
 //использует модель юзера
 message UserAvatarModel{
-  bytes Chunk = 1;
-  UserModel User = 2;
-  string FileName = 3;
+  int64 userID = 1;
+  string fileName = 2;
+  bytes chunk = 3;
 }
 message UserUpdateModel{
-  UserIDModel userID = 1;
-  UserModel UserData = 2;
+  int64 userID = 1;
+  UserModel userData = 2;
 }
 
 message UserIDModel {
@@ -30,7 +30,7 @@ message CheckPassResp{
   bool is_correct = 1;
 }
 message CheckPassModel{
-  LoginModel login = 1;
+  string login = 1;
   string pass = 2;
 }
 message LoginModel{
