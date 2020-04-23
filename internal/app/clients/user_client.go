@@ -83,7 +83,7 @@ func (c *UserClient) CheckPass(login string, pass string) (bool, error) {
 	return false, err
 }
 func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) error {
-	const ChunkSize int64 = 1 << 15
+	const ChunkSize int64 = 1 << 16//64kb
 	stream, err := c.client.UploadAvatar(context.Background())
 	if err != nil {
 		return err
