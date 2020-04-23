@@ -149,6 +149,11 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		logger.Fatal(err, "not connect to auth server")
 	}
 
+	userClient := clients.UserClient{}
+	if err := userClient.Connect(); err != nil {
+		logger.Fatal(err, "not connect to auth server")
+	}
+
 	userUCase := userUC.UCUser{RepUser: &userRepos}
 
 	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
@@ -170,8 +175,8 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 
 	userDelivery := http3.UserHttp{
 		SessHttp: &sessDelivery,
-		UserUC:   &userUCase,
 		Logger:   &logger,
+		UClient:  &userClient,
 	}
 
 	gitDelivery := gitDeliv.GitDelivery{

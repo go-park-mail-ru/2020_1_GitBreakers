@@ -492,7 +492,7 @@ var file_user_proto_rawDesc = []byte{
 	0x65, 0x72, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x6f, 0x64, 0x65, 0x6c,
 	0x22, 0x00, 0x12, 0x45, 0x0a, 0x0c, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x41, 0x76, 0x61, 0x74,
 	0x61, 0x72, 0x12, 0x19, 0x2e, 0x75, 0x73, 0x65, 0x72, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x55, 0x73,
-	0x65, 0x72, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x1a, 0x16, 0x2e,
+	0x65, 0x72, 0x41, 0x76, 0x61, 0x74, 0x61, 0x72, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x1a, 0x16, 0x2e,
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
 	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x28, 0x01, 0x42, 0x0c, 0x5a, 0x0a, 0x2e, 0x3b, 0x75,
 	0x73, 0x65, 0x72, 0x67, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
@@ -528,7 +528,7 @@ var file_user_proto_depIdxs = []int32{
 	1, // 3: usergrpc.UserGrpc.UpdateUser:input_type -> usergrpc.UserUpdateModel
 	4, // 4: usergrpc.UserGrpc.CheckPass:input_type -> usergrpc.CheckPassModel
 	2, // 5: usergrpc.UserGrpc.GetByID:input_type -> usergrpc.UserIDModel
-	1, // 6: usergrpc.UserGrpc.UploadAvatar:input_type -> usergrpc.UserUpdateModel
+	0, // 6: usergrpc.UserGrpc.UploadAvatar:input_type -> usergrpc.UserAvatarModel
 	7, // 7: usergrpc.UserGrpc.Create:output_type -> google.protobuf.Empty
 	6, // 8: usergrpc.UserGrpc.GetByLogin:output_type -> usergrpc.UserModel
 	7, // 9: usergrpc.UserGrpc.UpdateUser:output_type -> google.protobuf.Empty
@@ -736,7 +736,7 @@ func (c *userGrpcClient) UploadAvatar(ctx context.Context, opts ...grpc.CallOpti
 }
 
 type UserGrpc_UploadAvatarClient interface {
-	Send(*UserUpdateModel) error
+	Send(*UserAvatarModel) error
 	CloseAndRecv() (*empty.Empty, error)
 	grpc.ClientStream
 }
@@ -745,7 +745,7 @@ type userGrpcUploadAvatarClient struct {
 	grpc.ClientStream
 }
 
-func (x *userGrpcUploadAvatarClient) Send(m *UserUpdateModel) error {
+func (x *userGrpcUploadAvatarClient) Send(m *UserAvatarModel) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -893,7 +893,7 @@ func _UserGrpc_UploadAvatar_Handler(srv interface{}, stream grpc.ServerStream) e
 
 type UserGrpc_UploadAvatarServer interface {
 	SendAndClose(*empty.Empty) error
-	Recv() (*UserUpdateModel, error)
+	Recv() (*UserAvatarModel, error)
 	grpc.ServerStream
 }
 
@@ -905,8 +905,8 @@ func (x *userGrpcUploadAvatarServer) SendAndClose(m *empty.Empty) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *userGrpcUploadAvatarServer) Recv() (*UserUpdateModel, error) {
-	m := new(UserUpdateModel)
+func (x *userGrpcUploadAvatarServer) Recv() (*UserAvatarModel, error) {
+	m := new(UserAvatarModel)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

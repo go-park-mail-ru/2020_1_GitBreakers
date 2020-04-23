@@ -9,7 +9,7 @@ service UserGrpc{
   rpc UpdateUser(UserUpdateModel)returns(google.protobuf.Empty){}
   rpc CheckPass(CheckPassModel)returns(CheckPassResp){}
   rpc GetByID(UserIDModel)returns(UserModel){}
-  rpc UploadAvatar(stream UserUpdateModel)returns(google.protobuf.Empty){}
+  rpc UploadAvatar(stream UserAvatarModel)returns(google.protobuf.Empty){}
   //delete method not realized
 }
 //использует модель юзера

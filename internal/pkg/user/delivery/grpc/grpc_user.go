@@ -52,21 +52,29 @@ func (h *UserServer) GetByID(ctx context.Context, in *UserIDModel) (*UserModel, 
 	return &userModel, err
 }
 func (h *UserServer) UploadAvatar(stream UserGrpc_UploadAvatarServer) error {
+	buf := make([]byte, 0)
+	userAvatar := UserAvatarModel{}
 	for {
-		_, err := stream.Recv()
+		tempModel, err := stream.Recv()
 		switch {
 		case err == io.EOF:
+			buf = append(buf, tempModel.GetChunk()...)
 			goto END
 		case err != nil:
-			err = errors.Wrapf(err,
-				"failed unexpectadely while reading chunks from stream")
+			err = errors.Wrapf(err, "failed unexpectadely while reading chunks from stream")
 			return err
+		default:
+			//todo каждый раз переопределяются overhead
+			userAvatar.FileName = tempModel.FileName
+			userAvatar.UserID = tempModel.UserID
+			buf = append(buf, tempModel.GetChunk()...)
 		}
 	}
 END:
-	// once the transmission finished, send the
-	// confirmation
-	err := stream.SendAndClose(&empty.Empty{})
+	// once the transmission finished, send the confirmation
+
+	err := h.UC.UploadAvatar(userAvatar.GetUserID(), userAvatar.GetFileName(), buf)
+	_ = stream.SendAndClose(&empty.Empty{})
 	return err
 }
 

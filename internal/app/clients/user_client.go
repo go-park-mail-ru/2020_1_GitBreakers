@@ -27,31 +27,88 @@ func (c *UserClient) Connect() error {
 func (c *UserClient) Create(User models.User) error {
 	userModelGRPC := usergrpc.UserModel{}
 
-	copier.Copy(&userModelGRPC, &User)
-	userModel := usergrpc.UserModel{
-		Id:       int64(User.ID),
-		Password: User.Password,
-		Name:     User.Name,
-		Login:    User.Login,
-		Image:    User.Image,
-		Email:    User.Email,
+	if err := copier.Copy(&userModelGRPC, &User); err != nil {
+		return err
 	}
-	_, err := c.client.Create(context.Background(), &userModel)
+
+	_, err := c.client.Create(context.Background(), &userModelGRPC)
 	return err
 }
 
-func (c *UserClient) Update(userID int, newUserData models.User) error {
+func (c *UserClient) Update(userID int64, newUserData models.User) error {
+	grpcUserModel := usergrpc.UserModel{}
+	if err := copier.Copy(&grpcUserModel, &newUserData); err != nil {
+		return err
+	}
 	userUPDModel := usergrpc.UserUpdateModel{
-		UserID: int64(userID),
-		UserData: &usergrpc.UserModel{
-			Id:       0,
-			Password: newUserData.Password,
-			Name:     newUserData.Name,
-			Login:    newUserData.Login,
-			Image:    newUserData.Image,
-			Email:    newUserData.Email,
-		},
+		UserID:   userID,
+		UserData: &grpcUserModel,
 	}
 	_, err := c.client.UpdateUser(context.Background(), &userUPDModel)
+	return err
+}
+func (c *UserClient) GetByLogin(login string) (models.User, error) {
+	loginGRPC := &usergrpc.LoginModel{Login: login}
+
+	userGRPCModel, err := c.client.GetByLogin(context.Background(), loginGRPC)
+
+	userFromServer := models.User{}
+
+	if err := copier.Copy(&userFromServer, userGRPCModel); err != nil {
+		return models.User{}, err
+	}
+	return userFromServer, err
+}
+
+func (c *UserClient) GetByID(userID int64) (models.User, error) {
+	idGRPC := &usergrpc.UserIDModel{UserID: userID}
+
+	userGRPCModel, err := c.client.GetByID(context.Background(), idGRPC)
+
+	userFromServer := models.User{}
+
+	if err := copier.Copy(&userFromServer, userGRPCModel); err != nil {
+		return models.User{}, err
+	}
+	return userFromServer, err
+}
+func (c *UserClient) CheckPass(login string, pass string) (bool, error) {
+	loginWithPassGRPC := &usergrpc.CheckPassModel{Login: login, Pass: pass}
+
+	checkPassResp, err := c.client.CheckPass(context.Background(), loginWithPassGRPC)
+	if checkPassResp != nil {
+		return checkPassResp.GetIsCorrect(), err
+	}
+	//в случае неуспешного запроса(ошибка клиента или сервера)
+	return false, err
+}
+func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) error {
+	const ChunkSize int64 = 1 << 15
+	stream, err := c.client.UploadAvatar(context.Background())
+	if err != nil {
+		return err
+	}
+	//открываем поток и туда кидаем частями, удобно для передачи жирных картинок
+	buf := make([]byte, ChunkSize)
+	var i int64 = 0
+	for i = 0; i < fileSize; i += ChunkSize {
+		if i+ChunkSize < fileSize {
+			copy(buf, fileData[i:i+ChunkSize])
+		} else {
+			err = stream.Send(&usergrpc.UserAvatarModel{
+				UserID:   UserID,
+				FileName: fileName,
+				Chunk:    fileData[i:],
+			})
+			break
+		}
+
+		err = stream.Send(&usergrpc.UserAvatarModel{
+			UserID:   UserID,
+			FileName: fileName,
+			Chunk:    buf,
+		})
+	}
+	_, err = stream.CloseAndRecv()
 	return err
 }

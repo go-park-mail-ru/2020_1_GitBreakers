@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
@@ -18,8 +18,8 @@ import (
 
 type UserHttp struct {
 	SessHttp session.SessDelivery
-	UserUC   user.UCUser
 	Logger   *logger.SimpleLogger
+	UClient  *clients.UserClient
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = UsHttp.UserUC.Create(*User)
+	err = UsHttp.UClient.Create(*User)
 	switch {
 	case err == entityerrors.AlreadyExist():
 		UsHttp.Logger.HttpLogError(r.Context(), "user", " Create", errors.Cause(err))
@@ -60,7 +60,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 
 	UsHttp.Logger.HttpLogInfo(r.Context(), "user created in postgres")
 
-	UserFromDB, err := UsHttp.UserUC.GetByLogin(User.Login)
+	UserFromDB, err := UsHttp.UClient.GetByLogin(User.Login)
 	if err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -95,7 +95,7 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := UsHttp.UserUC.Update(userId, newUserData)
+	err := UsHttp.UClient.Update(userId, newUserData)
 	switch {
 	case err == entityerrors.AlreadyExist():
 		w.WriteHeader(http.StatusConflict)
@@ -129,7 +129,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	User, err := UsHttp.UserUC.GetByLogin(input.Login)
+	User, err := UsHttp.UClient.GetByLogin(input.Login)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		w.WriteHeader(http.StatusNotFound)
@@ -141,7 +141,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isUser, err := UsHttp.UserUC.CheckPass(User.Login, input.Password)
+	isUser, err := UsHttp.UClient.CheckPass(User.Login, input.Password)
 	if err != nil || !isUser {
 		UsHttp.Logger.HttpLogWarning(r.Context(), " ", "CheckPass", errors.Cause(err).Error())
 		w.WriteHeader(http.StatusUnauthorized)
@@ -192,7 +192,7 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := res.(int64)
-	User, err := UsHttp.UserUC.GetByID(userID)
+	User, err := UsHttp.UClient.GetByID(userID)
 
 	switch {
 	case err == entityerrors.DoesNotExist():
@@ -250,7 +250,8 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 	currUser := r.Context().Value("UserID").(int64)
 
-	if err := UsHttp.UserUC.UploadAvatar(currUser, header.Filename, binaryImage.Bytes()); err != nil {
+	err = UsHttp.UClient.UploadAvatar(currUser, header.Filename, binaryImage.Bytes(), int64(binaryImage.Len()))
+	if err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -261,7 +262,7 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 	slug := mux.Vars(r)["login"]
-	userData, err := UsHttp.UserUC.GetByLogin(slug)
+	userData, err := UsHttp.UClient.GetByLogin(slug)
 
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):

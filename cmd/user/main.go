@@ -8,6 +8,7 @@ import (
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -39,7 +40,7 @@ func main() {
 		}
 	}()
 
-	db.SetMaxOpenConns(conf.MAX_DB_OPEN_CONN) //10 по дефолту
+	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	userUCase := userUC.UCUser{RepUser: &userRepos}
 
