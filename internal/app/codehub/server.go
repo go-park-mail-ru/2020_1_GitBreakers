@@ -16,11 +16,14 @@ import (
 	http3 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/monitoring"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -32,6 +35,7 @@ import (
 func StartNew() {
 	conf := config.New()
 	customLogger := logger.SimpleLogger{}
+	prometheus.MustRegister(monitoring.Hits, monitoring.RequestDuration, monitoring.DBQueryDuration)
 
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
@@ -98,12 +102,15 @@ func StartNew() {
 
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
+	r.Handle("/metrics", promhttp.Handler())
+
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
 	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
+
 	r.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)

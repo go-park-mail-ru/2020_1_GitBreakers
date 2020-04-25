@@ -7,12 +7,15 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/monitoring"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -23,6 +26,10 @@ type UserHttp struct {
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
+	path, _ := mux.CurrentRoute(r).GetPathTemplate()
+	timer := prometheus.NewTimer(monitoring.RequestDuration.With(prometheus.
+	Labels{"path": path, "method": r.Method}))
+	defer timer.ObserveDuration()
 	if res := r.Context().Value("UserID"); res != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
 		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusNotAcceptable)
@@ -77,6 +84,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 	UsHttp.Logger.HttpInfo(r.Context(), "user created successful", http.StatusCreated)
 	w.WriteHeader(http.StatusCreated)
+	monitoring.Hits.WithLabelValues(strconv.Itoa(201), path).Inc()
 }
 
 func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
