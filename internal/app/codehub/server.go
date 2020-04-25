@@ -152,13 +152,13 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
-	sessClient := clients.SessClient{}
-	if err := sessClient.Connect(); err != nil {
+	sessClient, err := clients.NewSessClient()
+	if err != nil {
 		logger.Fatal(err, "not connect to auth server")
 	}
 
-	userClient := clients.UserClient{}
-	if err := userClient.Connect(); err != nil {
+	userClient, err := clients.NewUserClient()
+	if err != nil {
 		logger.Fatal(err, "not connect to auth server")
 	}
 

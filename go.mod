@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/consul/api v1.4.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jmoiron/sqlx v1.2.0
@@ -26,6 +26,7 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/sosedoff/gitkit v0.2.0
 	github.com/steinfletcher/apitest v1.4.5
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200403201458-baeed622b8d8
@@ -34,5 +35,4 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.28.1
 	google.golang.org/protobuf v1.21.0
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
