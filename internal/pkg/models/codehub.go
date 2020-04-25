@@ -6,9 +6,9 @@ import (
 )
 
 type Issue struct {
-	ID        int64       `json:"id" valid:"-" db:"id"`
-	AuthorID  int64       `json:"author_id" valid:"-" db:"author"`
-	RepoID    int64       `json:"repo_id" valid:"-" db:"repo"`
+	ID        int64     `json:"id" valid:"-" db:"id"`
+	AuthorID  int64     `json:"author_id" valid:"-" db:"author"`
+	RepoID    int64     `json:"repo_id" valid:"-" db:"repo"`
 	Title     string    `json:"title" valid:"stringlength(1|256)" db:"title"`
 	Message   string    `json:"message" valid:"stringlength(1|1024)" db:"message"`
 	Label     string    `json:"label" valid:"stringlength(0|50)" db:"label"`
@@ -18,9 +18,14 @@ type Issue struct {
 
 //пока нигде не использую
 type Star struct {
-	AuthorID int64  `json:"-" valid:"-"`
-	RepoID   int64  `json:"repo" valid:"-"`
-	Vote     bool `json:"vote" valid:"-"`
+	AuthorID int64 `json:"-" valid:"-"`
+	RepoID   int64 `json:"repo" valid:"-"`
+	Vote     bool  `json:"vote" valid:"-"`
+}
+
+type News struct {
+	Mess string    `json:"mess"`
+	Date time.Time `json:"date"`
 }
 
 //easyjson:json

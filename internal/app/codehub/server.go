@@ -20,6 +20,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
@@ -133,8 +134,8 @@ func StartNew() {
 	//
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
 	r.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
-	//
-	//r.HandleFunc("/repo/news", nil).Methods(http.MethodGet)
+
+	r.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
@@ -169,10 +170,14 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repoCodeHub := postgresCodeHub.NewRepository(db)
 
 	CodeHubUsecase := usecaseCodeHub.UCCodeHub{&repoCodeHub}
+	wsUpgrader := websocket.Upgrader{
+		HandshakeTimeout: 10,
+	}
 
 	codeHubDelivery := delivery.HttpCodehub{
 		Logger:    &logger,
 		CodeHubUC: &CodeHubUsecase,
+		Ws:        wsUpgrader,
 	}
 
 	sessDelivery := http2.SessionHttp{

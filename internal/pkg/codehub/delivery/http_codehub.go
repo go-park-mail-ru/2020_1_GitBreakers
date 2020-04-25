@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/mailru/easyjson"
 	"net/http"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 type HttpCodehub struct {
 	Logger    *logger.SimpleLogger
 	CodeHubUC codehub.UCCodeHub
+	Ws        websocket.Upgrader
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
@@ -288,4 +290,16 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	GD.Logger.HttpLogInfo(r.Context(), "issues closed success")
+}
+func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+
+	}
+
+
+	GD.Logger.HttpLogInfo(r.Context(), "news getted success")
 }
