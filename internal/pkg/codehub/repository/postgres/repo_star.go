@@ -24,7 +24,7 @@ func (repo *StarRepository) IsExistStar(userID int64, repoID int64) (bool, error
 	err := repo.DB.QueryRow(`
 		SELECT EXISTS(
                SELECT *
-               FROM git_repository_user_star
+               FROM git_repository_user_stars
                WHERE repository_id = $1
                  AND user_id = $2
            )`, repoID, userID).Scan(&isExist)
@@ -48,7 +48,7 @@ func (repo *StarRepository) AddStar(userID int64, repoID int64) error {
 	}
 
 	_, err = repo.DB.Exec(
-		"INSERT INTO git_repository_user_star (repository_id, user_id) VALUES ($1, $2)",
+		"INSERT INTO git_repository_user_stars (repository_id, user_id) VALUES ($1, $2)",
 		repoID, userID)
 	if err != nil {
 		return errors.Wrapf(err, "error occurs in StarRepository in AddStar function "+
@@ -62,7 +62,7 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 	var isDeleted bool
 
 	err := repo.DB.QueryRow(
-		"DELETE FROM git_repository_user_star WHERE repository_id = $1 AND user_id = $2 RETURNING TRUE",
+		"DELETE FROM git_repository_user_stars WHERE repository_id = $1 AND user_id = $2 RETURNING TRUE",
 		repoID, userID).Scan(&isDeleted)
 
 	switch true {
@@ -85,7 +85,7 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 					   gr.is_fork,
 					   gr.created_at,
 					   gr.is_public
-				FROM git_repository_user_star AS grus
+				FROM git_repository_user_stars AS grus
 						 JOIN git_repositories AS gr ON grus.repository_id = gr.id
 				WHERE grus.user_id = $1 LIMIT $2 OFFSET $3`,
 		userID, limit, offset)
@@ -127,7 +127,7 @@ func (repo *StarRepository) GetUserStaredList(repoID int64, limit int64, offset 
 					   u.name,
 					   u.avatar_path,
 					   u.created_at
-				FROM git_repository_user_star AS grus
+				FROM git_repository_user_stars AS grus
 						 JOIN users AS u ON grus.user_id = u.id
 				WHERE grus.repository_id = $1
 				LIMIT $2 OFFSET $3`,

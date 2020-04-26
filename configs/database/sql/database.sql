@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
 alter table git_repositories
     add if not exists stars integer default 0 not null;
 
-CREATE TABLE IF NOT EXISTS git_repository_user_star
+CREATE TABLE IF NOT EXISTS git_repository_user_stars
 (
     repository_id BIGINT                                             NOT NULL,
     user_id       BIGINT                                             NOT NULL,
