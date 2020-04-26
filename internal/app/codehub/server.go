@@ -35,7 +35,6 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	customLogger := logger.SimpleLogger{}
 	prometheus.MustRegister(monitoring.Hits, monitoring.RequestDuration, monitoring.DBQueryDuration)
 
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
@@ -44,7 +43,7 @@ func StartNew() {
 		f = os.Stdout
 	}
 
-	customLogger = logger.NewTextFormatSimpleLogger(f)
+	customLogger := logger.NewTextFormatSimpleLogger(f)
 
 	defer func() {
 		if f != os.Stdout {
@@ -152,13 +151,13 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
-	sessClient := clients.SessClient{}
-	if err := sessClient.Connect(); err != nil {
+	sessClient, err := clients.NewSessClient()
+	if err != nil {
 		logger.Fatal(err, "not connect to auth server")
 	}
 
-	userClient := clients.UserClient{}
-	if err := userClient.Connect(); err != nil {
+	userClient, err := clients.NewUserClient()
+	if err != nil {
 		logger.Fatal(err, "not connect to auth server")
 	}
 

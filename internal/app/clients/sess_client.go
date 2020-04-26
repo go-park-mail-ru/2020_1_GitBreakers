@@ -12,6 +12,14 @@ type SessClient struct {
 	conn *grpc.ClientConn
 }
 
+func NewSessClient() (SessClient, error) {
+	sessClient := SessClient{}
+	if err := sessClient.Connect(); err != nil {
+		return sessClient, err
+	}
+	return sessClient, nil
+}
+
 func (c *SessClient) Connect() error {
 	//todo port unhardcode
 	conn, err := grpc.Dial(":8081", grpc.WithInsecure())

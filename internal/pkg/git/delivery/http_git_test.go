@@ -45,7 +45,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().Create(gomock.Any(), testRepo).
 				Return(nil).
-				Times(0), )
+				Times(0))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.CreateRepo, false)
 
@@ -63,7 +63,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().Create(gomock.Any(), testRepo).
 				Return(nil).
-				Times(0), )
+				Times(0))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.CreateRepo, true)
 
@@ -81,7 +81,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().Create(gomock.Any(), testRepo).
 				Return(nil).
-				Times(0), )
+				Times(0))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.CreateRepo, true)
 
@@ -99,7 +99,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().Create(gomock.Any(), gomock.Any()).
 				Return(entityerrors.AlreadyExist()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.CreateRepo, true)
 
@@ -118,7 +118,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().Create(gomock.Any(), gomock.Any()).
 				Return(errors.New("some error")).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.CreateRepo, true)
 
@@ -136,7 +136,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().Create(gomock.Any(), gomock.Any()).
 				Return(nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.CreateRepo, true)
 
@@ -177,7 +177,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().GetRepoList(someLogin, gomock.Any()).
 				Return(repolist, nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -198,7 +198,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().GetRepoList(someLogin, gomock.Any()).
 				Return(repolist, entityerrors.AccessDenied()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -229,7 +229,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 				Times(1),
 			m.EXPECT().GetRepoList(someUser.Login, gomock.Any()).
 				Return(repolist, nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
 		//middlewareMock = middleware.SetMuxVars(middlewareMock, "username", "")
@@ -260,7 +260,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 				Times(1),
 			m.EXPECT().GetRepoList(someUser.Login, gomock.Any()).
 				Return(repolist, nil).
-				Times(0), )
+				Times(0))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
 
@@ -297,7 +297,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().GetRepo(gomock.Eq(someLogin), gomock.Any(), gomock.Any()).
 				Return(repo, nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -317,7 +317,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().GetRepo(gomock.Eq(someLogin), gomock.Any(), gomock.Any()).
 				Return(repo, entityerrors.AccessDenied()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -337,7 +337,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().GetRepo(gomock.Eq(someLogin), gomock.Any(), gomock.Any()).
 				Return(repo, entityerrors.DoesNotExist()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -357,7 +357,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().GetRepo(gomock.Eq(someLogin), gomock.Any(), gomock.Any()).
 				Return(repo, errors.New("some error")).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -400,7 +400,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 			m.EXPECT().
 				GetBranchList(nil, someLogin, gomock.Any()).
 				Return(branchlist, nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -421,8 +421,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 			m.EXPECT().
 				GetBranchList(nil, someLogin, gomock.Any()).
 				Return(branchlist, entityerrors.AccessDenied()).
-				Times(1), )
-
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -443,7 +442,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 			m.EXPECT().
 				GetBranchList(nil, someLogin, gomock.Any()).
 				Return(branchlist, entityerrors.DoesNotExist()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -464,7 +463,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 			m.EXPECT().
 				GetBranchList(nil, someLogin, gomock.Any()).
 				Return(branchlist, errors.New("some error")).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -510,7 +509,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 			m.EXPECT().
 				GetCommitsByCommitHash(gomock.Any(), gomock.Any()).
 				Return(commitslist, nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -532,7 +531,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 			m.EXPECT().
 				GetCommitsByCommitHash(gomock.Any(), gomock.Any()).
 				Return(commitslist, entityerrors.AccessDenied()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -554,7 +553,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 			m.EXPECT().
 				GetCommitsByCommitHash(gomock.Any(), gomock.Any()).
 				Return(commitslist, entityerrors.DoesNotExist()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -576,7 +575,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 			m.EXPECT().
 				GetCommitsByCommitHash(gomock.Any(), gomock.Any()).
 				Return(commitslist, errors.New("some error")).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -624,7 +623,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
 					gomock.Any(), 0, 100, gomock.Any()).
 				Return(commitslist, nil).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -647,7 +646,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
 					gomock.Any(), 0, 100, gomock.Any()).
 				Return(commitslist, entityerrors.AccessDenied()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -670,7 +669,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
 					gomock.Any(), 0, 100, gomock.Any()).
 				Return(commitslist, entityerrors.DoesNotExist()).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
@@ -693,7 +692,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
 					gomock.Any(), 0, 100, gomock.Any()).
 				Return(commitslist, errors.New("some error")).
-				Times(1), )
+				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
 		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)

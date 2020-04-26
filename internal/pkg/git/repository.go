@@ -2,6 +2,7 @@ package git
 
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 )
 
 type Repository interface {
@@ -11,6 +12,10 @@ type Repository interface {
 	//DeleteByID(id int) error // TODO
 	//DeleteByName(userId int, repoName string) error // TODO
 	CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error)
+	// GetPermission returns permission: for public repo - write and higher, for private - read and higher
+	// In other case returns NoAccess
+	GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error)
+
 	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)
 	GetAnyReposByUserLogin(userLogin string, offset, limit int64) ([]git.Repository, error)
 	GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error)

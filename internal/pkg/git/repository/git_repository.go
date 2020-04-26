@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
@@ -313,6 +314,26 @@ func (repo Repository) CheckReadAccess(currentUserId *int64, userLogin, repoName
 			"with currentUserId=%+v, userLogin=%s, repoName=%s", currentUserId, userLogin, repoName)
 	}
 	return haveAccess, nil
+}
+
+func (repo Repository) GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error) {
+	var permissionRole string
+	err := repo.db.QueryRow(`
+		SELECT ugr.role FROM users_git_repositories AS ugr 
+		        JOIN git_repositories AS gr ON ugr.repository_id = gr.id
+		    	JOIN users AS u ON gr.owner_id = u.id
+		    WHERE u.login = $1 AND gr.name = $2 AND ugr.user_id = $3`,
+		userLogin, repoName, currentUserId).Scan(&permissionRole)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return perm.NoAccess(), nil
+	case err != nil:
+		return perm.NoAccess(), errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+			"with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+
+	return perm.Permission(permissionRole), nil
 }
 
 func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Branch, error) {

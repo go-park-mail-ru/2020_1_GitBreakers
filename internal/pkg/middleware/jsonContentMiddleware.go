@@ -7,6 +7,6 @@ import (
 
 func JsonContentTypeMiddleware(next http.Handler) http.Handler {
 	return middleware.CreateHeadersMiddleware(map[string]string{
-		"Content-Type" : "application/json",
+		"Content-Type": "application/json",
 	})(next)
 }

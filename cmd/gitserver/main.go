@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/asaskevich/govalidator"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/codehub"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/gitserver"
 	"github.com/joho/godotenv"
 	"log"
 )
@@ -13,6 +13,7 @@ func init() {
 	}
 	govalidator.SetFieldsRequiredByDefault(true)
 }
+
 func main() {
-	codehub.StartNew()
+	gitserver.StartNew()
 }

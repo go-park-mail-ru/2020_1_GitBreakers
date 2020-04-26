@@ -14,6 +14,14 @@ type UserClient struct {
 	client usergrpc.UserGrpcClient
 }
 
+func NewUserClient() (UserClient, error) {
+	userClient := UserClient{}
+	if err := userClient.Connect(); err != nil {
+		return userClient, err
+	}
+	return userClient, nil
+}
+
 func (c *UserClient) Connect() error {
 	//todo port unhardcode
 	conn, err := grpc.Dial(":8082", grpc.WithInsecure())
@@ -83,7 +91,7 @@ func (c *UserClient) CheckPass(login string, pass string) (bool, error) {
 	return false, err
 }
 func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) error {
-	const ChunkSize int64 = 1 << 16//64kb
+	const ChunkSize int64 = 1 << 16 //64kb
 	stream, err := c.client.UploadAvatar(context.Background())
 	if err != nil {
 		return err

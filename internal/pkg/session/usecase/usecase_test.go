@@ -124,7 +124,6 @@ func TestSessionUC_GetByID(t *testing.T) {
 		someInputSessionID := "base+f33g339ifk3933435"
 		someUserID := 20
 
-
 		someOldSession := models.Session{
 			ID:     "",
 			UserID: someUserID,
@@ -132,7 +131,7 @@ func TestSessionUC_GetByID(t *testing.T) {
 
 		m.EXPECT().
 			GetSessByID(someInputSessionID).
-			Return(someOldSession,nil).
+			Return(someOldSession, nil).
 			Times(1)
 
 		useCase := SessionUC{m}

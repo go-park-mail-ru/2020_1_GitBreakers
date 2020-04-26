@@ -77,4 +77,3 @@ func (mr *MockSessRepoMockRecorder) DeleteByID(sessionID interface{}) *gomock.Ca
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByID", reflect.TypeOf((*MockSessRepo)(nil).DeleteByID), sessionID)
 }
-
