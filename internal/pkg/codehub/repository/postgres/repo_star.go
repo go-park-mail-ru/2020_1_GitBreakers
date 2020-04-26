@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jmoiron/sqlx"
@@ -114,4 +115,7 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 	}
 
 	return gitRepos, nil
+}
+func (repo *StarRepository) GetUserStaredList(repoID int64, limit int64, offset int64) ([]models.User, error) {
+	panic("implement me")
 }
