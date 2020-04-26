@@ -24,13 +24,14 @@ type Star struct {
 }
 
 type News struct {
-	Mess string    `json:"mess"`
-	Date time.Time `json:"date"`
+	ID       int64     `json:"id"`
+	AuthorID int64     `json:"author_id"`
+	Mess     string    `json:"message"`
+	Date     time.Time `json:"date"`
 }
+
 //easyjson:json
 type NewsSet []News
-
-
 
 //easyjson:json
 type RepoSet []gitmodels.Repository

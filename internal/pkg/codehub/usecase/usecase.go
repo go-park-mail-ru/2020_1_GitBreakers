@@ -13,26 +13,26 @@ type UCCodeHub struct {
 	RepoNews  codehub.RepoNewsI
 }
 
-func (GD *UCCodeHub) ModifyStar(star models.Star) error {
+func (UC *UCCodeHub) ModifyStar(star models.Star) error {
 	if star.Vote {
-		return GD.RepoStar.AddStar(star.AuthorID, star.RepoID)
+		return UC.RepoStar.AddStar(star.AuthorID, star.RepoID)
 	} else {
-		return GD.RepoStar.DelStar(star.AuthorID, star.RepoID)
+		return UC.RepoStar.DelStar(star.AuthorID, star.RepoID)
 	}
 }
 
-func (GD *UCCodeHub) GetStarredRepo(userID int64) (models.RepoSet, error) {
-	return GD.RepoStar.GetStarredRepo(userID)
+func (UC *UCCodeHub) GetStarredRepo(userID, limit, offset int64) (models.RepoSet, error) {
+	return UC.RepoStar.GetStarredRepo(userID, limit, offset)
 }
 
-func (GD *UCCodeHub) CreateIssue(issue models.Issue) error {
-	permis, err := GD.RepoIssue.CheckAccessRepo(issue.AuthorID, issue.RepoID)
+func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
+	permis, err := UC.RepoIssue.CheckAccessRepo(issue.AuthorID, issue.RepoID)
 	if err != nil {
 		return err
 	}
 
 	if permis != perm.NoAccess() { //can create if repo not private
-		return GD.RepoIssue.CreateIssue(issue)
+		return UC.RepoIssue.CreateIssue(issue)
 	} else {
 		return entityerrors.AccessDenied()
 	}
@@ -65,14 +65,14 @@ func (GD *UCCodeHub) CloseIssue(issueID int64, userID int64) error {
 	}
 }
 
-func (GD *UCCodeHub) GetIssuesList(repoID int64, userID int64) (models.IssuesSet, error) {
+func (GD *UCCodeHub) GetIssuesList(repoID, userID, limit, offset int64) (models.IssuesSet, error) {
 	permis, err := GD.RepoIssue.CheckAccessRepo(userID, repoID)
 	if err != nil {
 		return nil, err
 	}
 
 	if permis != perm.NoAccess() {
-		return GD.RepoIssue.GetIssuesList(repoID)
+		return GD.RepoIssue.GetIssuesList(repoID, limit, offset)
 	} else {
 		return nil, entityerrors.AccessDenied()
 	}
@@ -90,7 +90,7 @@ func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error)
 		return models.Issue{}, entityerrors.AccessDenied()
 	}
 }
-func (GD *UCCodeHub) GetNews(repoID int64, userID int64) (models.Issue, error) {
-	//permis, err := GD.RepoIssue.CheckAccessRepo(userID, repoID)
 
+func (UC *UCCodeHub) GetNews(repoID, userID int64) (models.NewsSet, error) {
+	panic("implement me")
 }

@@ -66,7 +66,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repolist, err := GD.CodeHubUC.GetStarredRepo(userID)
+	repolist, err := GD.CodeHubUC.GetStarredRepo(userID, 100, 0)
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -215,7 +215,7 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 		userID = -1 //соответствует неавторизованному юзеру
 	}
 
-	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID)
+	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID, 100, 0)
 
 	switch {
 	case err == entityerrors.AccessDenied():

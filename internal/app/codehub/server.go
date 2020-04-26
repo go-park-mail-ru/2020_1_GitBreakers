@@ -20,7 +20,6 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
@@ -166,11 +165,14 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
-	repoCodeHub := postgresCodeHub.NewRepository(db)
+	repoCodeHubIssue := postgresCodeHub.NewRepoIssue(db)
+	repoCodeHubStar := postgresCodeHub.NewRepoStar(db)
+	repoCodeHubNews := postgresCodeHub.NewRepoNews(db)
 
-	CodeHubUsecase := usecaseCodeHub.UCCodeHub{&repoCodeHub}
-	wsUpgrader := websocket.Upgrader{
-		HandshakeTimeout: 10,
+	CodeHubUsecase := usecaseCodeHub.UCCodeHub{
+		RepoIssue: repoCodeHubIssue,
+		RepoStar:  repoCodeHubStar,
+		RepoNews:  repoCodeHubNews,
 	}
 
 	codeHubDelivery := delivery.HttpCodehub{
