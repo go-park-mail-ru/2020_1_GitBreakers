@@ -63,7 +63,7 @@ func StartNew() {
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
-	gitServer := panicMiddleware(loggerMWare(gitkitServer))
+	gitServer := middleware.PrometheusMetricsMiddleware(panicMiddleware(loggerMWare(gitkitServer)))
 
 	http.Handle("/", gitServer)
 
