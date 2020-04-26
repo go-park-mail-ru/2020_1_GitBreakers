@@ -34,7 +34,7 @@ func (w *ResponseWriter) GetResponseLength() int {
 	return w.length
 }
 
-func (w *ResponseWriter) Flush()  {
+func (w *ResponseWriter) Flush() {
 	if flusher, ok := w.TryFlusher(); ok {
 		flusher.Flush()
 	}

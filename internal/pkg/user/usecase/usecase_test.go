@@ -155,7 +155,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).Return(false, nil)
+		m.EXPECT().CheckPass(someUser.Login, someUser.Password).Return(false, nil)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -171,7 +171,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).
+		m.EXPECT().CheckPass(someUser.Login, someUser.Password).
 			Return(true, entityerrors.DoesNotExist())
 
 		useCase := UCUser{

@@ -3,6 +3,7 @@ package usecase
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitModels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
@@ -40,6 +41,14 @@ func (u UseCase) GetGitRepository(userLogin string, repoName string) (gitModels.
 			"userLogin: %v, repoName=%v", userLogin, repoName)
 	}
 	return repo, nil
+}
+
+func (u UseCase) GetUser(userLogin string) (models.User, error) {
+	user, err := u.userClient.GetByLogin(userLogin)
+	if err != nil {
+		return user, errors.Wrapf(err, "error while getting user by userLogin=%v", userLogin)
+	}
+	return user, nil
 }
 
 func (u UseCase) CheckUserPassword(userLogin string, password string) (bool, error) {

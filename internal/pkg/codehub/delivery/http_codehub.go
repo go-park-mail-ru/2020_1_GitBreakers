@@ -300,6 +300,5 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-
 	GD.Logger.HttpLogInfo(r.Context(), "news getted success")
 }

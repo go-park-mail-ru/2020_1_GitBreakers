@@ -1,7 +1,11 @@
 package gitserver
 
 import (
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/delivery"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/monitoring"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
@@ -13,18 +17,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func StartNew() {
 	conf := config.New()
 	prometheus.MustRegister(monitoring.Hits, monitoring.RequestDuration, monitoring.DBQueryDuration)
 
-	//userClient, err := clients.NewUserClient()
-	//if err != nil {
-	//	log.Fatal(err, "not connect to auth server")
-	//}
+	userClient, err := clients.NewUserClient()
+	if err != nil {
+		log.Fatal(err, "not connect to auth server")
+	}
 
 	customLogger := logger.NewTextFormatSimpleLogger(os.Stdout)
+
+	customLogger.Printf(">>>>>>>>>>>>%v<<<<<<<<<<<<\n", time.Now())
 
 	//берутся из .env файла
 	connStr := "user=" + conf.POSTGRES_USER + " password=" +
@@ -45,12 +52,12 @@ func StartNew() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
-	// repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 
 	gitkitConfig := gitkit.Config{
 		Dir:        conf.GIT_USER_REPOS_DIR,
 		AutoCreate: false, // Do not create repository if it not exist
-		Auth:       false, // TODO use ow authentication based on middleware
+		Auth:       false, // We use own authentication based on middleware
 	}
 
 	gitkitServer := gitkit.New(gitkitConfig)
@@ -62,9 +69,22 @@ func StartNew() {
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
-	gitServer := middleware.PrometheusMetricsMiddleware(panicMiddleware(loggerMWare(gitkitServer)))
+	// Later we cat add news integration based on response status code in this middleware
+	authMiddleware := delivery.CreateMainAuthMiddleware(delivery.GitServerDelivery{
+		UseCase: usecase.NewUseCase(repogit, userClient),
+		Logger:  customLogger,
+	})
+
+	gitServer := middleware.PrometheusMetricsMiddleware(
+		panicMiddleware(
+			loggerMWare(
+				authMiddleware(
+					gitkitServer))))
 
 	http.Handle("/", gitServer)
+
+	customLogger.Printf("starting git server with GIT_SERVER_PORT=%v\n", conf.GIT_SERVER_PORT)
+	customLogger.Printf("starting git server with GIT_SERVER_PORT=%v\n", conf.GIT_USER_REPOS_DIR)
 
 	if err := http.ListenAndServe(conf.GIT_SERVER_PORT, nil); err != nil {
 		customLogger.Fatalln("cannot start http git server:", err)

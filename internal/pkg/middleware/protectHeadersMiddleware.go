@@ -7,7 +7,7 @@ import (
 
 func ProtectHeadersMiddleware(next http.Handler) http.Handler {
 	return middleware.CreateHeadersMiddleware(map[string]string{
-		"X-XSS-Protection" : "1; mode=block",
-		"X-Content-Type-Options" : "nosniff;",
+		"X-XSS-Protection":       "1; mode=block",
+		"X-Content-Type-Options": "nosniff;",
 	})(next)
 }

@@ -204,7 +204,7 @@ func TestGitUseCase_GetRepoList(t *testing.T) {
 		repolistFromDB, err := useCase.GetRepoList(someUser.Login, &someUser.ID)
 
 		require.Error(t, err)
-		require.Nil(t,repolistFromDB)
+		require.Nil(t, repolistFromDB)
 	})
 }
 

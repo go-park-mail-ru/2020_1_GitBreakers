@@ -34,7 +34,7 @@ func (s *redisTestSuite) SetupSuite() {
 	s.client = redis.NewClient(&redis.Options{
 		Addr: mr.Addr(),
 	})
-	s.redisRepository = NewSessionRedis(s.client,redisTestPrefix)
+	s.redisRepository = NewSessionRedis(s.client, redisTestPrefix)
 }
 
 func (s *redisTestSuite) SetupTest() {

@@ -28,7 +28,7 @@ type UserHttp struct {
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 	path, _ := mux.CurrentRoute(r).GetPathTemplate()
 	timer := prometheus.NewTimer(monitoring.RequestDuration.With(prometheus.
-	Labels{"path": path, "method": r.Method}))
+		Labels{"path": path, "method": r.Method}))
 	defer timer.ObserveDuration()
 	if res := r.Context().Value("UserID"); res != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
