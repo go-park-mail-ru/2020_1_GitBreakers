@@ -80,7 +80,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repolist, err := GD.CodeHubUC.GetStarredRepo(user.ID, int64(limit), int64(offset))
+	repolist, err := GD.CodeHubUC.GetStarredRepos(user.ID, int64(limit), int64(offset))
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)

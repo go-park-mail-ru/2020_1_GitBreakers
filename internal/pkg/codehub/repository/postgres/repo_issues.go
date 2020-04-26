@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
@@ -11,9 +10,12 @@ type RepoIssue struct {
 	DB *sqlx.DB
 }
 
-func NewRepoIssue(db *sqlx.DB) codehub.RepoIssueI {
-	return &RepoIssue{DB: db}
+func NewRepoIssue(db *sqlx.DB) RepoIssue {
+	return RepoIssue{
+		DB: db,
+	}
 }
+
 func (R *RepoIssue) CreateIssue(issue models.Issue) error {
 	panic("implement me")
 }
@@ -38,6 +40,6 @@ func (R *RepoIssue) CheckAccessRepo(userID, repoID int64) (perm.Permission, erro
 	panic("implement me")
 }
 
-func (R *RepoIssue) GetIssues(issueID int64) (models.Issue, error) {
+func (R *RepoIssue) GetIssue(issueID int64) (models.Issue, error) {
 	panic("implement me")
 }
