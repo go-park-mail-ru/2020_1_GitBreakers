@@ -176,8 +176,9 @@ func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string,
 			   			repo.name,
 			   			repo.description,
 			   			repo.is_fork,
-			   			repo.created_at,
-			   			repo.is_public
+			   			repo.is_public,
+ 						repo.stars,
+        			   	repo.created_at
 				FROM git_repositories AS repo
 					JOIN users AS owner ON repo.owner_id = owner.id
 					JOIN users_git_repositories AS ugr ON repo.id = ugr.repository_id
@@ -207,8 +208,9 @@ func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string,
 			&gitRepo.Name,
 			&gitRepo.Description,
 			&gitRepo.IsFork,
-			&gitRepo.CreatedAt,
-			&gitRepo.IsPublic)
+			&gitRepo.IsPublic,
+			&gitRepo.Stars,
+			&gitRepo.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
 				"while scanning in GetReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
@@ -225,8 +227,9 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 				repo.name,
 				repo.description,
 				repo.is_fork,
-				repo.created_at,
-				repo.is_public
+				repo.is_public,
+		       	repo.stars,
+		       	repo.created_at
 		FROM git_repositories AS repo
 			JOIN users AS owner ON repo.owner_id = owner.id
 		WHERE owner.login = $1 OFFSET $2
@@ -254,8 +257,9 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 			&gitRepo.Name,
 			&gitRepo.Description,
 			&gitRepo.IsFork,
-			&gitRepo.CreatedAt,
-			&gitRepo.IsPublic)
+			&gitRepo.IsPublic,
+			&gitRepo.Stars,
+			&gitRepo.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
 				"while scanning in GetAnyReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
@@ -269,13 +273,14 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 	var gitRepo git.Repository
 
 	err := repo.db.QueryRow(`
-		SELECT r.id,
-			   r.owner_id,
-			   r.name,
-			   r.description,
-			   r.is_fork,
-			   r.created_at,
-			   r.is_public
+		SELECT 	r.id,
+			   	r.owner_id,
+			   	r.name,
+			   	r.description,
+			   	r.is_fork,
+			   	r.is_public,
+		       	r.stars,
+				r.created_at
 		FROM git_repositories AS r
 				 JOIN users AS u ON r.owner_id = u.id
 		WHERE u.login = $1
@@ -286,8 +291,9 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 		&gitRepo.Name,
 		&gitRepo.Description,
 		&gitRepo.IsFork,
-		&gitRepo.CreatedAt,
-		&gitRepo.IsPublic)
+		&gitRepo.IsPublic,
+		&gitRepo.Stars,
+		&gitRepo.CreatedAt)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -354,23 +360,25 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 
 	var gitRepoBranches []git.Branch
 
-	err = gogitBranchesIterator.ForEach(func(reference *gogitPlumbing.Reference) error {
-		gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, reference.Hash())
-		if err != nil {
-			return errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
-				"with userLogin=%s, repoName=%s, branchName=%s",
-				userLogin, repoName, reference.Name().String())
-		}
+	err = gogitBranchesIterator.ForEach(
+		func(reference *gogitPlumbing.Reference) error {
+			gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, reference.Hash())
+			if err != nil {
+				return errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+					"with userLogin=%s, repoName=%s, branchName=%s",
+					userLogin, repoName, reference.Name().String())
+			}
 
-		gitRepoBranches = append(gitRepoBranches,
-			git.Branch{
-				Name:   strings.TrimLeft(reference.Name().String(), gogitPlumbing.NewBranchReferenceName("").String()),
-				Commit: convertToGitCommitModel(gogitCommit),
-			},
-		)
+			gitRepoBranches = append(gitRepoBranches,
+				git.Branch{
+					Name:   strings.TrimLeft(reference.Name().String(), gogitPlumbing.NewBranchReferenceName("").String()),
+					Commit: convertToGitCommitModel(gogitCommit),
+				},
+			)
 
-		return nil
-	})
+			return nil
+		},
+	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
 			"after iterating by branches with userLogin=%s, repoName=%s", userLogin, repoName)
@@ -381,21 +389,22 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 func (repo Repository) GetByID(id int64) (git.Repository, error) {
 	var gitRepo git.Repository
 	err := repo.db.QueryRow(`
-			SELECT id,
-			       owner_id,
-			       name,
-			       description,
-			       is_public,
-			       is_fork, 
-			       created_at
-			FROM git_repositories WHERE id = $1
-			`, id).Scan(
+			SELECT 	id,
+			       	owner_id,
+			       	name,
+			       	description,
+			       	is_fork, 
+			       	is_public,
+			       	stars,
+			       	created_at
+			FROM git_repositories WHERE id = $1`, id).Scan(
 		&gitRepo.ID,
 		&gitRepo.OwnerID,
 		&gitRepo.Name,
 		&gitRepo.Description,
-		&gitRepo.IsPublic,
 		&gitRepo.IsFork,
+		&gitRepo.IsPublic,
+		&gitRepo.Stars,
 		&gitRepo.CreatedAt,
 	)
 
