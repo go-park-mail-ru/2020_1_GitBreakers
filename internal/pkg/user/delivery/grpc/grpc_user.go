@@ -22,14 +22,14 @@ func NewUserServer(gserver *grpc.Server, UserUseCase user.UCUser) {
 }
 func (h *UserServer) Create(ctx context.Context, in *UserModel) (*empty.Empty, error) {
 	User := models.User{
-		ID:       in.GetId(),
+		ID:       in.GetID(),
 		Password: in.GetPassword(),
 		Name:     in.GetName(),
 		Login:    in.GetLogin(),
 		Image:    in.GetImage(),
 		Email:    in.GetEmail(),
 	}
-	return nil, h.UC.Create(User)
+	return &empty.Empty{}, h.UC.Create(User)
 }
 func (h *UserServer) GetByLogin(ctx context.Context, in *LoginModel) (*UserModel, error) {
 	User, err := h.UC.GetByLogin(in.GetLogin())
@@ -40,7 +40,7 @@ func (h *UserServer) GetByLogin(ctx context.Context, in *LoginModel) (*UserModel
 func (h *UserServer) UpdateUser(ctx context.Context, in *UserUpdateModel) (*empty.Empty, error) {
 	UserID := in.GetUserID()
 	User := h.transfToModelsUser(in.GetUserData())
-	return nil, h.UC.Update(UserID, User)
+	return &empty.Empty{}, h.UC.Update(UserID, User)
 }
 func (h *UserServer) CheckPass(ctx context.Context, in *CheckPassModel) (*CheckPassResp, error) {
 	isCorrect, err := h.UC.CheckPass(in.GetLogin(), in.GetPass())
@@ -81,7 +81,7 @@ END:
 //функции вспомогательные для преобразования from/to models.User UserModel(GRPC)
 func (h *UserServer) transfToModelsUser(in *UserModel) models.User {
 	return models.User{
-		ID:       in.GetId(),
+		ID:       in.GetID(),
 		Password: in.GetPassword(),
 		Name:     in.GetName(),
 		Login:    in.GetLogin(),
@@ -93,7 +93,7 @@ func (h *UserServer) transfToModelsUser(in *UserModel) models.User {
 //функции вспомогательные для преобразования from/to models.User UserModel(GRPC)
 func (h *UserServer) transfToUserModelGRPC(in *models.User) UserModel {
 	return UserModel{
-		Id:       int64(in.ID),
+		ID:       int64(in.ID),
 		Password: in.Password,
 		Name:     in.Name,
 		Login:    in.Login,

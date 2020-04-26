@@ -33,7 +33,7 @@ func (repo *StarRepository) IsExistStar(userID int64, repoID int64) (bool, error
 		return false, errors.Wrapf(err, "error occurs in StarRepository in IsExistStar function "+
 			"with userId=%v, repoID=%v", userID, repoID)
 	}
-	return true, nil
+	return isExist, nil
 }
 
 func (repo *StarRepository) AddStar(userID int64, repoID int64) error {

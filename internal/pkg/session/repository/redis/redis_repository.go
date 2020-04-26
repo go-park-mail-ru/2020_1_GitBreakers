@@ -47,7 +47,7 @@ func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	if err := repo.redisDb.Set(key, string(sessionJSON), expire).Err(); err != nil {
+	if err := repo.redisDb.Set(key, sessionJSON, expire).Err(); err != nil {
 		return "", errors.Wrapf(err, "session_repository: redis Set failed for %+v", session)
 	}
 	return session.ID, nil

@@ -6,7 +6,6 @@ import (
 	usergrpc "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/grpc"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
-	consulown "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/consul"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -25,20 +24,6 @@ func init() {
 func main() {
 	s := grpc.NewServer()
 	conf := config.New()
-
-	cl, err := consulown.NewConsulClient("localhost:8500")
-	if err != nil {
-		log.Fatalln("cannot connect to consul:", err)
-	}
-
-	if err = cl.Register("userservice", 8082); err != nil {
-		log.Fatalln("cannot register service in consul:", err)
-	}
-	defer func() {
-		if err = cl.DeRegister("userservice"); err != nil {
-			log.Fatalln("cannot register service in consul:", err)
-		}
-	}()
 
 	connStr := "user=" + conf.POSTGRES_USER + " password=" +
 		conf.POSTGRES_PASS + " dbname=" + conf.POSTGRES_DBNAME

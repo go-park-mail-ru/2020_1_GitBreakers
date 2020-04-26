@@ -28,6 +28,12 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	userID, ok := res.(int64)
 	if !ok {
@@ -43,8 +49,15 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newStar.AuthorID = userID
+	newStar.RepoID = int64(repoID)
 
-	if err := GD.CodeHubUC.ModifyStar(newStar); err != nil {
+	err = GD.CodeHubUC.ModifyStar(newStar)
+	switch {
+	case err == entityerrors.AlreadyExist():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -68,15 +81,11 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := GD.UserClient.GetByLogin(userLogin)
-
+	//todo чуть лучше обработку сделать
 	switch {
-	case err == entityerrors.DoesNotExist():
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusNotFound)
-		return
 	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 

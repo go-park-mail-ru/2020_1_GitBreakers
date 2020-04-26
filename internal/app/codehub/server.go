@@ -203,7 +203,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	}
 
 	m := middleware.Middleware{
-		SessDeliv: &sessDelivery,
+		SessDeliv: &sessClient,
 		UCUser:    &userUCase,
 	}
 

@@ -62,6 +62,7 @@ func (c *UserClient) GetByLogin(login string) (models.User, error) {
 
 	userFromServer := models.User{}
 
+
 	if err := copier.Copy(&userFromServer, userGRPCModel); err != nil {
 		return models.User{}, err
 	}

@@ -2,14 +2,14 @@ package middleware
 
 import (
 	"context"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"net/http"
 )
 
 //содержит интерфейсы
 type Middleware struct {
-	SessDeliv session.SessDelivery
+	SessDeliv *clients.SessClient
 	UCUser    user.UCUser
 }
 
@@ -21,7 +21,7 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		sessModel, err := Mdware.SessDeliv.GetBySessID(cookie.Value)
+		sessModel, err := Mdware.SessDeliv.GetSess(cookie.Value)
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return

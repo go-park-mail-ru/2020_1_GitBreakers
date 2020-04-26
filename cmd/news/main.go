@@ -47,7 +47,7 @@ func main() {
 	UCRepos := usecase.UCCodeHub{
 		RepoIssue: nil,
 		RepoStar:  nil,
-		RepoNews:  newsRepos,
+		RepoNews:  &newsRepos,
 	}
 
 	news.NewNewsServer(s, &UCRepos)
