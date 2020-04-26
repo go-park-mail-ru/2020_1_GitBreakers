@@ -76,7 +76,7 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 	return nil
 }
 
-func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset int64) ([]gitmodels.Repository, error) {
+func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset int64) (gitRepos []gitmodels.Repository, err error) {
 	rows, err := repo.DB.Query(
 		`	SELECT gr.id,
 					   gr.owner_id,
@@ -89,13 +89,17 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 						 JOIN git_repositories AS gr ON grus.repository_id = gr.id
 				WHERE grus.user_id = $1 LIMIT $2 OFFSET $3`,
 		userID, limit, offset)
-
 	if err != nil {
 		return nil, errors.Wrapf(err, "error occurs in StarRepository in GetStarredRepos function "+
 			"with userId=%v", userID)
 	}
 
-	var gitRepos []gitmodels.Repository
+	defer func() {
+		errRows := rows.Close()
+		if errRows != nil {
+			err = errors.Wrap(err, errRows.Error())
+		}
+	}()
 
 	for rows.Next() {
 		gitRepo := gitmodels.Repository{}
