@@ -18,6 +18,7 @@ type Config struct {
 	LOGFILE             string
 	HOST_TO_SAVE        string
 	GIT_USER_REPOS_DIR  string
+	GIT_SERVER_PORT     string
 	CSRF_SECRET_KEY     string
 	COOKIE_EXPIRE_HOURS int64
 }
@@ -39,6 +40,7 @@ func New() *Config {
 		GIT_USER_REPOS_DIR:  getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
 		CSRF_SECRET_KEY:     getEnv("CSRF_SECRET_KEY", ""),
 		COOKIE_EXPIRE_HOURS: getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
+		GIT_SERVER_PORT:     getEnv("GIT_SERVER_PORT", ":5000"),
 	}
 }
 

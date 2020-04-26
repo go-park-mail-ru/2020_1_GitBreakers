@@ -252,6 +252,8 @@ github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sosedoff/gitkit v0.2.0 h1:cVre9QZvsDzS/v42PSOsf+GCaecvb/CWGX+diP232F8=
 github.com/sosedoff/gitkit v0.2.0/go.mod h1:A+o6ZazfVJwetlcHz3ah6th66XcBdsyzLo+aBt/AsK4=
+github.com/sosedoff/gitkit v0.2.1-0.20191202022816-7182d43c6254 h1:O/uSUCnRlONVGr+v/JEXvFh3y9/FR5Dm1R2ypPFngVo=
+github.com/sosedoff/gitkit v0.2.1-0.20191202022816-7182d43c6254/go.mod h1:A+o6ZazfVJwetlcHz3ah6th66XcBdsyzLo+aBt/AsK4=
 github.com/steinfletcher/apitest v1.4.5 h1:BfKcS94yzsXomRV0Ojto999uziGGEz+AHh0iQWxrtu0=
 github.com/steinfletcher/apitest v1.4.5/go.mod h1:yaYc9GDlj4fa0qUUDywqAmrELlNbDrBwd36Zgo5hMZo=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

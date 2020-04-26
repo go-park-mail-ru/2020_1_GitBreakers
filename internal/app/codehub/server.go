@@ -35,7 +35,6 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	customLogger := logger.SimpleLogger{}
 	prometheus.MustRegister(monitoring.Hits, monitoring.RequestDuration, monitoring.DBQueryDuration)
 
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
@@ -44,7 +43,7 @@ func StartNew() {
 		f = os.Stdout
 	}
 
-	customLogger = logger.NewTextFormatSimpleLogger(f)
+	customLogger := logger.NewTextFormatSimpleLogger(f)
 
 	defer func() {
 		if f != os.Stdout {
