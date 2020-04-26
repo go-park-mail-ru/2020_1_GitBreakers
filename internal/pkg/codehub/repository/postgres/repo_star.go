@@ -95,8 +95,7 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 	}
 
 	defer func() {
-		errRows := rows.Close()
-		if errRows != nil {
+		if errRows := rows.Close(); errRows != nil {
 			err = errors.Wrap(err, errRows.Error())
 		}
 	}()
@@ -120,6 +119,45 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 
 	return gitRepos, nil
 }
-func (repo *StarRepository) GetUserStaredList(repoID int64, limit int64, offset int64) ([]models.User, error) {
-	panic("implement me")
+func (repo *StarRepository) GetUserStaredList(repoID int64, limit int64, offset int64) (users []models.User, err error) {
+	rows, err := repo.DB.Query(`
+				SELECT u.id,
+					   u.login,
+					   u.email,
+					   u.name,
+					   u.avatar_path,
+					   u.created_at
+				FROM git_repository_user_star AS grus
+						 JOIN users AS u ON grus.user_id = u.id
+				WHERE grus.repository_id = $1
+				LIMIT $2 OFFSET $3`,
+		repoID, limit, offset)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error occurs in StarRepository in GetUserStaredList function "+
+			"with repoID=%v", repoID)
+	}
+
+	defer func() {
+		if errRows := rows.Close(); errRows != nil {
+			err = errors.Wrap(err, errRows.Error())
+		}
+	}()
+
+	for rows.Next() {
+		user := models.User{}
+		err = rows.Scan(
+			&user.ID,
+			&user.Login,
+			&user.Email,
+			&user.Name,
+			&user.Image,
+			&user.CreatedAt)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error occurs in StarRepository in GetUserStaredList function "+
+				"while scanning users with repoID=%v", repoID)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }
