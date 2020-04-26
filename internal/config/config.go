@@ -19,6 +19,7 @@ type Config struct {
 	HOST_TO_SAVE        string
 	GIT_USER_REPOS_DIR  string
 	GIT_SERVER_PORT     string
+	NEWS_SERVER_PORT    string
 	CSRF_SECRET_KEY     string
 	COOKIE_EXPIRE_HOURS int64
 }
@@ -41,6 +42,7 @@ func New() *Config {
 		CSRF_SECRET_KEY:     getEnv("CSRF_SECRET_KEY", ""),
 		COOKIE_EXPIRE_HOURS: getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
 		GIT_SERVER_PORT:     getEnv("GIT_SERVER_PORT", ":5000"),
+		NEWS_SERVER_PORT:    getEnv("NEWS_SERVER_PORT", ":8083"),
 	}
 }
 

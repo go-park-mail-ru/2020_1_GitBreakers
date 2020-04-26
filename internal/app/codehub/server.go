@@ -103,7 +103,7 @@ func StartNew() {
 
 	r.Handle("/metrics", promhttp.Handler())
 
-	api := r.PathPrefix("/api/v1").Subrouter()
+	api := r.PathPrefix("/news/v1").Subrouter()
 	api.Use(csrfMiddleware)
 	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 

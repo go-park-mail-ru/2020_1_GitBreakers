@@ -326,5 +326,6 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	GD.Logger.HttpLogInfo(r.Context(), "news got success")
 }

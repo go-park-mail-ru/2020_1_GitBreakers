@@ -1,0 +1,25 @@
+syntax = "proto3";
+// protoc --go_out=plugins=grpc:. *.proto
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+package news;
+option go_package = ".;news";
+service News{
+  rpc Get(NewsReq)returns(NewsResp){}
+}
+
+message NewsReq {
+  int64 repoID = 1;
+  int64 userID = 2;
+  int64 limit = 3;
+  int64 offset = 4;
+}
+message NewsResp{
+  repeated NewsModel News = 1;
+}
+message NewsModel{
+  int64 ID = 1;
+  int64 AuthorID = 2;
+  string Message = 3;
+  google.protobuf.Timestamp CreatedAt = 4;
+}
