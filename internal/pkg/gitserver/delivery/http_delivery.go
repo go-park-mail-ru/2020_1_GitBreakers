@@ -5,16 +5,17 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	permTypes "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/sosedoff/gitkit"
 	"net/http"
-	"strings"
 )
 
 const (
-	pkgAnchor      = 0
-	gitReceivePack = "git-receive-pack"
-	gitUploadPack  = "git-upload-pack"
+	GitReceivePackService      = "git-receive-pack"
+	GitUploadPackService       = "git-upload-pack"
+	OwnerLoginMuxParameter     = "OwnerLogin"
+	RepositoryNameMuxParameter = "RepositoryName"
 )
 
 type GitServerDelivery struct {
@@ -27,35 +28,75 @@ type repoBasicInfo struct {
 	repoName   string
 }
 
-func CreateMainAuthMiddleware(delivery GitServerDelivery) func(http.Handler) http.Handler {
+func CreateGitIfoRefsMiddleware(delivery GitServerDelivery) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			var needNextHandler bool
-			var err error
 
-			switch r.Method {
-			case http.MethodGet:
-				if strings.HasSuffix(r.URL.Path, "/info/refs") {
-					needNextHandler, err = gitInfoRefsHandler(w, r, delivery)
-				}
-			case http.MethodPost:
-
-				switch true {
-				case strings.HasSuffix(r.URL.Path, "/"+gitUploadPack):
-					needNextHandler, err = gitUploadPackHandler(w, r, delivery)
-				case strings.HasSuffix(r.URL.Path, "/"+gitReceivePack):
-					needNextHandler, err = gitReceivePackHandler(w, r, delivery)
-				}
-			default:
+			if r.Method != http.MethodGet {
 				http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 				delivery.Logger.HttpLogWarning(r.Context(), "gitserver/delivery",
-					"MainAuthMiddleware", "called not implemented method")
+					"GitInfoRefsMiddleware", "called not implemented method")
 				return
 			}
 
+			needNextHandler, err := gitInfoRefsHandler(w, r, delivery)
+
 			if err != nil {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				delivery.Logger.HttpLogCallerError(r.Context(), pkgAnchor, err)
+				delivery.Logger.HttpLogCallerError(r.Context(), delivery, err)
+				return
+			}
+
+			if needNextHandler {
+				next.ServeHTTP(w, r)
+			}
+
+		})
+	}
+}
+
+func CreateGitUploadPackMiddleware(delivery GitServerDelivery) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			if r.Method != http.MethodPost {
+				http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
+				delivery.Logger.HttpLogWarning(r.Context(), "gitserver/delivery",
+					"GitUploadPackMiddleware", "called not implemented method")
+				return
+			}
+
+			needNextHandler, err := gitUploadPackHandler(w, r, delivery)
+
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				delivery.Logger.HttpLogCallerError(r.Context(), delivery, err)
+				return
+			}
+
+			if needNextHandler {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func CreateGitReceivePackMiddleware(delivery GitServerDelivery) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			if r.Method != http.MethodPost {
+				http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
+				delivery.Logger.HttpLogWarning(r.Context(), "gitserver/delivery",
+					"GitReceivePackMiddleware", "called not implemented method")
+				return
+			}
+
+			needNextHandler, err := gitReceivePackHandler(w, r, delivery)
+
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				delivery.Logger.HttpLogCallerError(r.Context(), delivery, err)
 				return
 			}
 
@@ -68,15 +109,15 @@ func CreateMainAuthMiddleware(delivery GitServerDelivery) func(http.Handler) htt
 
 func gitInfoRefsHandler(w http.ResponseWriter, r *http.Request, delivery GitServerDelivery) (bool, error) {
 	service := r.Header.Get("service")
-	if service != gitUploadPack && service != gitReceivePack {
+	if service != GitUploadPackService && service != GitReceivePackService {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return false, nil
 	}
 
 	switch service {
-	case gitUploadPack:
+	case GitUploadPackService:
 		return gitUploadPackHandler(w, r, delivery)
-	case gitReceivePack:
+	case GitReceivePackService:
 		return gitReceivePackHandler(w, r, delivery)
 	}
 
@@ -85,7 +126,7 @@ func gitInfoRefsHandler(w http.ResponseWriter, r *http.Request, delivery GitServ
 }
 
 func gitUploadPackHandler(w http.ResponseWriter, r *http.Request, delivery GitServerDelivery) (bool, error) {
-	repoInfo := getRepoInfo(gitUploadPack, r)
+	repoInfo := getRepoInfo(r)
 
 	perm, needNextHandle, err := GetPermissionsForRepo(w, r, repoInfo, delivery)
 	if err != nil {
@@ -104,7 +145,7 @@ func gitUploadPackHandler(w http.ResponseWriter, r *http.Request, delivery GitSe
 }
 
 func gitReceivePackHandler(w http.ResponseWriter, r *http.Request, delivery GitServerDelivery) (bool, error) {
-	repoInfo := getRepoInfo(gitReceivePack, r)
+	repoInfo := getRepoInfo(r)
 
 	haveReadAccess, err := delivery.UseCase.CheckGitRepositoryReadAccess(nil,
 		repoInfo.ownerLogin, repoInfo.repoName)
@@ -183,4 +224,19 @@ func processCredentials(w http.ResponseWriter, r *http.Request) (gitkit.Credenti
 	}
 
 	return getCredential(r)
+}
+
+func getCredential(request *http.Request) (cred gitkit.Credential, ok bool) {
+	cred.Username, cred.Password, ok = request.BasicAuth()
+	return cred, ok
+}
+
+func getRepoInfo(request *http.Request) repoBasicInfo {
+	ownerLogin := mux.Vars(request)[OwnerLoginMuxParameter]
+	repositoryName := mux.Vars(request)[RepositoryNameMuxParameter]
+
+	return repoBasicInfo{
+		ownerLogin: ownerLogin,
+		repoName:   repositoryName,
+	}
 }
