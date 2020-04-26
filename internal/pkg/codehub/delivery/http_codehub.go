@@ -66,7 +66,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repolist, err := GD.CodeHubUC.GetStarredRepo(userID, 100, 0)
+	repolist, err := GD.CodeHubUC.GetStarredRepos(userID, 100, 0)
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)

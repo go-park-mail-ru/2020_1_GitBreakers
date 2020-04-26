@@ -15,5 +15,3 @@ func NewUserServer(gserver *grpc.Server, UserUseCase codehub.UCCodeHubI) {
 	//RegisterUserGrpcServer(gserver, userServer)
 	reflection.Register(gserver)
 }
-
-

@@ -6,7 +6,7 @@ import (
 
 type UCCodeHubI interface {
 	ModifyStar(star models.Star) error
-	GetStarredRepo(userID, limit, offset int64) (models.RepoSet, error)
+	GetStarredRepos(userID, limit, offset int64) (models.RepoSet, error)
 	CreateIssue(issue models.Issue) error
 	UpdateIssue(issue models.Issue) error
 	CloseIssue(issueID, userID int64) error
@@ -14,5 +14,3 @@ type UCCodeHubI interface {
 	GetIssue(issueID, userID int64) (models.Issue, error)
 	GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error)
 }
-
-

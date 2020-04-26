@@ -21,8 +21,8 @@ func (UC *UCCodeHub) ModifyStar(star models.Star) error {
 	}
 }
 
-func (UC *UCCodeHub) GetStarredRepo(userID, limit, offset int64) (models.RepoSet, error) {
-	return UC.RepoStar.GetStarredRepo(userID, limit, offset)
+func (UC *UCCodeHub) GetStarredRepos(userID, limit, offset int64) (models.RepoSet, error) {
+	return UC.RepoStar.GetStarredRepos(userID, limit, offset)
 }
 
 func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
@@ -85,7 +85,7 @@ func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error)
 	}
 
 	if permis != perm.NoAccess() {
-		return GD.RepoIssue.GetIssues(issueID)
+		return GD.RepoIssue.GetIssue(issueID)
 	} else {
 		return models.Issue{}, entityerrors.AccessDenied()
 	}

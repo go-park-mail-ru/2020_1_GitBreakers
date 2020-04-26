@@ -12,5 +12,5 @@ type RepoIssueI interface {
 	GetIssuesList(repoID int64, limit int64, offset int64) ([]models.Issue, error)
 	CheckAccessIssue(userID, issueID int64) (perm.Permission, error) ///вернет "","read","update","close"
 	CheckAccessRepo(userID, repoID int64) (perm.Permission, error)
-	GetIssues(issueID int64) (models.Issue, error)
+	GetIssue(issueID int64) (models.Issue, error)
 }

@@ -166,18 +166,18 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
 	repoCodeHubIssue := postgresCodeHub.NewRepoIssue(db)
-	repoCodeHubStar := postgresCodeHub.NewRepoStar(db)
+	repoCodeHubStar := postgresCodeHub.NewStarRepository(db)
 	repoCodeHubNews := postgresCodeHub.NewRepoNews(db)
 
-	CodeHubUsecase := usecaseCodeHub.UCCodeHub{
-		RepoIssue: repoCodeHubIssue,
-		RepoStar:  repoCodeHubStar,
-		RepoNews:  repoCodeHubNews,
+	codeHubUseCase := usecaseCodeHub.UCCodeHub{
+		RepoIssue: &repoCodeHubIssue,
+		RepoStar:  &repoCodeHubStar,
+		RepoNews:  &repoCodeHubNews,
 	}
 
 	codeHubDelivery := delivery.HttpCodehub{
 		Logger:    &logger,
-		CodeHubUC: &CodeHubUsecase,
+		CodeHubUC: &codeHubUseCase,
 	}
 
 	sessDelivery := http2.SessionHttp{

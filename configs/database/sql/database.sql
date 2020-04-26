@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS git_repositories
     FOREIGN KEY (owner_id) REFERENCES users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
+
     UNIQUE (id, owner_id)
 );
 
@@ -42,9 +43,27 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
     FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
+
     UNIQUE (repository_id, user_id),
     CONSTRAINT users_git_repositories_pk PRIMARY KEY (repository_id, user_id)
 );
 
 alter table git_repositories
     add if not exists stars integer default 0 not null;
+
+CREATE TABLE IF NOT EXISTS git_repository_user_star
+(
+    repository_id BIGINT                                             NOT NULL,
+    user_id       BIGINT                                             NOT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    UNIQUE (repository_id, user_id),
+    CONSTRAINT git_repository_user_star_pk PRIMARY KEY (repository_id, user_id)
+)
