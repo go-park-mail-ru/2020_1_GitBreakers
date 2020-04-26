@@ -52,7 +52,7 @@ func main() {
 
 	news.NewNewsServer(s, &UCRepos)
 
-	l, err := net.Listen("tcp", conf.NEWS_SERVER_PORT)
+	l, err := net.Listen("tcp", ":8083")
 	if err != nil {
 		log.Println("cannot start service:", err)
 		return
