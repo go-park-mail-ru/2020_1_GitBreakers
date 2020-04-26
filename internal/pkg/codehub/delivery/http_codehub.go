@@ -304,7 +304,7 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	news, err := GD.CodeHubUC.GetNews(int64(repoID), res.(int64))
+	news, err := GD.CodeHubUC.GetNews(int64(repoID), res.(int64), 100, 0)
 
 	switch {
 	case err == entityerrors.AccessDenied():

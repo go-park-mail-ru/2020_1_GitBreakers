@@ -12,7 +12,7 @@ type UCCodeHubI interface {
 	CloseIssue(issueID, userID int64) error
 	GetIssuesList(repoID, userID, limit, offset int64) (models.IssuesSet, error)
 	GetIssue(issueID, userID int64) (models.Issue, error)
-	GetNews(repoID, userID int64) (models.NewsSet, error)
+	GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error)
 }
 
 

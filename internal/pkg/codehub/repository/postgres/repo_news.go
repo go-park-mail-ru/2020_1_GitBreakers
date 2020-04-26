@@ -13,6 +13,6 @@ type RepoNews struct {
 func NewRepoNews(db *sqlx.DB) codehub.RepoNewsI {
 	return &RepoNews{DB: db}
 }
-func (R *RepoNews) GetNews(repoID int64, limit int64, offset int64) (models.News, error) {
+func (R *RepoNews) GetNews(repoID int64, limit int64, offset int64) (models.NewsSet, error) {
 	panic("implement me")
 }

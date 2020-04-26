@@ -91,6 +91,15 @@ func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error)
 	}
 }
 
-func (UC *UCCodeHub) GetNews(repoID, userID int64) (models.NewsSet, error) {
-	panic("implement me")
+func (UC *UCCodeHub) GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error) {
+	permis, err := UC.RepoIssue.CheckAccessRepo(userID, repoID)
+	if err != nil {
+		return nil, err
+	}
+
+	if permis != perm.NoAccess() {
+		return UC.RepoNews.GetNews(repoID, limit, offset)
+	} else {
+		return models.NewsSet{}, entityerrors.AccessDenied()
+	}
 }
