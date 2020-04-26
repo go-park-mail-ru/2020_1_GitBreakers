@@ -19,7 +19,7 @@ func StartNew() {
 	conf := config.New()
 	prometheus.MustRegister(monitoring.Hits, monitoring.RequestDuration, monitoring.DBQueryDuration)
 
-	// userClient, err := clients.NewUserClient()
+	//userClient, err := clients.NewUserClient()
 	//if err != nil {
 	//	log.Fatal(err, "not connect to auth server")
 	//}
@@ -45,16 +45,15 @@ func StartNew() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
+	// repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+
 	gitkitConfig := gitkit.Config{
 		Dir:        conf.GIT_USER_REPOS_DIR,
-		AutoCreate: false,
-		Auth:       true,
+		AutoCreate: false, // Do not create repository if it not exist
+		Auth:       false, // TODO use ow authentication based on middleware
 	}
 
 	gitkitServer := gitkit.New(gitkitConfig)
-	gitkitServer.AuthFunc = func(credential gitkit.Credential, request *gitkit.Request) (bool, error) {
-		return true, nil // TODO implement me
-	}
 
 	if err := gitkitServer.Setup(); err != nil {
 		customLogger.Fatalln("cannot start gitserver:", err)
