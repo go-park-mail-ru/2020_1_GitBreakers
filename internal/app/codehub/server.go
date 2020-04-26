@@ -147,9 +147,7 @@ func StartNew() {
 }
 
 func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*http3.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
-	//sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
-	//sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
 	sessClient, err := clients.NewSessClient()
 	if err != nil {
 		logger.Fatal(err, "not connect to auth server")
@@ -158,6 +156,10 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	userClient, err := clients.NewUserClient()
 	if err != nil {
 		logger.Fatal(err, "not connect to auth server")
+	}
+	newsClient, err := clients.NewNewsClient()
+	if err != nil {
+		logger.Fatal(err, "not connect to news server")
 	}
 
 	userUCase := userUC.UCUser{RepUser: &userRepos}
@@ -176,8 +178,9 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	}
 
 	codeHubDelivery := delivery.HttpCodehub{
-		Logger:    &logger,
-		CodeHubUC: &CodeHubUsecase,
+		Logger:     &logger,
+		CodeHubUC:  &CodeHubUsecase,
+		NewsClient: &newsClient,
 	}
 
 	sessDelivery := http2.SessionHttp{

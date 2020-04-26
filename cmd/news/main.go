@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	news "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/grpc"
 	dbCodehub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
-	usergrpc "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/grpc"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -43,15 +43,16 @@ func main() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 	newsRepos := dbCodehub.NewRepoNews(db)
+
 	UCRepos := usecase.UCCodeHub{
 		RepoIssue: nil,
 		RepoStar:  nil,
 		RepoNews:  newsRepos,
 	}
 
-	usergrpc.NewUserServer(s, &userUCase)
+	news.NewNewsServer(s, &UCRepos)
 
-	l, err := net.Listen("tcp", ":8082")
+	l, err := net.Listen("tcp", conf.NEWS_SERVER_PORT)
 	if err != nil {
 		log.Println("cannot start service:", err)
 		return

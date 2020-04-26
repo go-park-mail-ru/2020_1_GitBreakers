@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"github.com/asaskevich/govalidator"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
@@ -13,8 +14,9 @@ import (
 )
 
 type HttpCodehub struct {
-	Logger    *logger.SimpleLogger
-	CodeHubUC codehub.UCCodeHubI
+	Logger     *logger.SimpleLogger
+	CodeHubUC  codehub.UCCodeHubI
+	NewsClient *clients.NewsClient
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
@@ -304,7 +306,7 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	news, err := GD.CodeHubUC.GetNews(int64(repoID), res.(int64), 100, 0)
+	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), 100, 0)
 
 	switch {
 	case err == entityerrors.AccessDenied():
