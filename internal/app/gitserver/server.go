@@ -1,6 +1,7 @@
 package gitserver
 
 import (
+	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/monitoring"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
+	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
@@ -56,6 +58,7 @@ func StartNew() {
 
 	gitkitConfig := gitkit.Config{
 		Dir:        conf.GIT_USER_REPOS_DIR,
+		AutoHooks:  false, // Do not initialise hooks, because we use nested directories
 		AutoCreate: false, // Do not create repository if it not exist
 		Auth:       false, // We use own authentication based on middleware
 	}
@@ -69,24 +72,30 @@ func StartNew() {
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
-	// Later we cat add news integration based on response status code in this middleware
-	authMiddleware := delivery.CreateMainAuthMiddleware(delivery.GitServerDelivery{
+	routerTemplate := fmt.Sprintf("/{%s}/{%s}",
+		delivery.OwnerLoginMuxParameter, delivery.RepositoryNameMuxParameter)
+
+	router := mux.NewRouter().PathPrefix(routerTemplate).Subrouter()
+
+	router.Use(middleware.PrometheusMetricsMiddleware, panicMiddleware, loggerMWare)
+
+	gitServerDelivery := delivery.GitServerDelivery{
 		UseCase: usecase.NewUseCase(repogit, userClient),
 		Logger:  customLogger,
-	})
+	}
 
-	gitServer := middleware.PrometheusMetricsMiddleware(
-		panicMiddleware(
-			loggerMWare(
-				authMiddleware(
-					gitkitServer))))
+	gitInfoRefsHandler := delivery.CreateGitIfoRefsMiddleware(gitServerDelivery)(gitkitServer)
+	gitUploadPackHandler := delivery.CreateGitUploadPackMiddleware(gitServerDelivery)(gitkitServer)
+	gitReceivePackHandler := delivery.CreateGitReceivePackMiddleware(gitServerDelivery)(gitkitServer)
 
-	http.Handle("/", gitServer)
+	router.Handle("/info/refs", gitInfoRefsHandler).Methods(http.MethodGet)
+	router.Handle("/"+delivery.GitUploadPackService, gitUploadPackHandler).Methods(http.MethodPost)
+	router.Handle("/"+delivery.GitReceivePackService, gitReceivePackHandler).Methods(http.MethodPost)
 
 	customLogger.Printf("starting git server with GIT_SERVER_PORT=%v\n", conf.GIT_SERVER_PORT)
-	customLogger.Printf("starting git server with GIT_SERVER_PORT=%v\n", conf.GIT_USER_REPOS_DIR)
+	customLogger.Printf("starting git server with GIT_USER_REPOS_DIR=%v\n", conf.GIT_USER_REPOS_DIR)
 
-	if err := http.ListenAndServe(conf.GIT_SERVER_PORT, nil); err != nil {
+	if err := http.ListenAndServe(conf.GIT_SERVER_PORT, router); err != nil {
 		customLogger.Fatalln("cannot start http git server:", err)
 	}
 }
