@@ -17,6 +17,7 @@ type HttpCodehub struct {
 	Logger     *logger.SimpleLogger
 	CodeHubUC  codehub.UCCodeHubI
 	NewsClient *clients.NewsClient
+	UserClient *clients.UserClient
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
@@ -54,21 +55,32 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
-	if res == nil {
-		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+	userLogin := mux.Vars(r)["login"]
 
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
 	}
 
-	userID, ok := res.(int64)
-	if !ok {
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	user, err := GD.UserClient.GetByLogin(userLogin)
+
+	switch {
+	case err == entityerrors.DoesNotExist():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	repolist, err := GD.CodeHubUC.GetStarredRepo(userID, 100, 0)
+	repolist, err := GD.CodeHubUC.GetStarredRepo(user.ID, int64(limit), int64(offset))
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -293,7 +305,6 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 }
 func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
-
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)

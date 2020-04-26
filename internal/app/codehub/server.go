@@ -103,7 +103,7 @@ func StartNew() {
 
 	r.Handle("/metrics", promhttp.Handler())
 
-	api := r.PathPrefix("/news/v1").Subrouter()
+	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
 	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
@@ -131,7 +131,7 @@ func StartNew() {
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
-	r.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
+	r.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 
 	r.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 

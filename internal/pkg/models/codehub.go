@@ -26,6 +26,7 @@ type Star struct {
 type News struct {
 	ID       int64     `json:"id"`
 	AuthorID int64     `json:"author_id"`
+	RepoID   int64     `json:"repo_id"`
 	Mess     string    `json:"message"`
 	Date     time.Time `json:"date"`
 }
