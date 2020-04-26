@@ -103,3 +103,6 @@ func (UC *UCCodeHub) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 		return models.NewsSet{}, entityerrors.AccessDenied()
 	}
 }
+func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) (models.UserSet, error) {
+	return UC.RepoStar.GetUserStaredList(repoID, limit, offset)
+}

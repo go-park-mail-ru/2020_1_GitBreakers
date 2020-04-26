@@ -131,6 +131,7 @@ func StartNew() {
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
 	r.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 
 	r.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)

@@ -509,6 +509,30 @@ Required: id
 Ответ:  
 1. 200 ок  
 2. 404 нет юзера с таким логином  
+### 6.3 Список юзеров которые лайкнули репозиторий  
+Запрос: `/func/repo/{repoID}/stars/users?limit=100&offset=2` типа `GET`  
+Тело: 
+```json
+[{
+    "id": "int",
+    "login": "string",
+    "email": "string",
+    "name": "string",
+    "image": "string"
+},
+{
+    "id": "int",
+    "login": "string",
+    "email": "string",
+    "name": "string",
+    "image": "string"
+}]
+``` 
+Ответ:  
+1. 200 ок  
+2. 400 вместо repoID  скидывают строку  
+3. 403 нет прав на просмотр    
+4. 404 нет такого repoID  
 ## 7. News  
 ### 7.1 Список новостей   
 Запрос: `/func/repo/{repoID}/news?limit=100&offset=2` типа `GET`  

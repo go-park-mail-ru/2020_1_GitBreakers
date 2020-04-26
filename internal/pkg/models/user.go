@@ -14,4 +14,7 @@ type SignInForm struct {
 	Password string `json:"password" valid:"stringlength(5|128)"`
 }
 
+//easyjson:json
+type UserSet []User
+
 //easyjson -all path/to/file.go

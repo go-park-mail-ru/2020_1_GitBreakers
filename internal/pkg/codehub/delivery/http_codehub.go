@@ -95,6 +95,45 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 
 	GD.Logger.HttpLogInfo(r.Context(), "repolist got success")
 }
+func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
+	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	userlist, err := GD.CodeHubUC.GetUserStaredList(int64(repoID), int64(limit), int64(offset))
+
+	switch {
+	case err == entityerrors.DoesNotExist():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(userlist, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	GD.Logger.HttpLogInfo(r.Context(), "userlist got success")
+}
 
 func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
