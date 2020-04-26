@@ -7,7 +7,6 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"github.com/mailru/easyjson"
 	"net/http"
 	"strconv"
@@ -15,8 +14,7 @@ import (
 
 type HttpCodehub struct {
 	Logger    *logger.SimpleLogger
-	CodeHubUC codehub.UCCodeHub
-	Ws        websocket.Upgrader
+	CodeHubUC codehub.UCCodeHubI
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
@@ -293,13 +291,40 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 }
 func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
+
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 
 	}
+	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	news, err := GD.CodeHubUC.GetNews(int64(repoID), res.(int64))
 
+	switch {
+	case err == entityerrors.AccessDenied():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err == entityerrors.DoesNotExist():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	GD.Logger.HttpLogInfo(r.Context(), "news getted success")
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(news, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	GD.Logger.HttpLogInfo(r.Context(), "news got success")
 }

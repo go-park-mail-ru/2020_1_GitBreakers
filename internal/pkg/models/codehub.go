@@ -27,6 +27,10 @@ type News struct {
 	Mess string    `json:"mess"`
 	Date time.Time `json:"date"`
 }
+//easyjson:json
+type NewsSet []News
+
+
 
 //easyjson:json
 type RepoSet []gitmodels.Repository

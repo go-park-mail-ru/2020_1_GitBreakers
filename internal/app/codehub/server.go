@@ -177,7 +177,6 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	codeHubDelivery := delivery.HttpCodehub{
 		Logger:    &logger,
 		CodeHubUC: &CodeHubUsecase,
-		Ws:        wsUpgrader,
 	}
 
 	sessDelivery := http2.SessionHttp{
