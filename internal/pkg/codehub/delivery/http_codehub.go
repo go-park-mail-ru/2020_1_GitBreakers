@@ -53,7 +53,7 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 
 	err = GD.CodeHubUC.ModifyStar(newStar)
 	switch {
-	case err == entityerrors.AlreadyExist():
+	case err == entityerrors.DoesNotExist() || err == entityerrors.AlreadyExist():
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusConflict)
 		return
