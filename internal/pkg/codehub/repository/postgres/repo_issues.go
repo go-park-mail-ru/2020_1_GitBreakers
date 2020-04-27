@@ -255,8 +255,8 @@ func (repo *IssueRepository) CheckEditAccessIssue(userID, issueID int64) (perm.P
 	).Scan(&issueAuthorId, &issueRepoId)
 
 	switch {
-	case err == entityerrors.DoesNotExist():
-		return perm.NoAccess(), err
+	case err == sql.ErrNoRows:
+		return perm.NoAccess(), entityerrors.DoesNotExist()
 	case err != nil:
 		return perm.NoAccess(), errors.Wrapf(err, "error occurs in IssuesRepository"+
 			" while getting issueAuthorId and issueRepoId in CheckEditAccessIssue with userID=%v, issueID=%v",
