@@ -246,8 +246,41 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 }
 
 func (repo *IssueRepository) CheckAccessIssue(userID, issueID int64) (perm.Permission, error) {
-	return perm.AdminAccess(), nil
+	var issueAuthorId int64
+	var issueRepoId int64
 
+	err := repo.DB.QueryRow(
+		`SELECT author_id, repo_id FROM issues WHERE id = $1`,
+		issueID,
+	).Scan(&issueAuthorId, &issueRepoId)
+
+	switch {
+	case err == entityerrors.DoesNotExist():
+		return perm.NoAccess(), err
+	case err != nil:
+		return perm.NoAccess(), errors.Wrapf(err, "error occurs in IssuesRepository"+
+			" while getting issueAuthorId and issueRepoId in CheckAccessIssue with userID=%v, issueID=%v",
+			userID, issueID)
+	}
+
+	if issueAuthorId == userID {
+		return perm.OwnerAccess(), nil
+	}
+
+	var gitRepoRole string
+	err = repo.DB.QueryRow(
+		`SELECT role FROM users_git_repositories WHERE repository_id = $1 AND user_id = $2`,
+		issueRepoId, userID).Scan(&gitRepoRole)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return perm.NoAccess(), nil
+	case err != nil:
+		return perm.NoAccess(), errors.Wrapf(err, "error occurs in IssuesRepository"+
+			" in CheckAccessIssue while checking repo access with userID=%v, issueID=%v", userID, issueID)
+	}
+
+	return perm.Permission(gitRepoRole), nil
 }
 
 func (repo *IssueRepository) CheckAccessRepo(userID, repoID int64) (perm.Permission, error) {
