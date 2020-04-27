@@ -71,7 +71,7 @@ func (repo *IssueRepository) CloseIssue(issueID int64) error {
 		`,
 		issueID).Scan(&isAffected)
 
-	switch true {
+	switch {
 	case err == sql.ErrNoRows:
 		return entityerrors.Invalid()
 	case err != nil:
@@ -266,7 +266,7 @@ func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err er
 		&issue.CreatedAt,
 	)
 
-	switch true {
+	switch {
 	case err == sql.ErrNoRows:
 		return issue, entityerrors.DoesNotExist()
 	case err != nil:
