@@ -58,7 +58,7 @@ func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
 		return err
 	}
 
-	if permis == perm.WriteAccess() || permis == perm.AdminAccess() {
+	if permis == perm.WriteAccess() || permis == perm.AdminAccess() || permis == perm.OwnerAccess() {
 		return GD.RepoIssue.UpdateIssue(issue)
 	} else {
 		return entityerrors.AccessDenied()
@@ -72,7 +72,7 @@ func (GD *UCCodeHub) CloseIssue(issueID int64, userID int64) error {
 		return err
 	}
 
-	if permis == perm.WriteAccess() || permis == perm.AdminAccess() {
+	if permis == perm.WriteAccess() || permis == perm.AdminAccess() || permis == perm.OwnerAccess() {
 		return GD.RepoIssue.CloseIssue(issueID)
 	} else {
 		return entityerrors.AccessDenied()
@@ -102,16 +102,7 @@ func (UC *UCCodeHub) GetIssuesList(repoID, userID, limit, offset int64) (models.
 }
 
 func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error) {
-	permis, err := GD.RepoIssue.CheckEditAccessIssue(userID, issueID)
-	if err != nil {
-		return models.Issue{}, err
-	}
-
-	if permis != perm.NoAccess() {
-		return GD.RepoIssue.GetIssue(issueID)
-	} else {
-		return models.Issue{}, entityerrors.AccessDenied()
-	}
+	return GD.RepoIssue.GetIssue(issueID)
 }
 
 func (UC *UCCodeHub) GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error) {
