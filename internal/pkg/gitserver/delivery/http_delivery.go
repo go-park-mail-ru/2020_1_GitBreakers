@@ -108,7 +108,7 @@ func CreateGitReceivePackMiddleware(delivery GitServerDelivery) func(http.Handle
 }
 
 func gitInfoRefsHandler(w http.ResponseWriter, r *http.Request, delivery GitServerDelivery) (bool, error) {
-	service := r.Header.Get("service")
+	service := r.URL.Query().Get("service")
 	if service != GitUploadPackService && service != GitReceivePackService {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return false, nil
@@ -128,7 +128,16 @@ func gitInfoRefsHandler(w http.ResponseWriter, r *http.Request, delivery GitServ
 func gitUploadPackHandler(w http.ResponseWriter, r *http.Request, delivery GitServerDelivery) (bool, error) {
 	repoInfo := getRepoInfo(r)
 
-	perm, needNextHandle, err := GetPermissionsForRepo(w, r, repoInfo, delivery)
+	haveReadAccess, err := delivery.UseCase.CheckGitRepositoryReadAccess(nil,
+		repoInfo.ownerLogin, repoInfo.repoName)
+	if err != nil {
+		return false, err
+	}
+	if haveReadAccess {
+		return true, nil
+	}
+
+	perm, needNextHandle, err := getPermissionsForRepo(w, r, repoInfo, delivery)
 	if err != nil {
 		return false, err
 	}
@@ -147,16 +156,7 @@ func gitUploadPackHandler(w http.ResponseWriter, r *http.Request, delivery GitSe
 func gitReceivePackHandler(w http.ResponseWriter, r *http.Request, delivery GitServerDelivery) (bool, error) {
 	repoInfo := getRepoInfo(r)
 
-	haveReadAccess, err := delivery.UseCase.CheckGitRepositoryReadAccess(nil,
-		repoInfo.ownerLogin, repoInfo.repoName)
-	if err != nil {
-		return false, err
-	}
-	if haveReadAccess {
-		return true, nil
-	}
-
-	perm, needNextHandle, err := GetPermissionsForRepo(w, r, repoInfo, delivery)
+	perm, needNextHandle, err := getPermissionsForRepo(w, r, repoInfo, delivery)
 	if err != nil {
 		return false, err
 	}
@@ -172,7 +172,7 @@ func gitReceivePackHandler(w http.ResponseWriter, r *http.Request, delivery GitS
 	return needNextHandle, nil
 }
 
-func GetPermissionsForRepo(w http.ResponseWriter, r *http.Request, repoInfo repoBasicInfo,
+func getPermissionsForRepo(w http.ResponseWriter, r *http.Request, repoInfo repoBasicInfo,
 	delivery GitServerDelivery) (permTypes.Permission, bool, error) {
 
 	cred, ok := processCredentials(w, r)
@@ -185,7 +185,7 @@ func GetPermissionsForRepo(w http.ResponseWriter, r *http.Request, repoInfo repo
 	// check user credentials
 	isValidCred, err := delivery.UseCase.CheckUserPassword(cred.Username, cred.Password)
 
-	switch true {
+	switch {
 	case errors.Cause(err) == entityerrors.DoesNotExist():
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return permTypes.NoAccess(), false, nil

@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	gitRepoPostfix = ".git"
+	gitRepositoryNameSuffix = ".git"
 )
 
 type Repository struct {
@@ -85,7 +85,7 @@ func isRepoExistsInDb(queryer queryer, ownerId int64, repoName string) (bool, er
 }
 
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
-	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepoPostfix
+	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepositoryNameSuffix
 }
 
 func (repo Repository) createRepoPath(queryer queryer, ownerId int64, repoName string) (string, error) {
