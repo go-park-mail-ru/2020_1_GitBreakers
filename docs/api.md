@@ -475,7 +475,6 @@ Required: id
 Тело: 
 ```json
 {
-  "repo_id": 24,
   "vote": true
 }
 ``` 
