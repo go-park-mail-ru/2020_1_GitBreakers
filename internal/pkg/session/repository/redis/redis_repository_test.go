@@ -40,7 +40,7 @@ func (s *redisTestSuite) SetupSuite() {
 func (s *redisTestSuite) SetupTest() {
 	s.session = models.Session{
 		ID:     uuid.NewV4().String(),
-		UserID: rand.Int(),
+		UserID: rand.Int63(),
 	}
 }
 

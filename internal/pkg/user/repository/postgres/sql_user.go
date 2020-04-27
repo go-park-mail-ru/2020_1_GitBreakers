@@ -168,7 +168,7 @@ func (repo UserRepo) CheckPass(login string, newpass string) (bool, error) {
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(User.Password), []byte(newpass))
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 	return true, nil
 }

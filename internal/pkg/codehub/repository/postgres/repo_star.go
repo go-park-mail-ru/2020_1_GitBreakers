@@ -65,7 +65,7 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 		"DELETE FROM git_repository_user_stars WHERE repository_id = $1 AND user_id = $2 RETURNING TRUE",
 		repoID, userID).Scan(&isDeleted)
 
-	switch true {
+	switch {
 	case err == sql.ErrNoRows:
 		return entityerrors.DoesNotExist()
 	case err != nil:

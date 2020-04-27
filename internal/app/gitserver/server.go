@@ -72,7 +72,7 @@ func StartNew() {
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
-	routerTemplate := fmt.Sprintf("/{%s}/{%s}",
+	routerTemplate := fmt.Sprintf("/{%s}/{%s}.git",
 		delivery.OwnerLoginMuxParameter, delivery.RepositoryNameMuxParameter)
 
 	router := mux.NewRouter().PathPrefix(routerTemplate).Subrouter()
