@@ -183,6 +183,10 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
+	case err == entityerrors.AlreadyExist():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
+		return
 	case err == entityerrors.DoesNotExist():
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)

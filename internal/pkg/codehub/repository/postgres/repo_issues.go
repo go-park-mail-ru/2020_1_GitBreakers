@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
@@ -29,12 +30,21 @@ func (repo *IssueRepository) CreateIssue(issue models.Issue) error {
 		issue.Message,
 		issue.Label,
 	)
-	if err != nil {
-		return errors.Wrapf(err, "error occurs in IssuesRepository in CreateIssue "+
-			"with issue=%+v", issue)
+	if err == nil {
+		return nil
 	}
+	if err, ok := err.(*pq.Error); ok {
+		switch err.Code {
+		case "23505":
+			return entityerrors.AlreadyExist()
+		default:
+			return errors.Wrapf(err, "error occurs in IssuesRepository in CreateIssue "+
+				"with issue=%+v", issue)
 
-	return nil
+		}
+	}
+	return err
+
 }
 
 func (repo *IssueRepository) UpdateIssue(issue models.Issue) error {
