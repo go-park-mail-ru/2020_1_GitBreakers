@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	usergrpc "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/grpc"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 type UserClient struct {
@@ -40,7 +42,14 @@ func (c *UserClient) Create(User models.User) error {
 	}
 
 	_, err := c.client.Create(context.Background(), &userModelGRPC)
-	return err
+
+	stat := status.Convert(err)
+	switch {
+	case stat.Message() == entityerrors.AlreadyExist().Error():
+		return entityerrors.AlreadyExist()
+	default:
+		return err
+	}
 }
 
 func (c *UserClient) Update(userID int64, newUserData models.User) error {
@@ -53,15 +62,25 @@ func (c *UserClient) Update(userID int64, newUserData models.User) error {
 		UserData: &grpcUserModel,
 	}
 	_, err := c.client.UpdateUser(context.Background(), &userUPDModel)
-	return err
+	stat := status.Convert(err)
+	switch {
+	case stat.Message() == entityerrors.AlreadyExist().Error():
+		return entityerrors.AlreadyExist()
+	default:
+		return err
+	}
 }
 func (c *UserClient) GetByLogin(login string) (models.User, error) {
 	loginGRPC := &usergrpc.LoginModel{Login: login}
 
 	userGRPCModel, err := c.client.GetByLogin(context.Background(), loginGRPC)
+	stat := status.Convert(err)
+	switch {
+	case stat.Message() == entityerrors.DoesNotExist().Error():
+		return models.User{}, entityerrors.DoesNotExist()
+	}
 
 	userFromServer := models.User{}
-
 
 	if err := copier.Copy(&userFromServer, userGRPCModel); err != nil {
 		return models.User{}, err
@@ -73,6 +92,11 @@ func (c *UserClient) GetByID(userID int64) (models.User, error) {
 	idGRPC := &usergrpc.UserIDModel{UserID: userID}
 
 	userGRPCModel, err := c.client.GetByID(context.Background(), idGRPC)
+	stat := status.Convert(err)
+	switch {
+	case stat.Message() == entityerrors.DoesNotExist().Error():
+		return models.User{}, entityerrors.DoesNotExist()
+	}
 
 	userFromServer := models.User{}
 
