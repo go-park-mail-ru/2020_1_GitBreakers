@@ -53,7 +53,7 @@ func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
 }
 
 func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
-	permis, err := GD.RepoIssue.CheckAccessIssue(issue.AuthorID, issue.RepoID)
+	permis, err := GD.RepoIssue.CheckEditAccessIssue(issue.AuthorID, issue.RepoID)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
 }
 
 func (GD *UCCodeHub) CloseIssue(issueID int64, userID int64) error {
-	permis, err := GD.RepoIssue.CheckAccessIssue(userID, issueID)
+	permis, err := GD.RepoIssue.CheckEditAccessIssue(userID, issueID)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (UC *UCCodeHub) GetIssuesList(repoID, userID, limit, offset int64) (models.
 }
 
 func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error) {
-	permis, err := GD.RepoIssue.CheckAccessIssue(userID, issueID)
+	permis, err := GD.RepoIssue.CheckEditAccessIssue(userID, issueID)
 	if err != nil {
 		return models.Issue{}, err
 	}

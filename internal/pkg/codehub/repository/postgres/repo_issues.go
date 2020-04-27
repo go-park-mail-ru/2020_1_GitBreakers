@@ -245,7 +245,7 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 	return issues, nil
 }
 
-func (repo *IssueRepository) CheckAccessIssue(userID, issueID int64) (perm.Permission, error) {
+func (repo *IssueRepository) CheckEditAccessIssue(userID, issueID int64) (perm.Permission, error) {
 	var issueAuthorId int64
 	var issueRepoId int64
 
@@ -259,7 +259,7 @@ func (repo *IssueRepository) CheckAccessIssue(userID, issueID int64) (perm.Permi
 		return perm.NoAccess(), err
 	case err != nil:
 		return perm.NoAccess(), errors.Wrapf(err, "error occurs in IssuesRepository"+
-			" while getting issueAuthorId and issueRepoId in CheckAccessIssue with userID=%v, issueID=%v",
+			" while getting issueAuthorId and issueRepoId in CheckEditAccessIssue with userID=%v, issueID=%v",
 			userID, issueID)
 	}
 
@@ -277,7 +277,7 @@ func (repo *IssueRepository) CheckAccessIssue(userID, issueID int64) (perm.Permi
 		return perm.NoAccess(), nil
 	case err != nil:
 		return perm.NoAccess(), errors.Wrapf(err, "error occurs in IssuesRepository"+
-			" in CheckAccessIssue while checking repo access with userID=%v, issueID=%v", userID, issueID)
+			" in CheckEditAccessIssue while checking repo access with userID=%v, issueID=%v", userID, issueID)
 	}
 
 	return perm.Permission(gitRepoRole), nil
