@@ -236,11 +236,12 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 }
 
 func (repo *IssueRepository) CheckAccessIssue(userID, issueID int64) (perm.Permission, error) {
-	panic("implement me") // TODO
+	return perm.AdminAccess(), nil
+
 }
 
 func (repo *IssueRepository) CheckAccessRepo(userID, repoID int64) (perm.Permission, error) {
-	panic("implement me") // TODO use repository for GitRepository
+	return perm.AdminAccess(), nil
 }
 
 func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err error) {

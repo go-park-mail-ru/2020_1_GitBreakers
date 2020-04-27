@@ -152,6 +152,12 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	userID, ok := res.(int64)
 	if !ok {
@@ -168,8 +174,9 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newIssue.AuthorID = userID
+	newIssue.RepoID = int64(repoID)
 
-	err := GD.CodeHubUC.CreateIssue(newIssue)
+	err = GD.CodeHubUC.CreateIssue(newIssue)
 
 	switch {
 	case err == entityerrors.AccessDenied():
@@ -237,10 +244,10 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		oldIssue.Message = newIssue.Message
 	}
 	if govalidator.IsByteLength(newIssue.Title, 1, 256) {
-		oldIssue.Message = newIssue.Title
+		oldIssue.Title = newIssue.Title
 	}
 	if govalidator.IsByteLength(newIssue.Label, 0, 100) {
-		oldIssue.Message = newIssue.Label
+		oldIssue.Label = newIssue.Label
 	}
 
 	err = GD.CodeHubUC.UpdateIssue(oldIssue)
@@ -289,12 +296,6 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(issueslist, w); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -365,7 +366,7 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), 100, 0)
+	news, err := GD.CodeHubUC.GetNews(int64(repoID), res.(int64), 100, 0)
 
 	switch {
 	case err == entityerrors.AccessDenied():
