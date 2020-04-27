@@ -168,7 +168,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
-	repoCodeHubIssue := postgresCodeHub.NewRepoIssue(db)
+	repoCodeHubIssue := postgresCodeHub.NewIssueRepository(db)
 	repoCodeHubStar := postgresCodeHub.NewStarRepository(db)
 	repoCodeHubNews := postgresCodeHub.NewRepoNews(db)
 
