@@ -40,3 +40,6 @@ type FilesCommitRequest struct {
 	HashCommits string `json:"hash_commits"`
 	Path        string `schema:"path"`
 }
+
+//easyjson:json
+type FileInCommitSet []FileInCommit

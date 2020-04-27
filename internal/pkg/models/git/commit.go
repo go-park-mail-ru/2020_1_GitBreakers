@@ -20,3 +20,6 @@ type CommitRequest struct {
 	Offset     int64  `json:"offset" schema:"offset"`
 	Limit      int64  `json:"limit" schema:"limit"`
 }
+
+//easyjson:json
+type CommitSet []Commit

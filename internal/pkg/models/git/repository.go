@@ -12,3 +12,6 @@ type Repository struct {
 	IsPublic    bool      `json:"is_public" valid:"-"`
 	Stars       int64     `json:"stars" valid:"-"`
 }
+
+//easyjson:json
+type RepositorySet []Repository

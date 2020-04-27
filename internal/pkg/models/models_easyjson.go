@@ -115,6 +115,10 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			out.Image = string(in.String())
 		case "email":
 			out.Email = string(in.String())
+		case "created_at":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CreatedAt).UnmarshalJSON(data))
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -158,6 +162,11 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"email\":"
 		out.RawString(prefix)
 		out.String(string(in.Email))
+	}
+	{
+		const prefix string = ",\"created_at\":"
+		out.RawString(prefix)
+		out.Raw((in.CreatedAt).MarshalJSON())
 	}
 	out.RawByte('}')
 }
