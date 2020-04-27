@@ -251,7 +251,7 @@ func (repo *IssueRepository) CheckAccessIssue(userID, issueID int64) (perm.Permi
 }
 
 func (repo *IssueRepository) CheckAccessRepo(userID, repoID int64) (perm.Permission, error) {
-	return perm.AdminAccess(), nil
+	panic("implement panic")
 }
 
 func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err error) {

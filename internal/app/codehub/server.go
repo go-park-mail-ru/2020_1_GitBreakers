@@ -176,6 +176,8 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		RepoIssue: &repoCodeHubIssue,
 		RepoStar:  &repoCodeHubStar,
 		RepoNews:  &repoCodeHubNews,
+		GitRepo:   repogit,
+		UserRepo:  userRepos,
 	}
 
 	codeHubDelivery := delivery.HttpCodehub{

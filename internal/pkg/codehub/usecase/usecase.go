@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 )
@@ -11,6 +13,8 @@ type UCCodeHub struct {
 	RepoIssue codehub.RepoIssueI
 	RepoStar  codehub.RepoStarI
 	RepoNews  codehub.RepoNewsI
+	GitRepo   git.Repository
+	UserRepo  user.RepoUser
 }
 
 func (UC *UCCodeHub) ModifyStar(star models.Star) error {
@@ -26,12 +30,22 @@ func (UC *UCCodeHub) GetStarredRepos(userID, limit, offset int64) (models.RepoSe
 }
 
 func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
-	permis, err := UC.RepoIssue.CheckAccessRepo(issue.AuthorID, issue.RepoID)
+	repo, err := UC.GitRepo.GetByID(issue.RepoID)
+	if err != nil {
+		return entityerrors.DoesNotExist()
+	}
+	login, err := UC.UserRepo.GetLoginByID(repo.OwnerID)
+	if err != nil {
+		return entityerrors.DoesNotExist()
+	}
+	currUserId := issue.AuthorID
+
+	permis, err := UC.GitRepo.CheckReadAccess(&currUserId, login, repo.Name)
 	if err != nil {
 		return err
 	}
 
-	if permis != perm.NoAccess() { //can create if repo not private
+	if permis { //can create if repo not private
 		return UC.RepoIssue.CreateIssue(issue)
 	} else {
 		return entityerrors.AccessDenied()
@@ -65,14 +79,23 @@ func (GD *UCCodeHub) CloseIssue(issueID int64, userID int64) error {
 	}
 }
 
-func (GD *UCCodeHub) GetIssuesList(repoID, userID, limit, offset int64) (models.IssuesSet, error) {
-	permis, err := GD.RepoIssue.CheckAccessRepo(userID, repoID)
+func (UC *UCCodeHub) GetIssuesList(repoID, userID, limit, offset int64) (models.IssuesSet, error) {
+	repo, err := UC.GitRepo.GetByID(repoID)
 	if err != nil {
-		return nil, err
+		return models.IssuesSet{}, entityerrors.DoesNotExist()
+	}
+	login, err := UC.UserRepo.GetLoginByID(repo.OwnerID)
+	if err != nil {
+		return models.IssuesSet{}, entityerrors.DoesNotExist()
 	}
 
-	if permis != perm.NoAccess() {
-		return GD.RepoIssue.GetIssuesList(repoID, limit, offset)
+	permis, err := UC.GitRepo.CheckReadAccess(&userID, login, repo.Name)
+	if err != nil {
+		return models.IssuesSet{}, err
+	}
+
+	if permis {
+		return UC.RepoIssue.GetIssuesList(repoID, limit, offset)
 	} else {
 		return nil, entityerrors.AccessDenied()
 	}
@@ -92,12 +115,20 @@ func (GD *UCCodeHub) GetIssue(issueID int64, userID int64) (models.Issue, error)
 }
 
 func (UC *UCCodeHub) GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error) {
-	permis, err := UC.RepoIssue.CheckAccessRepo(userID, repoID)
+	repo, err := UC.GitRepo.GetByID(repoID)
 	if err != nil {
-		return nil, err
+		return models.NewsSet{}, entityerrors.DoesNotExist()
+	}
+	login, err := UC.UserRepo.GetLoginByID(repo.OwnerID)
+	if err != nil {
+		return models.NewsSet{}, entityerrors.DoesNotExist()
 	}
 
-	if permis != perm.NoAccess() {
+	permis, err := UC.GitRepo.CheckReadAccess(&userID, login, repo.Name)
+	if err != nil {
+		return models.NewsSet{}, err
+	}
+	if permis {
 		return UC.RepoNews.GetNews(repoID, limit, offset)
 	} else {
 		return models.NewsSet{}, entityerrors.AccessDenied()
