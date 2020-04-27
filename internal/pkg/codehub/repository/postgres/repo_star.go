@@ -84,7 +84,8 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 					   gr.description,
 					   gr.is_fork,
 					   gr.created_at,
-					   gr.is_public
+					   gr.is_public,
+	   					gr.stars
 				FROM git_repository_user_stars AS grus
 						 JOIN git_repositories AS gr ON grus.repository_id = gr.id
 				WHERE grus.user_id = $1 LIMIT $2 OFFSET $3`,
@@ -109,7 +110,8 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 			&gitRepo.Description,
 			&gitRepo.IsFork,
 			&gitRepo.CreatedAt,
-			&gitRepo.IsPublic)
+			&gitRepo.IsPublic,
+			&gitRepo.Stars)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in StarRepository in GetStarredRepos function "+
 				"while scanning repositories with starUserId=%v", userID)
