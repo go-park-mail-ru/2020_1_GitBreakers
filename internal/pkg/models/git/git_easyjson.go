@@ -52,6 +52,8 @@ func easyjson97a49f66DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			}
 		case "is_public":
 			out.IsPublic = bool(in.Bool())
+		case "stars":
+			out.Stars = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -100,6 +102,11 @@ func easyjson97a49f66EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"is_public\":"
 		out.RawString(prefix)
 		out.Bool(bool(in.IsPublic))
+	}
+	{
+		const prefix string = ",\"stars\":"
+		out.RawString(prefix)
+		out.Int64(int64(in.Stars))
 	}
 	out.RawByte('}')
 }
