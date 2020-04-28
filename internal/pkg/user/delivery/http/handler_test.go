@@ -3,10 +3,10 @@ package http
 import (
 	"fmt"
 	"github.com/bxcodec/faker/v3"
+	mock_clients "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	sessMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/mocks"
-	userMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/golang/mock/gomock"
@@ -27,16 +27,16 @@ var testUser = models.User{
 	Image:    "default.png",
 	Email:    "bezbab@mail.ru",
 }
-var userHandlers http2.UserHttp
+var userHandlers UserHttp
 
 func TestUserHttp_Login(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
-	s := sessMock.NewMockSessDelivery(ctrl)
+	u := sessMock.NewMockSessDelivery(ctrl)
+	s := mock_clients.NewMockUserClientI(ctrl)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = s
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	userHandlers.Logger = &newlogger
 
@@ -44,18 +44,17 @@ func TestUserHttp_Login(t *testing.T) {
 		Login:    testUser.Login,
 		Password: testUser.Password,
 	}
-	userHandlers.UserUC = m
-	userHandlers.SessHttp = s
+	userHandlers.SessHttp = u
 
 	t.Run("Login-OK", func(t *testing.T) {
-		m.EXPECT().
+		s.EXPECT().
 			GetByLogin(testInput.Login).
 			Return(testUser, nil).Times(1)
-		m.EXPECT().
+		s.EXPECT().
 			CheckPass(testInput.Login, testInput.Password).
 			Return(true, nil).Times(1)
 
-		s.EXPECT().
+		u.EXPECT().
 			Create(testUser.ID).
 			Return(http.Cookie{
 				Name:  "session_id",
@@ -75,14 +74,14 @@ func TestUserHttp_Login(t *testing.T) {
 	})
 
 	t.Run("Login already auth", func(t *testing.T) {
-		m.EXPECT().
+		s.EXPECT().
 			GetByLogin(testInput.Login).
 			Return(testUser, nil).Times(0)
-		m.EXPECT().
+		s.EXPECT().
 			CheckPass(testInput.Login, testInput.Password).
 			Return(true, nil).Times(0)
 
-		s.EXPECT().
+		u.EXPECT().
 			Create(testUser.ID).
 			Return(http.Cookie{
 				Name:  "session_id",
@@ -102,15 +101,15 @@ func TestUserHttp_Login(t *testing.T) {
 	})
 
 	t.Run("User not exsist", func(t *testing.T) {
-		m.EXPECT().
+		s.EXPECT().
 			GetByLogin(testInput.Login).
 			Return(models.User{}, entityerrors.DoesNotExist()).Times(1)
 
-		m.EXPECT().
+		s.EXPECT().
 			CheckPass(testInput.Login, testInput.Password).
 			Return(true, nil).Times(0)
 
-		s.EXPECT().
+		u.EXPECT().
 			Create(testUser.ID).
 			Return(http.Cookie{
 				Name:  "session_id",
@@ -129,11 +128,11 @@ func TestUserHttp_Login(t *testing.T) {
 			End()
 	})
 	t.Run("Some error in UseCase", func(t *testing.T) {
-		m.EXPECT().
+		s.EXPECT().
 			GetByLogin(testInput.Login).
 			Return(models.User{}, errors.New("some error")).Times(1)
 
-		m.EXPECT().
+		s.EXPECT().
 			CheckPass(testInput.Login, testInput.Password).
 			Return(true, nil).Times(0)
 
@@ -151,13 +150,13 @@ func TestUserHttp_Login(t *testing.T) {
 
 	t.Run("Error in session", func(t *testing.T) {
 		gomock.InOrder(
-			m.EXPECT().
+			s.EXPECT().
 				GetByLogin(testInput.Login).
 				Return(testUser, nil).Times(1),
-			m.EXPECT().
+			s.EXPECT().
 				CheckPass(testInput.Login, testInput.Password).
 				Return(true, nil).Times(1),
-			s.EXPECT().
+			u.EXPECT().
 				Create(testUser.ID).
 				Return(http.Cookie{
 					Name:  "session_id",
@@ -178,7 +177,7 @@ func TestUserHttp_Login(t *testing.T) {
 
 	t.Run("Invalid json", func(t *testing.T) {
 		gomock.InOrder(
-			m.EXPECT().
+			s.EXPECT().
 				GetByLogin(testInput.Login).
 				Return(testUser, nil).Times(0))
 
@@ -198,7 +197,7 @@ func TestUserHttp_Login(t *testing.T) {
 		invalidPassword := "45"
 		invalidLogin := "kek"
 		gomock.InOrder(
-			m.EXPECT().
+			s.EXPECT().
 				GetByLogin(invalidLogin).
 				Return(testUser, nil).Times(0))
 
@@ -219,11 +218,11 @@ func TestUserHttp_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
+	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
 
@@ -468,11 +467,11 @@ func TestUserHttp_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
+	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
 
@@ -595,11 +594,11 @@ func TestUserHttp_Logout(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
+	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
 
@@ -689,11 +688,11 @@ func TestUserHttp_GetInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
+	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
 
@@ -801,11 +800,11 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
+	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
 
@@ -821,7 +820,7 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 				Return(testUser, nil).
 				Times(0),
 			m.EXPECT().
-				UploadAvatar(testUser, nil, nil).
+				UploadAvatar(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(nil).
 				Times(0),
 		)
@@ -861,11 +860,11 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := userMock.NewMockUCUser(ctrl)
+	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 
-	userHandlers.UserUC = m
+	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
 

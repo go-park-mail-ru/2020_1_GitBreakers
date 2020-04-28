@@ -16,7 +16,7 @@ func AuthMiddlewareMock(next http.HandlerFunc, isAuthorized bool) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if isAuthorized {
-			ctx = context.WithValue(ctx, "UserID", rand.Intn(max-min)+min)
+			ctx = context.WithValue(ctx, "UserID", int64(rand.Intn(max-min)+min))
 		}
 		next(w, r.WithContext(ctx))
 	}
