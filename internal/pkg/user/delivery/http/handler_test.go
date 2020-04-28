@@ -512,7 +512,7 @@ func TestUserHttp_Update(t *testing.T) {
 	t.Run("Update ok", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				Update(gomock.Any(), testUserEmpty).
+				Update(gomock.AssignableToTypeOf(int64(0)), testUserEmpty).
 				Return(nil).
 				Times(1),
 		)
@@ -532,7 +532,7 @@ func TestUserHttp_Update(t *testing.T) {
 	t.Run("Update invalid json", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				Update(gomock.Any(), testUserEmpty).
+				Update(gomock.AssignableToTypeOf(int64(0)), testUserEmpty).
 				Return(nil).
 				Times(0),
 		)
@@ -552,7 +552,7 @@ func TestUserHttp_Update(t *testing.T) {
 	t.Run("Update already exsist", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				Update(gomock.Any(), testUserEmpty).
+				Update(gomock.AssignableToTypeOf(int64(0)), testUserEmpty).
 				Return(entityerrors.AlreadyExist()).
 				Times(1),
 		)
@@ -572,7 +572,7 @@ func TestUserHttp_Update(t *testing.T) {
 	t.Run("Update some err in Update func", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				Update(gomock.Any(), testUserEmpty).
+				Update(gomock.AssignableToTypeOf(int64(0)), testUserEmpty).
 				Return(errors.New("some error")).
 				Times(1),
 		)
@@ -610,7 +610,7 @@ func TestUserHttp_Logout(t *testing.T) {
 	t.Run("Logout unauthorized", func(t *testing.T) {
 		gomock.InOrder(
 			s.EXPECT().
-				Delete(gomock.Any()).
+				Delete(gomock.AssignableToTypeOf("")).
 				Return(nil).
 				Times(0),
 		)
@@ -629,7 +629,7 @@ func TestUserHttp_Logout(t *testing.T) {
 	t.Run("Logout session not exsist", func(t *testing.T) {
 		gomock.InOrder(
 			s.EXPECT().
-				Delete(gomock.Any()).
+				Delete(gomock.AssignableToTypeOf("")).
 				Return(nil).
 				Times(0),
 		)
@@ -704,7 +704,7 @@ func TestUserHttp_GetInfo(t *testing.T) {
 	t.Run("Getinto unauthorized", func(t *testing.T) {
 		gomock.InOrder(
 			s.EXPECT().
-				Delete(gomock.Any()).
+				Delete(gomock.AssignableToTypeOf("")).
 				Return(nil).
 				Times(0),
 		)
@@ -742,7 +742,7 @@ func TestUserHttp_GetInfo(t *testing.T) {
 	t.Run("Getinto entity does not exsist", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				GetByID(gomock.Any()).
+				GetByID(gomock.AssignableToTypeOf(int64(0))).
 				Return(testInput, entityerrors.DoesNotExist()).
 				Times(1),
 		)
@@ -761,7 +761,7 @@ func TestUserHttp_GetInfo(t *testing.T) {
 	t.Run("Getinto some error in DB", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				GetByID(gomock.Any()).
+				GetByID(gomock.AssignableToTypeOf(int64(0))).
 				Return(testInput, errors.New("some error")).
 				Times(1),
 		)
@@ -780,7 +780,7 @@ func TestUserHttp_GetInfo(t *testing.T) {
 	t.Run("Getinto some error in DB", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				GetByID(gomock.Any()).
+				GetByID(gomock.AssignableToTypeOf(int64(0))).
 				Return(testInput, errors.New("some error")).
 				Times(1),
 		)
@@ -816,11 +816,14 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 	t.Run("Upload avatar empty image", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				GetByID(gomock.Any()).
+				GetByID(gomock.AssignableToTypeOf(int64(0))).
 				Return(testUser, nil).
 				Times(0),
 			m.EXPECT().
-				UploadAvatar(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				UploadAvatar(gomock.AssignableToTypeOf(int64(0)),
+					gomock.AssignableToTypeOf(""),
+					gomock.AssignableToTypeOf([]byte("")),
+					gomock.AssignableToTypeOf(int64(0))).
 				Return(nil).
 				Times(0),
 		)
@@ -887,7 +890,7 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 		)
 
 		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "login", someLogin)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login": someLogin})
 
 		apitest.New("Get info by login").
 			Handler(middlewareMock).
@@ -912,7 +915,7 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 		)
 
 		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "login", someLogin)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login": someLogin})
 
 		apitest.New("Get info login doesn't exsist").
 			Handler(middlewareMock).
@@ -936,7 +939,7 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 		)
 
 		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "login", someLogin)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login": someLogin})
 
 		apitest.New("Get info login doesn't exsist").
 			Handler(middlewareMock).

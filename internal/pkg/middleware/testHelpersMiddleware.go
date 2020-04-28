@@ -21,9 +21,9 @@ func AuthMiddlewareMock(next http.HandlerFunc, isAuthorized bool) http.HandlerFu
 		next(w, r.WithContext(ctx))
 	}
 }
-func SetMuxVars(next http.HandlerFunc, key, value string) http.HandlerFunc {
+func SetMuxVars(next http.HandlerFunc, vars map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := mux.SetURLVars(r, map[string]string{key: value})
+		req := mux.SetURLVars(r, vars)
 		next(w, req)
 	}
 }

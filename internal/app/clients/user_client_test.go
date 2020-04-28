@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	usergrpc "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/grpc"
 	userMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -26,7 +27,7 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 }
 
 //мокаем usecase и тестим клиент->сервер->mockUseCase;
-func TestUserCreate(t *testing.T) {
+func TestUserClient(t *testing.T) {
 	lis = bufconn.Listen(bufSize)
 	server := grpc.NewServer()
 	ctrl := gomock.NewController(t)
@@ -72,6 +73,60 @@ func TestUserCreate(t *testing.T) {
 		grpcErr := status.Convert(err)
 
 		require.Equal(t, err, grpcErr.Err())
+	})
+
+	t.Run("Get by login ok", func(t *testing.T) {
+		mock.EXPECT().GetByLogin(testUser.Login).Return(testUser, nil).Times(1)
+		userFromDB, err := client.GetByLogin(testUser.Login)
+
+		require.Equal(t, userFromDB, testUser)
+
+		grpcErr := status.Convert(err)
+
+		require.Equal(t, err, grpcErr.Err())
+	})
+
+	t.Run("GetByLogin err", func(t *testing.T) {
+		mock.EXPECT().GetByLogin(testUser.Login).Return(testUser, entityerrors.DoesNotExist()).Times(1)
+		userFromDB, err := client.GetByLogin(testUser.Login)
+
+		require.Equal(t, userFromDB, models.User{})
+
+		grpcErr := status.Convert(err)
+
+		require.EqualError(t, entityerrors.DoesNotExist(), grpcErr.Message())
+	})
+
+	t.Run("GetByID ok", func(t *testing.T) {
+		mock.EXPECT().GetByID(testUser.ID).Return(testUser, nil).Times(1)
+		userFromDB, err := client.GetByID(testUser.ID)
+
+		require.Equal(t, userFromDB, testUser)
+
+		grpcErr := status.Convert(err)
+
+		require.Nil(t, grpcErr)
+	})
+
+	t.Run("GetByID err", func(t *testing.T) {
+		mock.EXPECT().GetByID(testUser.ID).Return(testUser, entityerrors.DoesNotExist()).Times(1)
+		userFromDB, err := client.GetByID(testUser.ID)
+
+		require.Equal(t, userFromDB, models.User{})
+
+		grpcErr := status.Convert(err)
+
+		require.EqualError(t, entityerrors.DoesNotExist(), grpcErr.Message())
+
+	})
+	t.Run("CheckPass ok", func(t *testing.T) {
+		mock.EXPECT().CheckPass(testUser.Login, testUser.Password).Return(true, nil).Times(1)
+		is_correct, err := client.CheckPass(testUser.Login, testUser.Password)
+
+		require.Equal(t, is_correct, true)
+
+		require.Nil(t, err)
+
 	})
 
 }
