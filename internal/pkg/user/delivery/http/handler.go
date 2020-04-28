@@ -2,7 +2,6 @@ package http
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
@@ -10,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
@@ -31,21 +31,19 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 
 	User := &models.User{}
 
-	err := json.NewDecoder(r.Body).Decode(User)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, User); err != nil {
 		UsHttp.Logger.HttpLogError(r.Context(), "json", "decode", errors.Cause(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	_, err = govalidator.ValidateStruct(User)
-	if err != nil {
+	if _, err := govalidator.ValidateStruct(User); err != nil {
 		UsHttp.Logger.HttpLogError(r.Context(), "validator", "validate struct", errors.Cause(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = UsHttp.UClient.Create(*User)
+	err := UsHttp.UClient.Create(*User)
 	switch {
 	case err == entityerrors.AlreadyExist():
 		UsHttp.Logger.HttpLogError(r.Context(), "user", " Create", errors.Cause(err))
@@ -89,8 +87,8 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 	userId := res.(int64)
 	newUserData := models.User{}
 
-	if err := json.NewDecoder(r.Body).Decode(&newUserData); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "json", "decode", errors.Cause(err))
+	if err := easyjson.UnmarshalFromReader(r.Body, &newUserData); err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -116,9 +114,8 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := &models.SignInForm{}
-	err := json.NewDecoder(r.Body).Decode(&input)
-	if err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "json", "decode", errors.Cause(err))
+	if err := easyjson.UnmarshalFromReader(r.Body, input); err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -205,7 +202,7 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&User); err != nil {
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(User, w); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -276,7 +273,7 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	if err := json.NewEncoder(w).Encode(userData); err != nil {
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(userData, w); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

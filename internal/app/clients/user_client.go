@@ -117,6 +117,9 @@ func (c *UserClient) CheckPass(login string, pass string) (bool, error) {
 }
 func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) error {
 	const ChunkSize int64 = 1 << 16 //64kb
+	if int64(len(fileData)) != fileSize {
+		return errors.New("can not assign real fileLen and received len")
+	}
 	stream, err := c.client.UploadAvatar(context.Background())
 	if err != nil {
 		return err
