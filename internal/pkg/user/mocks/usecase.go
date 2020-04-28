@@ -7,9 +7,6 @@ package mocks
 import (
 	models "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gomock "github.com/golang/mock/gomock"
-	"io"
-	multipart "mime/multipart"
-	"os"
 	reflect "reflect"
 )
 
@@ -132,7 +129,7 @@ func (m *MockUCUser) UploadAvatar(UserID int64, fileName string, fileData []byte
 }
 
 // UploadAvatar indicates an expected call of UploadAvatar
-func (mr *MockUCUserMockRecorder) UploadAvatar(User, fileName, file interface{}) *gomock.Call {
+func (mr *MockUCUserMockRecorder) UploadAvatar(UserID, fileName, fileData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadAvatar", reflect.TypeOf((*MockUCUser)(nil).UploadAvatar), User, fileName, file)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadAvatar", reflect.TypeOf((*MockUCUser)(nil).UploadAvatar), UserID, fileName, fileData)
 }
