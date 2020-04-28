@@ -2,12 +2,14 @@ package clients
 
 import (
 	"context"
+	"errors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	usergrpc "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/grpc"
 	userMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 	"log"
 	"net"
@@ -23,6 +25,7 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 	return lis.Dial()
 }
 
+//мокаем usecase и тестим клиент->сервер->mockUseCase;
 func TestUserCreate(t *testing.T) {
 	lis = bufconn.Listen(bufSize)
 	server := grpc.NewServer()
@@ -57,6 +60,18 @@ func TestUserCreate(t *testing.T) {
 		mock.EXPECT().Create(testUser).Return(nil).Times(1)
 		err := client.Create(testUser)
 		require.Nil(t, err)
+	})
+
+	t.Run("Create some err", func(t *testing.T) {
+		someErr := errors.New("some error")
+		mock.EXPECT().Create(testUser).Return(someErr).Times(1)
+		err := client.Create(testUser)
+
+		require.NotEqual(t, err, someErr)
+
+		grpcErr := status.Convert(err)
+
+		require.Equal(t, err, grpcErr.Err())
 	})
 
 }
