@@ -88,7 +88,11 @@ func StartNew() {
 			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
-	r.Use(middleware.JsonContentTypeMiddleware, middleware.ProtectHeadersMiddleware)
+	r.Use(
+		middleware.PrometheusMetricsMiddleware,
+		middleware.JsonContentTypeMiddleware,
+		middleware.ProtectHeadersMiddleware,
+	)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
