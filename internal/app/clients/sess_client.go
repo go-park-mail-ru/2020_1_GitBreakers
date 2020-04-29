@@ -9,7 +9,8 @@ import (
 )
 
 type SessClient struct {
-	conn *grpc.ClientConn
+	conn   *grpc.ClientConn
+	client session.SessionClient
 }
 
 func NewSessClient() (SessClient, error) {
@@ -27,12 +28,13 @@ func (c *SessClient) Connect() error {
 		return errors.Wrap(err, "grpc.Dial()")
 	}
 	c.conn = conn
+	c.client = session.NewSessionClient(c.conn)
 	return nil
 }
 func (c *SessClient) CreateSess(UserID int64) (string, error) {
-	client := session.NewSessionClient(c.conn)
+
 	UserIDModel := session.UserID{UserID: int64(UserID)}
-	sessIDModel, err := client.Create(context.Background(), &UserIDModel)
+	sessIDModel, err := c.client.Create(context.Background(), &UserIDModel)
 	if err != nil {
 		return "", err
 	}
@@ -41,20 +43,18 @@ func (c *SessClient) CreateSess(UserID int64) (string, error) {
 }
 
 func (c *SessClient) DelSess(SessID string) error {
-	client := session.NewSessionClient(c.conn)
 	SessIDModel := session.SessionID{SessionID: SessID}
 
-	_, err := client.Delete(context.Background(), &SessIDModel)
+	_, err := c.client.Delete(context.Background(), &SessIDModel)
 	return err
 }
 
 func (c *SessClient) GetSess(SessID string) (models.Session, error) {
-	client := session.NewSessionClient(c.conn)
 	SessIDModel := session.SessionID{SessionID: SessID}
 
-	SessModel, err := client.Get(context.Background(), &SessIDModel)
+	SessModel, err := c.client.Get(context.Background(), &SessIDModel)
 	if err != nil {
-		return models.Session{}, nil
+		return models.Session{}, err
 	}
 	return models.Session{
 		ID:     SessModel.GetID(),
