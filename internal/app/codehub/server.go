@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery"
+	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
 	postgresCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
 	usecaseCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
@@ -147,7 +147,7 @@ func StartNew() {
 	}
 }
 
-func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*http3.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *delivery.HttpCodehub) {
+func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*http3.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *http4.HttpCodehub) {
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessClient, err := clients.NewSessClient()
 	if err != nil {
@@ -180,7 +180,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		UserRepo:  userRepos,
 	}
 
-	codeHubDelivery := delivery.HttpCodehub{
+	codeHubDelivery := http4.HttpCodehub{
 		Logger:     &logger,
 		CodeHubUC:  &codeHubUseCase,
 		NewsClient: &newsClient,
