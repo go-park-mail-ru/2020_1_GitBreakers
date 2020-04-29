@@ -9,6 +9,7 @@ import (
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -237,7 +238,7 @@ func TestUCCodeHubNews(t *testing.T) {
 
 		require.Error(t, err)
 	})
-	t.Run("Get news", func(t *testing.T) {
+	t.Run("Get news error with access", func(t *testing.T) {
 		var limit int64 = 100
 		var offset int64 = 5
 
@@ -254,10 +255,6 @@ func TestUCCodeHubNews(t *testing.T) {
 				CheckReadAccess(&someUserOwner.ID, someUserOwner.Login, someRepo.Name).
 				Return(false, errors.New("some error")).
 				Times(1),
-			repoNews.EXPECT().
-				GetNews(someRepo.ID, limit, offset).
-				Return(newslist, nil).
-				Times(0),
 		)
 
 		newslistFromDB, err := useCase.GetNews(someRepo.ID, someUserOwner.ID, limit, offset)
@@ -265,5 +262,353 @@ func TestUCCodeHubNews(t *testing.T) {
 		require.Empty(t, newslistFromDB)
 
 		require.Error(t, err)
+
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(&someUserOwner.ID, someUserOwner.Login, someRepo.Name).
+				Return(false, nil).
+				Times(1),
+		)
+
+		newslistFromDB, err = useCase.GetNews(someRepo.ID, someUserOwner.ID, limit, offset)
+
+		require.Empty(t, newslistFromDB)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
 	})
+}
+func TestUCCodeHubIssues(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	repoIssues := mockCodehub.NewMockRepoIssueI(ctrl)
+	userRepo := mocks.NewMockRepoUser(ctrl)
+	gitRepo := mocksGit.NewMockGitRepoI(ctrl)
+
+	useCase := UCCodeHub{
+		RepoIssue: repoIssues,
+		GitRepo:   gitRepo,
+		UserRepo:  userRepo,
+	}
+	someIssue := models.Issue{
+		ID:       20,
+		AuthorID: 12,
+		RepoID:   45352,
+		Title:    "how to increase money",
+		Message:  "no money",
+		Label:    "fixed",
+		IsClosed: false,
+		CreatedAt: time.Date(
+			2017, 11, 17, 20, 34, 58, 651387237, time.UTC),
+	}
+	const issuesCount int = 10
+	issueslist := make([]models.Issue, issuesCount)
+	for i := range issueslist {
+		err := faker.FakeData(&issueslist[i])
+		require.Nil(t, err)
+	}
+
+	t.Run("Create issue ok", func(t *testing.T) {
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(gomock.Any(), someUserOwner.Login, someRepo.Name).
+				Return(true, nil).
+				Times(1),
+			repoIssues.EXPECT().
+				CreateIssue(someIssue).
+				Return(nil).
+				Times(1),
+		)
+
+		err := useCase.CreateIssue(someIssue)
+
+		require.NoError(t, err)
+	})
+
+	t.Run("Create issue error in repoID", func(t *testing.T) {
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, entityerrors.DoesNotExist()).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(0),
+		)
+
+		err := useCase.CreateIssue(someIssue)
+
+		require.EqualError(t, err, entityerrors.DoesNotExist().Error())
+	})
+
+	t.Run("Create issue error in getLoginByID", func(t *testing.T) {
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, entityerrors.DoesNotExist()).
+				Times(1),
+		)
+
+		err := useCase.CreateIssue(someIssue)
+
+		require.Equal(t, err, entityerrors.DoesNotExist())
+	})
+
+	t.Run("Create issue error in checkReadAccess", func(t *testing.T) {
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(gomock.Any(), someUserOwner.Login, someRepo.Name).
+				Return(true, errors.New("some error")).
+				Times(1),
+			repoIssues.EXPECT().
+				CreateIssue(someIssue).
+				Return(nil).
+				Times(0),
+		)
+
+		err := useCase.CreateIssue(someIssue)
+
+		require.Error(t, err)
+	})
+
+	t.Run("Create issue error in checkReadAccess", func(t *testing.T) {
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(gomock.Any(), someUserOwner.Login, someRepo.Name).
+				Return(false, nil).
+				Times(1),
+		)
+
+		err := useCase.CreateIssue(someIssue)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
+	})
+
+	t.Run("Update issues ok", func(t *testing.T) {
+		gomock.InOrder(
+			repoIssues.EXPECT().
+				CheckEditAccessIssue(someIssue.AuthorID, someIssue.RepoID).
+				Return(perm.WriteAccess(), nil).
+				Times(1),
+			repoIssues.EXPECT().
+				UpdateIssue(someIssue).
+				Return(nil).
+				Times(1),
+		)
+
+		err := useCase.UpdateIssue(someIssue)
+
+		require.NoError(t, err)
+	})
+
+	t.Run("Update issues access denied", func(t *testing.T) {
+		gomock.InOrder(
+			repoIssues.EXPECT().
+				CheckEditAccessIssue(someIssue.AuthorID, someIssue.RepoID).
+				Return(perm.NoAccess(), nil).
+				Times(1),
+			repoIssues.EXPECT().
+				UpdateIssue(someIssue).
+				Return(nil).
+				Times(0),
+		)
+
+		err := useCase.UpdateIssue(someIssue)
+
+		require.Equal(t, err, entityerrors.AccessDenied())
+	})
+
+	t.Run("GetIssue", func(t *testing.T) {
+		gomock.InOrder(
+			repoIssues.EXPECT().
+				GetIssue(someIssue.ID).
+				Return(someIssue, nil).
+				Times(1),
+		)
+
+		issueFromDB, err := useCase.GetIssue(someIssue.ID, someUserOwner.ID)
+
+		require.NoError(t, err)
+
+		require.Equal(t, issueFromDB, someIssue)
+	})
+
+	t.Run("CloseIssue", func(t *testing.T) {
+		gomock.InOrder(
+			repoIssues.EXPECT().
+				CheckEditAccessIssue(someIssue.AuthorID, someIssue.ID).
+				Return(perm.AdminAccess(), nil).
+				Times(1),
+			repoIssues.EXPECT().
+				CloseIssue(someIssue.ID).
+				Return(nil).
+				Times(1),
+		)
+
+		err := useCase.CloseIssue(someIssue.ID, someUserOwner.ID)
+
+		require.NoError(t, err)
+	})
+
+	t.Run("CloseIssue no access", func(t *testing.T) {
+		gomock.InOrder(
+			repoIssues.EXPECT().
+				CheckEditAccessIssue(someIssue.AuthorID, someIssue.ID).
+				Return(perm.ReadAccess(), nil).
+				Times(1),
+			repoIssues.EXPECT().
+				CloseIssue(someIssue.ID).
+				Return(nil).
+				Times(0),
+		)
+
+		err := useCase.CloseIssue(someIssue.ID, someUserOwner.ID)
+
+		require.Error(t, err)
+		require.Equal(t, err, entityerrors.AccessDenied())
+	})
+
+	t.Run("GetIssuesList ok", func(t *testing.T) {
+
+		var limit int64 = 10
+		var offset int64 = 2
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(gomock.Any(), someUserOwner.Login, someRepo.Name).
+				Return(true, nil).
+				Times(1),
+			repoIssues.EXPECT().
+				GetIssuesList(someRepo.ID, limit, offset).
+				Return(issueslist, nil).
+				Times(1),
+		)
+
+		issuesListFromDB, err := useCase.GetIssuesList(someRepo.ID, someUserOwner.ID, limit, offset)
+
+		require.NoError(t, err)
+		require.EqualValues(t, issueslist, issuesListFromDB)
+	})
+	t.Run("GetIssuesList err in get by id ", func(t *testing.T) {
+		var limit int64 = 10
+		var offset int64 = 2
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, errors.New("some error")).
+				Times(1),
+		)
+
+		issuesListFromDB, err := useCase.GetIssuesList(someRepo.ID, someUserOwner.ID, limit, offset)
+
+		require.Error(t, err)
+		require.EqualValues(t, models.IssuesSet{}, issuesListFromDB)
+	})
+	t.Run("GetIssuesList err in GetLoginByID ", func(t *testing.T) {
+		var limit int64 = 10
+		var offset int64 = 2
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, entityerrors.DoesNotExist()).
+				Times(1),
+		)
+
+		issuesListFromDB, err := useCase.GetIssuesList(someRepo.ID, someUserOwner.ID, limit, offset)
+
+		require.Error(t, err)
+		require.EqualValues(t, models.IssuesSet{}, issuesListFromDB)
+	})
+
+	t.Run("GetIssuesList err in checkReadAccess ", func(t *testing.T) {
+		var limit int64 = 10
+		var offset int64 = 2
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(gomock.Any(), someUserOwner.Login, someRepo.Name).
+				Return(false, nil).
+				Times(1),
+		)
+
+		issuesListFromDB, err := useCase.GetIssuesList(someRepo.ID, someUserOwner.ID, limit, offset)
+
+		require.Error(t, err)
+		require.EqualValues(t, models.IssuesSet{}, issuesListFromDB)
+
+		gomock.InOrder(
+			gitRepo.EXPECT().
+				GetByID(someRepo.ID).
+				Return(someRepo, nil).
+				Times(1),
+			userRepo.EXPECT().
+				GetLoginByID(someUserOwner.ID).
+				Return(someUserOwner.Login, nil).
+				Times(1),
+			gitRepo.EXPECT().
+				CheckReadAccess(gomock.Any(), someUserOwner.Login, someRepo.Name).
+				Return(false, errors.New("some error")).
+				Times(1),
+		)
+		issuesListFromDB, err = useCase.GetIssuesList(someRepo.ID, someUserOwner.ID, limit, offset)
+
+		require.Error(t, err)
+		require.EqualValues(t, models.IssuesSet{}, issuesListFromDB)
+	})
+
 }

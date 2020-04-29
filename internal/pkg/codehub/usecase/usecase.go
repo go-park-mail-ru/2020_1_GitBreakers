@@ -54,8 +54,7 @@ func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
 
 func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
 	permis, _ := GD.RepoIssue.CheckEditAccessIssue(issue.AuthorID, issue.RepoID)
-
-	permis = perm.AdminAccess()
+	//todo check that work
 	if permis == perm.WriteAccess() || permis == perm.AdminAccess() || permis == perm.OwnerAccess() {
 		return GD.RepoIssue.UpdateIssue(issue)
 	} else {
@@ -66,7 +65,6 @@ func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
 
 func (GD *UCCodeHub) CloseIssue(issueID int64, userID int64) error {
 	permis, _ := GD.RepoIssue.CheckEditAccessIssue(userID, issueID)
-	permis = perm.AdminAccess()
 
 	if permis == perm.WriteAccess() || permis == perm.AdminAccess() || permis == perm.OwnerAccess() {
 		return GD.RepoIssue.CloseIssue(issueID)
@@ -93,7 +91,7 @@ func (UC *UCCodeHub) GetIssuesList(repoID, userID, limit, offset int64) (models.
 	if permis {
 		return UC.RepoIssue.GetIssuesList(repoID, limit, offset)
 	} else {
-		return nil, entityerrors.AccessDenied()
+		return models.IssuesSet{}, entityerrors.AccessDenied()
 	}
 }
 
