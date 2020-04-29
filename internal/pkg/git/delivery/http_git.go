@@ -16,7 +16,7 @@ import (
 )
 
 type GitDelivery struct {
-	UC     git.UseCase
+	UC     git.GitUseCaseI
 	Logger *logger.SimpleLogger
 	UserUC user.UCUser
 }

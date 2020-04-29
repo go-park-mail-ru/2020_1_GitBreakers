@@ -2,7 +2,7 @@
 // Source: repo_star.go
 
 // Package mock_codehub is a generated GoMock package.
-package mock_codehub
+package mockCodehub
 
 import (
 	models "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"

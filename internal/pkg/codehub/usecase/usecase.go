@@ -13,7 +13,7 @@ type UCCodeHub struct {
 	RepoIssue codehub.RepoIssueI
 	RepoStar  codehub.RepoStarI
 	RepoNews  codehub.RepoNewsI
-	GitRepo   git.Repository
+	GitRepo   git.GitRepoI
 	UserRepo  user.RepoUser
 }
 

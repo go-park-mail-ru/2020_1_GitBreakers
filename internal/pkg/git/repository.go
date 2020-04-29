@@ -5,7 +5,7 @@ import (
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 )
 
-type Repository interface {
+type GitRepoI interface {
 	GetByID(id int64) (git.Repository, error)
 	GetByName(userLogin, repoName string) (git.Repository, error)
 	Create(repos git.Repository) (id int64, err error)

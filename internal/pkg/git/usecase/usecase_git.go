@@ -8,7 +8,7 @@ import (
 )
 
 type GitUseCase struct {
-	Repo git.Repository
+	Repo git.GitRepoI
 }
 
 func (GU *GitUseCase) Create(userID int64, repos *gitmodels.Repository) error {

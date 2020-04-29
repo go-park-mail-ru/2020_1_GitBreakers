@@ -11,11 +11,11 @@ import (
 )
 
 type UseCase struct {
-	gitRepoRepository git.Repository
+	gitRepoRepository git.GitRepoI
 	userClient        clients.UserClient
 }
 
-func NewUseCase(gitRepo git.Repository, client clients.UserClient) UseCase {
+func NewUseCase(gitRepo git.GitRepoI, client clients.UserClient) UseCase {
 	return UseCase{
 		gitRepoRepository: gitRepo,
 		userClient:        client,

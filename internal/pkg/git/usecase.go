@@ -4,7 +4,7 @@ import (
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 )
 
-type UseCase interface {
+type GitUseCaseI interface {
 	Create(userID int64, repos *gitmodels.Repository) error
 	GetRepo(userName string, repoName string, requestUserID *int64) (gitmodels.Repository, error)
 	GetRepoList(userName string, requestUserID *int64) (gitmodels.RepositorySet, error)
