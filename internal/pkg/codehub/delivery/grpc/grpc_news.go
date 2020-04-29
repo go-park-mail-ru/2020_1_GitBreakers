@@ -33,4 +33,3 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 
 	return &NewsResp{News: newsListProto}, nil
 }
-

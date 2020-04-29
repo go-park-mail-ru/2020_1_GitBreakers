@@ -13,7 +13,13 @@ func PrometheusMetricsMiddleware(next http.Handler) http.Handler {
 		newResponseWriter := &customHttp.ResponseWriter{ResponseWriter: w}
 		path := r.URL.Path
 
-		defer monitoring.Hits.WithLabelValues(strconv.Itoa(newResponseWriter.GetStatusCode()), path).Inc()
+		defer func() {
+			statusCode := newResponseWriter.GetStatusCode()
+			if statusCode == 0 {
+				statusCode = http.StatusOK
+			}
+			monitoring.Hits.WithLabelValues(strconv.Itoa(statusCode), path).Inc()
+		}()
 
 		timer := prometheus.NewTimer(monitoring.RequestDuration.With(
 			prometheus.Labels{"path": path, "method": r.Method},
