@@ -440,3 +440,11 @@ func (s *Suite) TestUploadAvatar() {
 
 	require.Nil(s.T(), err)
 }
+func (s *Suite) TestUploadAvatarBad() {
+	name := ""
+	content := []byte("kekekser")
+	err := s.repo.UploadAvatar(name, content)
+	defer os.Remove(`.` + s.repo.defaultImagePath + name)
+
+	require.Error(s.T(), err)
+}

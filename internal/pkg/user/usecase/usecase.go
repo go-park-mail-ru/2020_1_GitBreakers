@@ -113,4 +113,5 @@ func checkFileContentType(fileContent []byte) error {
 var allowedContentType = []string{
 	"image/png",
 	"image/jpeg",
+	"image/jpg",
 }

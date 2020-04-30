@@ -35,11 +35,7 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := res.(int64)
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	userID := res.(int64)
 
 	newStar := models.Star{}
 

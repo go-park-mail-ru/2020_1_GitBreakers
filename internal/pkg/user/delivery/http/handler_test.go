@@ -834,7 +834,7 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 			Debug().
 			Handler(middlewareMock).
 			Method(http.MethodPut).
-			URL("/avatar").
+			URL("user/avatar").
 			Expect(t).
 			Status(http.StatusBadRequest).
 			End()
