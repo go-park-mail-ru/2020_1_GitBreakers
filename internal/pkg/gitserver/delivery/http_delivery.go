@@ -145,7 +145,7 @@ func gitUploadPackHandler(w http.ResponseWriter, r *http.Request, delivery GitSe
 		return false, nil
 	}
 
-	if perm == permTypes.NoAccess() || perm == permTypes.ReadAccess() {
+	if perm == permTypes.NoAccess() {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return false, nil
 	}
