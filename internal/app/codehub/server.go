@@ -92,6 +92,9 @@ func StartNew() {
 			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
+	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
+	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+
 	r.Use(
 		middleware.PrometheusMetricsMiddleware,
 		middleware.JsonContentTypeMiddleware,
@@ -99,8 +102,8 @@ func StartNew() {
 	)
 
 	metricsRouter.Use(
-		middlewareCommon.CreateAccessLogMiddleware(1, customLogger),
-		middleware.CreatePanicMiddleware(customLogger),
+		loggerMWare,
+		panicMiddleware,
 	)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
@@ -152,10 +155,13 @@ func StartNew() {
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 
-	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)(m.AuthMiddleware(r))
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	r.Use(
+		loggerMWare,
+		middleware.CreatePanicMiddleware(customLogger),
+		m.AuthMiddleware,
+	)
 
-	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
+	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(mainRouter)); err != nil {
 		log.Fatal(err)
 	}
 }
