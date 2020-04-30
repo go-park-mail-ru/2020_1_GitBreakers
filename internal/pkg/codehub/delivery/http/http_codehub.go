@@ -155,12 +155,7 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := res.(int64)
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
+	userID := res.(int64)
 	newIssue := models.Issue{}
 
 	if err := easyjson.UnmarshalFromReader(r.Body, &newIssue); err != nil {
@@ -207,11 +202,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int64)
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	userID := res.(int64)
 
 	newIssue := models.Issue{}
 
