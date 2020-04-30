@@ -6,6 +6,8 @@ import (
 	news "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/grpc"
 	dbCodehub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -43,14 +45,16 @@ func main() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 	newsRepos := dbCodehub.NewRepoNews(db)
+	gitRepos := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
 
-	UCRepos := usecase.UCCodeHub{
-		RepoIssue: nil,
-		RepoStar:  nil,
-		RepoNews:  &newsRepos,
+	UCCodeHub := usecase.UCCodeHub{
+		RepoNews: &newsRepos,
+		GitRepo:  gitRepos,
+		UserRepo: userRepos,
 	}
 
-	news.NewNewsServer(s, &UCRepos)
+	news.NewNewsServer(s, &UCCodeHub)
 
 	l, err := net.Listen("tcp", ":8083")
 	if err != nil {

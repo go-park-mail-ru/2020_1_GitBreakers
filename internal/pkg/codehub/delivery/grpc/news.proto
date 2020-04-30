@@ -20,5 +20,6 @@ message NewsModel{
   int64 ID = 1;
   int64 AuthorID = 2;
   string Message = 3;
-  google.protobuf.Timestamp CreatedAt = 4;
+  int64 RepoID = 4;
+  google.protobuf.Timestamp Date = 5;
 }

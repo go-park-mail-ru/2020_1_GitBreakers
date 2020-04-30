@@ -3,19 +3,17 @@ package news
 import (
 	"context"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
-	"github.com/jinzhu/copier"
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 type NewsServerOwn struct {
 	UC codehub.UCCodeHubI
 }
 
-func NewNewsServer(gserver *grpc.Server, UserUseCase codehub.UCCodeHubI) {
-	newsServer := &NewsServerOwn{UC: UserUseCase}
+func NewNewsServer(gserver *grpc.Server, CodehubUseCase codehub.UCCodeHubI) {
+	newsServer := &NewsServerOwn{UC: CodehubUseCase}
 	RegisterNewsServer(gserver, newsServer)
-	reflection.Register(gserver)
 }
 
 func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) {
@@ -24,13 +22,17 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 		return &NewsResp{}, err
 	}
 	//todo debug может копировать хренотень
-	newsListProto := make([]*NewsModel, len(newsList))
-	for i, v := range newsList {
-		if err := copier.Copy(newsListProto[i], v); err != nil {
-			return &NewsResp{}, err
-		}
+	newsListProto := make([]*NewsModel, 0)
+	for _, v := range newsList {
+		temp := NewsModel{}
+		temp.ID = v.ID
+		temp.AuthorID = v.AuthorID
+		temp.Date, err = ptypes.TimestampProto(v.Date)
+		temp.Message = v.Mess
+		temp.RepoID = v.RepoID
+
+		newsListProto = append(newsListProto, &temp)
 	}
 
 	return &NewsResp{News: newsListProto}, nil
 }
-

@@ -362,15 +362,15 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
-
 	}
+
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	news, err := GD.CodeHubUC.GetNews(int64(repoID), res.(int64), 100, 0)
+	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), 100, 0)
 
 	switch {
 	case err == entityerrors.AccessDenied():
