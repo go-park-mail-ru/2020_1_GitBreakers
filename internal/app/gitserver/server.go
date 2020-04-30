@@ -15,6 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sosedoff/gitkit"
 	"log"
 	"net/http"
@@ -70,32 +71,39 @@ func StartNew() {
 	}
 
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	accessLogMiddleware := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
 	routerTemplate := fmt.Sprintf("/{%s}/{%s}.git",
 		delivery.OwnerLoginMuxParameter, delivery.RepositoryNameMuxParameter)
 
-	router := mux.NewRouter().PathPrefix(routerTemplate).Subrouter()
+	mainRouter := mux.NewRouter()
 
-	router.Use(middleware.PrometheusMetricsMiddleware, panicMiddleware, loggerMWare)
+	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
+	gitRouter := mainRouter.PathPrefix(routerTemplate).Subrouter()
+
+	metricsRouter.Use(accessLogMiddleware, panicMiddleware)
+
+	gitRouter.Use(middleware.PrometheusMetricsMiddleware, accessLogMiddleware, panicMiddleware)
 
 	gitServerDelivery := delivery.GitServerDelivery{
 		UseCase: usecase.NewUseCase(repogit, userClient),
 		Logger:  customLogger,
 	}
 
+	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
+
 	gitInfoRefsHandler := delivery.CreateGitIfoRefsMiddleware(gitServerDelivery)(gitkitServer)
 	gitUploadPackHandler := delivery.CreateGitUploadPackMiddleware(gitServerDelivery)(gitkitServer)
 	gitReceivePackHandler := delivery.CreateGitReceivePackMiddleware(gitServerDelivery)(gitkitServer)
 
-	router.Handle("/info/refs", gitInfoRefsHandler).Methods(http.MethodGet)
-	router.Handle("/"+delivery.GitUploadPackService, gitUploadPackHandler).Methods(http.MethodPost)
-	router.Handle("/"+delivery.GitReceivePackService, gitReceivePackHandler).Methods(http.MethodPost)
+	gitRouter.Handle("/info/refs", gitInfoRefsHandler).Methods(http.MethodGet)
+	gitRouter.Handle("/"+delivery.GitUploadPackService, gitUploadPackHandler).Methods(http.MethodPost)
+	gitRouter.Handle("/"+delivery.GitReceivePackService, gitReceivePackHandler).Methods(http.MethodPost)
 
 	customLogger.Printf("starting git server with GIT_SERVER_PORT=%v\n", conf.GIT_SERVER_PORT)
 	customLogger.Printf("starting git server with GIT_USER_REPOS_DIR=%v\n", conf.GIT_USER_REPOS_DIR)
 
-	if err := http.ListenAndServe(conf.GIT_SERVER_PORT, router); err != nil {
+	if err := http.ListenAndServe(conf.GIT_SERVER_PORT, mainRouter); err != nil {
 		customLogger.Fatalln("cannot start http git server:", err)
 	}
 }

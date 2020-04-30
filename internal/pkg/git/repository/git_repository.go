@@ -63,7 +63,8 @@ func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
 	}
 
 	_, err = entryFileReader.Read(buffer)
-	if err != nil {
+
+	if err != nil && err != io.EOF {
 		return "", errors.WithStack(err)
 	}
 

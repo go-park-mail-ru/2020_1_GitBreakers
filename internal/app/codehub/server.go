@@ -78,7 +78,11 @@ func StartNew() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
-	r := mux.NewRouter()
+	mainRouter := mux.NewRouter()
+
+	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
+
+	r := mainRouter.PathPrefix("").Subrouter()
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
@@ -88,7 +92,19 @@ func StartNew() {
 			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
-	r.Use(middleware.JsonContentTypeMiddleware, middleware.ProtectHeadersMiddleware)
+	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
+	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+
+	r.Use(
+		middleware.PrometheusMetricsMiddleware,
+		middleware.JsonContentTypeMiddleware,
+		middleware.ProtectHeadersMiddleware,
+	)
+
+	metricsRouter.Use(
+		loggerMWare,
+		panicMiddleware,
+	)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
@@ -101,7 +117,7 @@ func StartNew() {
 
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
-	r.Handle("/metrics", promhttp.Handler())
+	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
@@ -139,10 +155,13 @@ func StartNew() {
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 
-	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)(m.AuthMiddleware(r))
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	r.Use(
+		loggerMWare,
+		middleware.CreatePanicMiddleware(customLogger),
+		m.AuthMiddleware,
+	)
 
-	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
+	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(mainRouter)); err != nil {
 		log.Fatal(err)
 	}
 }
