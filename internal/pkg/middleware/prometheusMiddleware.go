@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/monitoring"
+	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	customHttp "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http"
 	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
@@ -18,10 +18,10 @@ func PrometheusMetricsMiddleware(next http.Handler) http.Handler {
 			if statusCode == 0 {
 				statusCode = http.StatusOK
 			}
-			monitoring.Hits.WithLabelValues(strconv.Itoa(statusCode), path).Inc()
+			monitoring2.Hits.WithLabelValues(strconv.Itoa(statusCode), path).Inc()
 		}()
 
-		timer := prometheus.NewTimer(monitoring.RequestDuration.With(
+		timer := prometheus.NewTimer(monitoring2.RequestDuration.With(
 			prometheus.Labels{"path": path, "method": r.Method},
 		))
 		defer timer.ObserveDuration()
