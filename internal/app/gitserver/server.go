@@ -90,7 +90,7 @@ func StartNew() {
 		Logger:  customLogger,
 	}
 
-	metricsRouter.Handle("/metrics", promhttp.Handler())
+	metricsRouter.Handle("/metrics", promhttp.Handler()).Methods(http.MethodGet)
 
 	gitInfoRefsHandler := delivery.CreateGitIfoRefsMiddleware(gitServerDelivery)(gitkitServer)
 	gitUploadPackHandler := delivery.CreateGitUploadPackMiddleware(gitServerDelivery)(gitkitServer)

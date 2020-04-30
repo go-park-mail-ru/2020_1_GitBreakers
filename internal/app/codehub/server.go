@@ -114,7 +114,7 @@ func StartNew() {
 
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
-	metricsRouter.Handle("/metrics", promhttp.Handler())
+	metricsRouter.Handle("/metrics", promhttp.Handler()).Methods(http.MethodGet)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
