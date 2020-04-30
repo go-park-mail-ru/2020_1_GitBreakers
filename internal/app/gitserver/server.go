@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/delivery"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/monitoring"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
 	"github.com/gorilla/mux"
@@ -25,7 +25,7 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	prometheus.MustRegister(monitoring.Hits, monitoring.RequestDuration, monitoring.DBQueryDuration)
+	prometheus.MustRegister(monitoring2.Hits, monitoring2.RequestDuration, monitoring2.DBQueryDuration)
 
 	userClient, err := clients.NewUserClient()
 	if err != nil {
