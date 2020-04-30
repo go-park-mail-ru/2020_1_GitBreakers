@@ -11,15 +11,17 @@ type Config struct {
 	POSTGRES_USER       string
 	POSTGRES_PASS       string
 	POSTGRES_DBNAME     string
-	MAX_DB_OPEN_CONN    int
+	MAX_DB_OPEN_CONN    int64
 	MAIN_LISTEN_PORT    string
 	ALLOWED_ORIGINS     []string
 	REDIS_PASS          string
 	LOGFILE             string
 	HOST_TO_SAVE        string
 	GIT_USER_REPOS_DIR  string
+	GIT_SERVER_PORT     string
+	NEWS_SERVER_PORT    string
 	CSRF_SECRET_KEY     string
-	COOKIE_EXPIRE_HOURS int
+	COOKIE_EXPIRE_HOURS int64
 }
 
 // New returns a new Config struct(!!!пароль не задан по дефолту и csrf secret key)
@@ -39,6 +41,8 @@ func New() *Config {
 		GIT_USER_REPOS_DIR:  getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
 		CSRF_SECRET_KEY:     getEnv("CSRF_SECRET_KEY", ""),
 		COOKIE_EXPIRE_HOURS: getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
+		GIT_SERVER_PORT:     getEnv("GIT_SERVER_PORT", ":5000"),
+		NEWS_SERVER_PORT:    getEnv("NEWS_SERVER_PORT", ":8083"),
 	}
 }
 
@@ -52,10 +56,10 @@ func getEnv(key string, defaultVal string) string {
 }
 
 //вернет переменную окружения int
-func getEnvAsInt(name string, defaultVal int) int {
+func getEnvAsInt(name string, defaultVal int64) int64 {
 	valueStr := getEnv(name, "")
 	if value, err := strconv.Atoi(valueStr); err == nil {
-		return value
+		return int64(value)
 	}
 
 	return defaultVal

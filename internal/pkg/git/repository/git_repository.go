@@ -7,6 +7,8 @@ import (
 	gogitPlumbingObj "github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"io"
@@ -17,7 +19,7 @@ import (
 )
 
 const (
-	gitRepoPostfix = ".git"
+	gitRepositoryNameSuffix = ".git"
 )
 
 type Repository struct {
@@ -61,14 +63,15 @@ func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
 	}
 
 	_, err = entryFileReader.Read(buffer)
-	if err != nil {
+
+	if err != nil && err != io.EOF {
 		return "", errors.WithStack(err)
 	}
 
 	return http.DetectContentType(buffer), nil
 }
 
-func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, error) {
+func isRepoExistsInDb(queryer queryer, ownerId int64, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
@@ -83,10 +86,10 @@ func isRepoExistsInDb(queryer queryer, ownerId int, repoName string) (bool, erro
 }
 
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
-	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepoPostfix
+	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepositoryNameSuffix
 }
 
-func (repo Repository) createRepoPath(queryer queryer, ownerId int, repoName string) (string, error) {
+func (repo Repository) createRepoPath(queryer queryer, ownerId int64, repoName string) (string, error) {
 	if repoName == "" {
 		return "", entityerrors.Invalid()
 	}
@@ -146,8 +149,8 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 			newRepo)
 	}
 
-	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id,repository_id) VALUES ($1, $2)",
-		newRepo.OwnerID, newRepoId)
+	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id, repository_id, role) VALUES ($1, $2, $3)",
+		newRepo.OwnerID, newRepoId, permission_types.OwnerAccess())
 	if err != nil {
 		return -1, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
 	}
@@ -167,15 +170,16 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	return newRepoId, nil
 }
 
-func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, offset, limit int) ([]git.Repository, error) {
+func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error) {
 	rows, err := repo.db.Query(
 		` SELECT 	repo.id,
 			   			repo.owner_id,
 			   			repo.name,
 			   			repo.description,
 			   			repo.is_fork,
-			   			repo.created_at,
-			   			repo.is_public
+			   			repo.is_public,
+ 						repo.stars,
+        			   	repo.created_at
 				FROM git_repositories AS repo
 					JOIN users AS owner ON repo.owner_id = owner.id
 					JOIN users_git_repositories AS ugr ON repo.id = ugr.repository_id
@@ -205,8 +209,9 @@ func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, o
 			&gitRepo.Name,
 			&gitRepo.Description,
 			&gitRepo.IsFork,
-			&gitRepo.CreatedAt,
-			&gitRepo.IsPublic)
+			&gitRepo.IsPublic,
+			&gitRepo.Stars,
+			&gitRepo.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
 				"while scanning in GetReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
@@ -216,15 +221,16 @@ func (repo Repository) GetReposByUserLogin(requesterId *int, userLogin string, o
 	return gitRepos, nil
 }
 
-func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit int) ([]git.Repository, error) {
+func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit int64) ([]git.Repository, error) {
 	rows, err := repo.db.Query(`
 		SELECT 	repo.id,
 				repo.owner_id,
 				repo.name,
 				repo.description,
 				repo.is_fork,
-				repo.created_at,
-				repo.is_public
+				repo.is_public,
+		       	repo.stars,
+		       	repo.created_at
 		FROM git_repositories AS repo
 			JOIN users AS owner ON repo.owner_id = owner.id
 		WHERE owner.login = $1 OFFSET $2
@@ -252,8 +258,9 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 			&gitRepo.Name,
 			&gitRepo.Description,
 			&gitRepo.IsFork,
-			&gitRepo.CreatedAt,
-			&gitRepo.IsPublic)
+			&gitRepo.IsPublic,
+			&gitRepo.Stars,
+			&gitRepo.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
 				"while scanning in GetAnyReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
@@ -267,13 +274,14 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 	var gitRepo git.Repository
 
 	err := repo.db.QueryRow(`
-		SELECT r.id,
-			   r.owner_id,
-			   r.name,
-			   r.description,
-			   r.is_fork,
-			   r.created_at,
-			   r.is_public
+		SELECT 	r.id,
+			   	r.owner_id,
+			   	r.name,
+			   	r.description,
+			   	r.is_fork,
+			   	r.is_public,
+		       	r.stars,
+				r.created_at
 		FROM git_repositories AS r
 				 JOIN users AS u ON r.owner_id = u.id
 		WHERE u.login = $1
@@ -284,8 +292,9 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 		&gitRepo.Name,
 		&gitRepo.Description,
 		&gitRepo.IsFork,
-		&gitRepo.CreatedAt,
-		&gitRepo.IsPublic)
+		&gitRepo.IsPublic,
+		&gitRepo.Stars,
+		&gitRepo.CreatedAt)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -298,7 +307,7 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 	return gitRepo, nil
 }
 
-func (repo Repository) CheckReadAccess(currentUserId *int, userLogin, repoName string) (bool, error) {
+func (repo Repository) CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error) {
 	var haveAccess bool
 	err := repo.db.QueryRow(`
 		SELECT EXISTS(
@@ -312,6 +321,26 @@ func (repo Repository) CheckReadAccess(currentUserId *int, userLogin, repoName s
 			"with currentUserId=%+v, userLogin=%s, repoName=%s", currentUserId, userLogin, repoName)
 	}
 	return haveAccess, nil
+}
+
+func (repo Repository) GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error) {
+	var permissionRole string
+	err := repo.db.QueryRow(`
+		SELECT ugr.role FROM users_git_repositories AS ugr 
+		        JOIN git_repositories AS gr ON ugr.repository_id = gr.id
+		    	JOIN users AS u ON gr.owner_id = u.id
+		    WHERE u.login = $1 AND gr.name = $2 AND ugr.user_id = $3`,
+		userLogin, repoName, currentUserId).Scan(&permissionRole)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return perm.NoAccess(), nil
+	case err != nil:
+		return perm.NoAccess(), errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+			"with userLogin=%s, repoName=%s", userLogin, repoName)
+	}
+
+	return perm.Permission(permissionRole), nil
 }
 
 func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Branch, error) {
@@ -332,23 +361,25 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 
 	var gitRepoBranches []git.Branch
 
-	err = gogitBranchesIterator.ForEach(func(reference *gogitPlumbing.Reference) error {
-		gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, reference.Hash())
-		if err != nil {
-			return errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
-				"with userLogin=%s, repoName=%s, branchName=%s",
-				userLogin, repoName, reference.Name().String())
-		}
+	err = gogitBranchesIterator.ForEach(
+		func(reference *gogitPlumbing.Reference) error {
+			gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, reference.Hash())
+			if err != nil {
+				return errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+					"with userLogin=%s, repoName=%s, branchName=%s",
+					userLogin, repoName, reference.Name().String())
+			}
 
-		gitRepoBranches = append(gitRepoBranches,
-			git.Branch{
-				Name:   strings.TrimLeft(reference.Name().String(), gogitPlumbing.NewBranchReferenceName("").String()),
-				Commit: convertToGitCommitModel(gogitCommit),
-			},
-		)
+			gitRepoBranches = append(gitRepoBranches,
+				git.Branch{
+					Name:   strings.TrimLeft(reference.Name().String(), gogitPlumbing.NewBranchReferenceName("").String()),
+					Commit: convertToGitCommitModel(gogitCommit),
+				},
+			)
 
-		return nil
-	})
+			return nil
+		},
+	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
 			"after iterating by branches with userLogin=%s, repoName=%s", userLogin, repoName)
@@ -356,24 +387,25 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 	return gitRepoBranches, nil
 }
 
-func (repo Repository) GetByID(id int) (git.Repository, error) {
+func (repo Repository) GetByID(id int64) (git.Repository, error) {
 	var gitRepo git.Repository
 	err := repo.db.QueryRow(`
-			SELECT id,
-			       owner_id,
-			       name,
-			       description,
-			       is_public,
-			       is_fork, 
-			       created_at
-			FROM git_repositories WHERE id = $1
-			`, id).Scan(
+			SELECT 	id,
+			       	owner_id,
+			       	name,
+			       	description,
+			       	is_fork, 
+			       	is_public,
+			       	stars,
+			       	created_at
+			FROM git_repositories WHERE id = $1`, id).Scan(
 		&gitRepo.ID,
 		&gitRepo.OwnerID,
 		&gitRepo.Name,
 		&gitRepo.Description,
-		&gitRepo.IsPublic,
 		&gitRepo.IsFork,
+		&gitRepo.IsPublic,
+		&gitRepo.Stars,
 		&gitRepo.CreatedAt,
 	)
 
@@ -477,7 +509,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 	return filesInCommit, nil
 }
 
-func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int) ([]git.Commit, error) {
+func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int64) ([]git.Commit, error) {
 	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
 	switch {
 	case err == gogit.ErrRepositoryNotExists:
@@ -533,7 +565,7 @@ func (repo Repository) GetCommitsByCommitHash(userLogin, repoName, commitHash st
 	return gitCommits, nil
 }
 
-func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int) ([]git.Commit, error) {
+func (repo Repository) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64) ([]git.Commit, error) {
 	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
 	switch {
 	case err == gogit.ErrRepositoryNotExists:

@@ -1,0 +1,47 @@
+syntax = "proto3";
+// protoc --go_out=plugins=grpc:. *.proto
+import "google/protobuf/empty.proto";
+package usergrpc;
+option go_package = ".;usergrpc";
+service UserGrpc{
+  rpc Create(UserModel)returns(google.protobuf.Empty){}
+  rpc GetByLogin(LoginModel)returns(UserModel){}
+  rpc UpdateUser(UserUpdateModel)returns(google.protobuf.Empty){}
+  rpc CheckPass(CheckPassModel)returns(CheckPassResp){}
+  rpc GetByID(UserIDModel)returns(UserModel){}
+  rpc UploadAvatar(stream UserAvatarModel)returns(google.protobuf.Empty){}
+  //delete method not realized
+}
+//использует модель юзера
+message UserAvatarModel{
+  int64 userID = 1;
+  string fileName = 2;
+  bytes chunk = 3;
+}
+message UserUpdateModel{
+  int64 userID = 1;
+  UserModel userData = 2;
+}
+
+message UserIDModel {
+  int64 userID = 1;
+}
+message CheckPassResp{
+  bool is_correct = 1;
+}
+message CheckPassModel{
+  string login = 1;
+  string pass = 2;
+}
+message LoginModel{
+  string login = 1;
+}
+
+message UserModel{
+  int64 ID = 1;
+  string password = 2;
+  string name = 3;
+  string login = 4;
+  string image = 5;
+  string email = 6;
+}

@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-//TODO пока никак не юзается, нужно прикрутить к деливери слою, должен быть реквестid
 type Logger interface {
 	//GetRequestIdKey() int
 	//GetRequestIdFromContext(ctx context.Context) string

@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitModels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -100,7 +101,7 @@ func (s *gitRepoTestSuite) TestRepositoryCreate() {
 			repo.IsFork,
 		).WillReturnRows(repoRow)
 
-	s.mock.ExpectExec("INSERT").WithArgs(repo.OwnerID, repo.ID).
+	s.mock.ExpectExec("INSERT").WithArgs(repo.OwnerID, repo.ID, perm.OwnerAccess()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	s.mock.ExpectQuery("SELECT").WithArgs(user.ID).WillReturnRows(userRow)
@@ -173,8 +174,9 @@ func (s *gitRepoTestSuite) TestGetById() {
 		"owner_id",
 		"name",
 		"description",
-		"is_public",
 		"is_fork",
+		"is_public",
+		"stars",
 		"created_at",
 	})
 	repoDbRow.AddRow(
@@ -182,8 +184,9 @@ func (s *gitRepoTestSuite) TestGetById() {
 		repo.OwnerID,
 		repo.Name,
 		repo.Description,
-		repo.IsPublic,
 		repo.IsFork,
+		repo.IsPublic,
+		repo.Stars,
 		repo.CreatedAt,
 	)
 

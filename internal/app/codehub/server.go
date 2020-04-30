@@ -2,24 +2,28 @@ package codehub
 
 import (
 	"fmt"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
+	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
+	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
+	postgresCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
+	usecaseCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
 	gitDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/delivery"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
-	sessDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery"
-	redisRepo "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/repository/redis"
-	sessUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/usecase"
-	userDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery"
+	http2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/delivery/http"
+	http3 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
-	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -30,7 +34,7 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	customLogger := logger.SimpleLogger{}
+	prometheus.MustRegister(monitoring2.Hits, monitoring2.RequestDuration, monitoring2.DBQueryDuration)
 
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
@@ -38,7 +42,7 @@ func StartNew() {
 		f = os.Stdout
 	}
 
-	customLogger = logger.NewTextFormatSimpleLogger(f)
+	customLogger := logger.NewTextFormatSimpleLogger(f)
 
 	defer func() {
 		if f != os.Stdout {
@@ -72,9 +76,13 @@ func StartNew() {
 		}
 	}()
 
-	db.SetMaxOpenConns(conf.MAX_DB_OPEN_CONN) //10 по дефолту
+	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
-	r := mux.NewRouter()
+	mainRouter := mux.NewRouter()
+
+	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
+
+	r := mainRouter.PathPrefix("").Subrouter()
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
@@ -84,22 +92,19 @@ func StartNew() {
 			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
 	})
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     conf.REDIS_ADDR, // use default Addr
-		Password: conf.REDIS_PASS, // no password set
-		DB:       0,               // use default db
-	})
+	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
+	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
-	res, err := redisClient.Ping().Result()
-	if err != nil {
-		msg := fmt.Sprintln("error with redis:", err)
-		customLogger.Error(msg)
-		log.Fatal(msg)
-	} else {
-		customLogger.Println("Connected to redis:", res)
-	}
+	r.Use(
+		middleware.PrometheusMetricsMiddleware,
+		middleware.JsonContentTypeMiddleware,
+		middleware.ProtectHeadersMiddleware,
+	)
 
-	r.Use(middleware.JsonContentTypeMiddleware, middleware.ProtectHeadersMiddleware)
+	metricsRouter.Use(
+		loggerMWare,
+		panicMiddleware,
+	)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
@@ -107,63 +112,110 @@ func StartNew() {
 		false,
 		conf.COOKIE_EXPIRE_HOURS*3600)
 
-	withCsrfRouter := r.PathPrefix("").Subrouter()
-	withCsrfRouter.Use(csrfMiddleware)
+	CsrfRouter := r.PathPrefix("").Subrouter()
+	CsrfRouter.Use(csrfMiddleware)
 
-	userSetHandler, m, repoHandler := initNewHandler(db, redisClient, customLogger, conf)
+	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
+
+	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
 	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
-	r.HandleFunc("/signup", userSetHandler.Create).Methods(http.MethodPost)
-	r.HandleFunc("/login", userSetHandler.Login).Methods(http.MethodPost)
-	withCsrfRouter.HandleFunc("/logout", userSetHandler.Logout).Methods(http.MethodPost)
-	r.HandleFunc("/whoami", userSetHandler.GetInfo).Methods(http.MethodGet)
-	withCsrfRouter.HandleFunc("/profile", userSetHandler.Update).Methods(http.MethodPut)
-	r.HandleFunc("/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
-	withCsrfRouter.HandleFunc("/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
+	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
 
-	withCsrfRouter.HandleFunc("/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
-	r.HandleFunc("/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
-	r.HandleFunc("/repolist", repoHandler.GetRepoList).Methods(http.MethodGet)
-	r.HandleFunc("/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
-	r.HandleFunc("/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
-	r.HandleFunc("/{username}/{reponame}/commits/{branchname}", repoHandler.GetCommitsList).Methods(http.MethodGet)
-	r.HandleFunc("/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
-	r.HandleFunc("/{username}/{reponame}/{branchname}/commits", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
+	r.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
+	r.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
+	r.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
+	r.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
+	r.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
+
+	r.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
+	r.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
+	r.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}", repoHandler.GetCommitsList).Methods(http.MethodGet)
+	r.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
+	r.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
+
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
+	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
+	//
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
+	r.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
+
+	r.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 
-	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)(m.AuthMiddleware(r))
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	r.Use(
+		loggerMWare,
+		middleware.CreatePanicMiddleware(customLogger),
+		m.AuthMiddleware,
+	)
 
-	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(loggerMWare(panicMiddleware))); err != nil {
+	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(mainRouter)); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger, conf *config.Config) (*userDeliv.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery) {
-	sessRepos := redisRepo.NewSessionRedis(redis, "codehub/session/")
+func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*http3.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *http4.HttpCodehub) {
 	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
-	sessUCase := sessUC.SessionUC{RepoSession: &sessRepos}
-	sessDelivery := sessDeliv.SessionHttp{
-		SessUC:     &sessUCase,
-		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
+	sessClient, err := clients.NewSessClient()
+	if err != nil {
+		logger.Fatal(err, "not connect to auth server")
+	}
+
+	userClient, err := clients.NewUserClient()
+	if err != nil {
+		logger.Fatal(err, "not connect to auth server")
+	}
+	newsClient, err := clients.NewNewsClient()
+	if err != nil {
+		logger.Fatal(err, "not connect to news server")
 	}
 
 	userUCase := userUC.UCUser{RepUser: &userRepos}
 
-	userDelivery := userDeliv.UserHttp{
-		SessHttp: &sessDelivery,
-		UserUC:   &userUCase,
-		Logger:   &logger,
-	}
-
 	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
+	repoCodeHubIssue := postgresCodeHub.NewIssueRepository(db)
+	repoCodeHubStar := postgresCodeHub.NewStarRepository(db)
+	repoCodeHubNews := postgresCodeHub.NewRepoNews(db)
+
+	codeHubUseCase := usecaseCodeHub.UCCodeHub{
+		RepoIssue: &repoCodeHubIssue,
+		RepoStar:  &repoCodeHubStar,
+		RepoNews:  &repoCodeHubNews,
+		GitRepo:   repogit,
+		UserRepo:  userRepos,
+	}
+
+	codeHubDelivery := http4.HttpCodehub{
+		Logger:     &logger,
+		CodeHubUC:  &codeHubUseCase,
+		NewsClient: &newsClient,
+		UserClient: &userClient,
+	}
+
+	sessDelivery := http2.SessionHttp{
+		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
+		Client:     &sessClient,
+	}
+
+	userDelivery := http3.UserHttp{
+		SessHttp: &sessDelivery,
+		Logger:   &logger,
+		UClient:  &userClient,
+	}
 
 	gitDelivery := gitDeliv.GitDelivery{
 		UC:     &gitUseCase,
@@ -172,9 +224,9 @@ func initNewHandler(db *sqlx.DB, redis *redis.Client, logger logger.SimpleLogger
 	}
 
 	m := middleware.Middleware{
-		SessDeliv: &sessDelivery,
+		SessDeliv: &sessClient,
 		UCUser:    &userUCase,
 	}
 
-	return &userDelivery, &m, &gitDelivery
+	return &userDelivery, &m, &gitDelivery, &codeHubDelivery
 }

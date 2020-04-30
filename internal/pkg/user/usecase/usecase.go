@@ -7,9 +7,6 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
-	"io"
-	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 )
 
@@ -41,8 +38,8 @@ func (UC *UCUser) Delete(user models.User) error {
 	return nil
 }
 
-func (UC *UCUser) Update(userid int, newUserData models.User) error {
-	oldUserData, err := UC.RepUser.GetUserByIDWithPass(userid)
+func (UC *UCUser) Update(userID int64, newUserData models.User) error {
+	oldUserData, err := UC.RepUser.GetUserByIDWithPass(userID)
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
@@ -74,49 +71,36 @@ func (UC *UCUser) Update(userid int, newUserData models.User) error {
 func (UC *UCUser) GetByLogin(login string) (models.User, error) {
 	return UC.RepUser.GetByLoginWithoutPass(login)
 }
-func (UC *UCUser) GetByID(userId int) (models.User, error) {
-	return UC.RepUser.GetUserByIDWithoutPass(userId)
+func (UC *UCUser) GetByID(userID int64) (models.User, error) {
+	return UC.RepUser.GetUserByIDWithoutPass(userID)
 }
 func (UC *UCUser) CheckPass(login string, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(login, pass)
 }
-func (UC *UCUser) UploadAvatar(User models.User, fileName *multipart.FileHeader, image multipart.File) error {
-	byteImage, err := ioutil.ReadAll(image)
-	if err != nil {
-		return errors.Wrap(err, "err in uploadImage Usercase")
-	}
-	file, err := fileName.Open()
-	if err != nil {
-		return err
-	}
-	if err := checkFileContentType(file); err != nil {
+func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) error {
+
+	if err := checkFileContentType(fileData); err != nil {
 		return err
 	}
 
-	if err := UC.RepUser.UploadAvatar(fileName.Filename, byteImage); err != nil {
+	if err := UC.RepUser.UploadAvatar(fileName, fileData); err != nil {
 		return errors.Wrap(err, "err in repo UploadAvatar")
 	}
-	User, err = UC.RepUser.GetUserByLoginWithPass(User.Login)
+	UserModel, err := UC.RepUser.GetUserByIDWithPass(UserID)
 
 	if err != nil {
-		return errors.Wrap(err,"err in GetUserByLoginWithPass")
+		return errors.Wrap(err, "err in GetUserByLoginWithPass")
 	}
 
-	if err := UC.RepUser.UpdateAvatarPath(User, fileName.Filename); err != nil {
+	if err := UC.RepUser.UpdateAvatarPath(UserModel, fileName); err != nil {
 		return errors.Wrap(err, "err in repo UpdateAvatarPath")
 	}
 	return nil
 }
 
-func checkFileContentType(file multipart.File) error {
-	buffer := make([]byte, 512)
+func checkFileContentType(fileContent []byte) error {
 
-	_, err := file.Read(buffer)
-	if err != nil || err == io.EOF {
-		return err
-	}
-
-	contentType := http.DetectContentType(buffer)
+	contentType := http.DetectContentType(fileContent)
 
 	for _, r := range allowedContentType {
 		if contentType == r {
@@ -129,4 +113,5 @@ func checkFileContentType(file multipart.File) error {
 var allowedContentType = []string{
 	"image/png",
 	"image/jpeg",
+	"image/jpg",
 }

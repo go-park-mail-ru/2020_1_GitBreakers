@@ -18,7 +18,7 @@ func TestSessionUC_Create(t *testing.T) {
 
 		m := mocks.NewMockSessRepo(ctrl)
 
-		someUserID := 20
+		var someUserID int64 = 20
 		someExpireTime := time.Duration(20) * time.Hour
 		someRetSessionID := "base+f33g339ifk3933435"
 
@@ -45,7 +45,7 @@ func TestSessionUC_Create(t *testing.T) {
 
 		m := mocks.NewMockSessRepo(ctrl)
 
-		someUserID := 20
+		var someUserID int64 = 20
 		someExpireTime := time.Duration(20) * time.Hour
 		someRetSessionID := "base+f33g339ifk3933435"
 
@@ -122,8 +122,7 @@ func TestSessionUC_GetByID(t *testing.T) {
 		m := mocks.NewMockSessRepo(ctrl)
 
 		someInputSessionID := "base+f33g339ifk3933435"
-		someUserID := 20
-
+		var someUserID int64 = 20
 
 		someOldSession := models.Session{
 			ID:     "",
@@ -132,7 +131,7 @@ func TestSessionUC_GetByID(t *testing.T) {
 
 		m.EXPECT().
 			GetSessByID(someInputSessionID).
-			Return(someOldSession,nil).
+			Return(someOldSession, nil).
 			Times(1)
 
 		useCase := SessionUC{m}

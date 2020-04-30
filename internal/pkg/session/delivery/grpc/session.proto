@@ -1,0 +1,23 @@
+syntax = "proto3";
+// protoc --go_out=plugins=grpc:. *.proto
+import "google/protobuf/empty.proto";
+package session;
+option go_package = ".;session";
+service Session{
+  rpc Create(UserID)returns(SessionID){}
+  rpc Delete(SessionID)returns(google.protobuf.Empty){}
+  rpc Get(SessionID)returns(SessionModel){}
+}
+
+message UserID {
+  int64 UserID = 1;
+}
+
+message SessionID {
+  string SessionID = 1;
+}
+
+message SessionModel{
+  string ID = 1;
+  int64 UserID = 2;
+}

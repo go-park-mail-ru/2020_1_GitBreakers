@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"encoding/json"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
@@ -10,13 +9,14 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 )
 
 type GitDelivery struct {
-	UC     git.UseCase
+	UC     git.GitUseCaseI
 	Logger *logger.SimpleLogger
 	UserUC user.UCUser
 }
@@ -30,10 +30,10 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := res.(int)
+	userID := res.(int64)
 	newRepo := &gitmodels.Repository{IsPublic: true}
-	if err := json.NewDecoder(r.Body).Decode(newRepo); err != nil {
-		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+	if err := easyjson.UnmarshalFromReader(r.Body, newRepo); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -82,8 +82,8 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&Repo); err != nil {
-		GD.Logger.HttpInfo(r.Context(), "not encode json", http.StatusInternalServerError)
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(Repo, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -110,12 +110,13 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 	repo, err := GD.UC.GetRepoList(userName, &userRealID)
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
-		GD.Logger.HttpInfo(r.Context(), "access denied for user "+strconv.Itoa(userRealID), http.StatusForbidden)
+		GD.Logger.HttpInfo(r.Context(), "access denied for user "+strconv.Itoa(int(userRealID)), http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-	if err := json.NewEncoder(w).Encode(&repo); err != nil {
-		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(repo, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -146,8 +147,8 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&branches); err != nil {
-		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(branches, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -163,7 +164,7 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 	commitParams := &gitmodels.CommitRequest{
 		UserLogin:  vars["username"],
 		RepoName:   vars["reponame"],
-		CommitHash: vars["branchname"],
+		CommitHash: vars["hash"],
 	}
 
 	decoder := schema.NewDecoder()
@@ -193,8 +194,8 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&res); err != nil {
-		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -240,16 +241,17 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		if err := json.NewEncoder(w).Encode(&res); err != nil {
-			GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&res); err != nil {
-		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -280,18 +282,17 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&res); err != nil {
-		GD.Logger.HttpLogError(r.Context(), "json", "encode", errors.Cause(err))
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
 }
 
-func (GD *GitDelivery) idToIntPointer(id interface{}) *int {
-	intID, ok := id.(int)
+func (GD *GitDelivery) idToIntPointer(id interface{}) *int64 {
+	intID, ok := id.(int64)
 	if !ok {
 		return nil
 	} else {

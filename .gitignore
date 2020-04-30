@@ -28,3 +28,7 @@
 **/.idea/
 **/.vscode/
 logfile.log
+static/image/avatar/*
+
+# Other
+**/nohup.out

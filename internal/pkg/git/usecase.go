@@ -4,13 +4,13 @@ import (
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 )
 
-type UseCase interface {
-	Create(userID int, repos *gitmodels.Repository) error
-	GetRepo(userName string, repoName string, requestUserID *int) (gitmodels.Repository, error)
-	GetRepoList(userName string, requestUserID *int) ([]gitmodels.Repository, error)
-	GetBranchList(requestUserID *int, userName string, repoName string) ([]gitmodels.Branch, error)
-	FilesInCommitByPath(requset gitmodels.FilesCommitRequest, requesrUserID *int) ([]gitmodels.FileInCommit, error)
-	GetCommitsByCommitHash(params gitmodels.CommitRequest, requestUserID *int) ([]gitmodels.Commit, error)
-	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int, requestUserID *int) ([]gitmodels.Commit, error)
-	GetFileByPath(params gitmodels.FilesCommitRequest, requestUserID *int) (file gitmodels.FileCommitted, err error)
+type GitUseCaseI interface {
+	Create(userID int64, repos *gitmodels.Repository) error
+	GetRepo(userName string, repoName string, requestUserID *int64) (gitmodels.Repository, error)
+	GetRepoList(userName string, requestUserID *int64) (gitmodels.RepositorySet, error)
+	GetBranchList(requestUserID *int64, userName string, repoName string) (gitmodels.BranchSet, error)
+	FilesInCommitByPath(requset gitmodels.FilesCommitRequest, requesrUserID *int64) (gitmodels.FileInCommitSet, error)
+	GetCommitsByCommitHash(params gitmodels.CommitRequest, requestUserID *int64) (gitmodels.CommitSet, error)
+	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64, requestUserID *int64) (gitmodels.CommitSet, error)
+	GetFileByPath(params gitmodels.FilesCommitRequest, requestUserID *int64) (file gitmodels.FileCommitted, err error)
 }

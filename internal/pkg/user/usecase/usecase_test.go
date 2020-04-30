@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"bytes"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
@@ -8,7 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	"net/http"
 	"testing"
+	"time"
 )
 
 var someUser = models.User{
@@ -155,7 +159,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).Return(false, nil)
+		m.EXPECT().CheckPass(someUser.Login, someUser.Password).Return(false, nil)
 
 		useCase := UCUser{
 			RepUser: m,
@@ -171,7 +175,7 @@ func TestUCUser_CheckPass(t *testing.T) {
 
 		m := mocks.NewMockRepoUser(ctrl)
 
-		m.EXPECT().CheckPass(someUser.Login, someUser.Password, ).
+		m.EXPECT().CheckPass(someUser.Login, someUser.Password).
 			Return(true, entityerrors.DoesNotExist())
 
 		useCase := UCUser{
@@ -226,30 +230,24 @@ func TestUCUser_GetByLogin(t *testing.T) {
 }
 
 func TestUCUser_Update(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mocks.NewMockRepoUser(ctrl)
+	useCase := UCUser{
+		RepUser: m,
+	}
 
 	t.Run("update with error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		m := mocks.NewMockRepoUser(ctrl)
-
 		m.EXPECT().GetUserByIDWithPass(someUser.ID).
 			Return(someUser, entityerrors.DoesNotExist()).
 			Times(1)
-
-		useCase := UCUser{
-			RepUser: m,
-		}
 
 		err := useCase.Update(someUser.ID, someUser)
 		assert.Error(t, err)
 	})
 
 	t.Run("update ok", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		m := mocks.NewMockRepoUser(ctrl)
 
 		someUser.Password = "low"
 
@@ -265,19 +263,11 @@ func TestUCUser_Update(t *testing.T) {
 			Return(nil).
 			Times(1)
 
-		useCase := UCUser{
-			RepUser: m,
-		}
-
 		err := useCase.Update(someUser.ID, someUser)
 		assert.NoError(t, err)
 	})
 
 	t.Run("update full valid with conflict", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		m := mocks.NewMockRepoUser(ctrl)
 
 		m.EXPECT().GetUserByIDWithPass(someUser.ID).
 			Return(someUser, nil).
@@ -291,12 +281,143 @@ func TestUCUser_Update(t *testing.T) {
 			Return(nil).
 			Times(0)
 
-		useCase := UCUser{
-			RepUser: m,
-		}
-
 		err := useCase.Update(someUser.ID, someUser)
 
 		require.Equal(t, entityerrors.AlreadyExist(), errors.Cause(err))
 	})
+	t.Run("update full ok", func(t *testing.T) {
+		someUser.Password = "gooodpassword"
+
+		m.EXPECT().GetUserByIDWithPass(someUser.ID).
+			Return(someUser, nil).
+			Times(1)
+
+		m.EXPECT().UserCanUpdate(gomock.AssignableToTypeOf(someUser)).
+			Return(true, nil).
+			Times(1)
+
+		m.EXPECT().Update(gomock.AssignableToTypeOf(someUser)).
+			Return(nil).
+			Times(1)
+
+		err := useCase.Update(someUser.ID, someUser)
+		assert.NoError(t, err)
+	})
+}
+func TestUCUser_UploadAvatar(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mocks.NewMockRepoUser(ctrl)
+
+	someName := "some_name"
+	clHttp := http.Client{
+		Timeout: 10 * time.Second,
+	}
+	//http get fake open image
+	reqImg, err := clHttp.Get("http://fakeimg.pl/3000x3000")
+
+	binaryImage := bytes.NewBuffer(nil)
+	if reqImg != nil && reqImg.StatusCode == 200 {
+
+		_, err = io.Copy(binaryImage, reqImg.Body)
+		require.Nil(t, err)
+		defer reqImg.Body.Close()
+
+	} else {
+		binaryImage = bytes.NewBuffer([]byte("some binary content"))
+	}
+	useCase := UCUser{m}
+
+	t.Run("UploadAvatar ok", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				UploadAvatar(someName, binaryImage.Bytes()).
+				Return(nil).
+				Times(1),
+			m.EXPECT().
+				GetUserByIDWithPass(someUser.ID).
+				Return(someUser, nil).
+				Times(1),
+			m.EXPECT().
+				UpdateAvatarPath(someUser, someName).
+				Return(nil).
+				Times(1),
+		)
+
+		err = useCase.UploadAvatar(someUser.ID, someName,
+			binaryImage.Bytes())
+
+		require.NoError(t, err)
+	})
+
+	t.Run("UploadAvatar incorrect content", func(t *testing.T) {
+		someBadContent := []byte("fasfsffaf")
+		gomock.InOrder(
+			m.EXPECT().
+				UploadAvatar(someName, binaryImage.Bytes()).
+				Return(nil).
+				Times(0),
+		)
+
+		err = useCase.UploadAvatar(someUser.ID, someName,
+			someBadContent)
+
+		require.Error(t, err)
+	})
+
+	t.Run("UploadAvatar err in uploadAvatar", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				UploadAvatar(someName, binaryImage.Bytes()).
+				Return(errors.New("some error")).
+				Times(1),
+		)
+
+		err = useCase.UploadAvatar(someUser.ID, someName,
+			binaryImage.Bytes())
+
+		require.Error(t, err)
+	})
+
+	t.Run("UploadAvatar err in getByID", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				UploadAvatar(someName, binaryImage.Bytes()).
+				Return(nil).
+				Times(1),
+			m.EXPECT().
+				GetUserByIDWithPass(someUser.ID).
+				Return(someUser, errors.New("some error")).
+				Times(1),
+		)
+
+		err = useCase.UploadAvatar(someUser.ID, someName,
+			binaryImage.Bytes())
+
+		require.Error(t, err)
+	})
+	t.Run("UploadAvatar err in updatePath", func(t *testing.T) {
+		gomock.InOrder(
+			m.EXPECT().
+				UploadAvatar(someName, binaryImage.Bytes()).
+				Return(nil).
+				Times(1),
+			m.EXPECT().
+				GetUserByIDWithPass(someUser.ID).
+				Return(someUser, nil).
+				Times(1),
+			m.EXPECT().
+				UpdateAvatarPath(someUser, someName).
+				Return(errors.New("some error")).
+				Times(1),
+		)
+
+		err = useCase.UploadAvatar(someUser.ID, someName,
+			binaryImage.Bytes())
+
+		require.Error(t, err)
+	})
+
 }

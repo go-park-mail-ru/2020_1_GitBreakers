@@ -1,10 +1,10 @@
 package redis
 
 import (
-	"encoding/json"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-redis/redis/v7"
+	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 	"time"
@@ -24,7 +24,7 @@ func (repo *SessionRedis) createKey(sessionId string) string {
 }
 
 func (repo *SessionRedis) convertToString(session models.Session) (string, error) {
-	sessionJSON, err := json.Marshal(session)
+	sessionJSON, err := easyjson.Marshal(session)
 	if err != nil {
 		return "", errors.Wrapf(err, "session_repository: JSON Marshal failed for %+v", session)
 	}
@@ -33,7 +33,7 @@ func (repo *SessionRedis) convertToString(session models.Session) (string, error
 
 func (repo *SessionRedis) convertFromString(sessionString string) (models.Session, error) {
 	var storedSession models.Session
-	if err := json.Unmarshal([]byte(sessionString), &storedSession); err != nil {
+	if err := easyjson.Unmarshal([]byte(sessionString), &storedSession); err != nil {
 		return storedSession, errors.Wrapf(err,
 			"session_repository: JSON Unmarshal failed with sessionString=%v", sessionString)
 	}
@@ -47,7 +47,7 @@ func (repo *SessionRedis) Create(session models.Session, expire time.Duration) (
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	if err := repo.redisDb.Set(key, string(sessionJSON), expire).Err(); err != nil {
+	if err := repo.redisDb.Set(key, sessionJSON, expire).Err(); err != nil {
 		return "", errors.Wrapf(err, "session_repository: redis Set failed for %+v", session)
 	}
 	return session.ID, nil

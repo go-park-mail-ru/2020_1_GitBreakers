@@ -227,7 +227,7 @@ func (s *Suite) TestUserCanUpdate() {
 
 	isCanUpdate, err = s.repo.UserCanUpdate(user)
 
-	require.Nil(s.T(), err, )
+	require.Nil(s.T(), err)
 	require.False(s.T(), isCanUpdate)
 
 	if err := s.mock.ExpectationsWereMet(); err != nil {
@@ -439,4 +439,12 @@ func (s *Suite) TestUploadAvatar() {
 	defer os.Remove(`.` + s.repo.defaultImagePath + name)
 
 	require.Nil(s.T(), err)
+}
+func (s *Suite) TestUploadAvatarBad() {
+	name := ""
+	content := []byte("kekekser")
+	err := s.repo.UploadAvatar(name, content)
+	defer os.Remove(`.` + s.repo.defaultImagePath + name)
+
+	require.Error(s.T(), err)
 }

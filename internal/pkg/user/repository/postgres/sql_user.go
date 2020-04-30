@@ -25,9 +25,9 @@ func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, defHost string) U
 		hostToSave:       defHost,
 	}
 }
-func (repo UserRepo) GetUserByIDWithPass(id int) (models.User, error) {
+func (repo UserRepo) GetUserByIDWithPass(ID int64) (models.User, error) {
 	User := models.User{}
-	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", id)
+	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", ID)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -38,8 +38,8 @@ func (repo UserRepo) GetUserByIDWithPass(id int) (models.User, error) {
 
 	return User, nil
 }
-func (repo UserRepo) GetUserByIDWithoutPass(id int) (models.User, error) {
-	storedUser, err := repo.GetUserByIDWithPass(id)
+func (repo UserRepo) GetUserByIDWithoutPass(ID int64) (models.User, error) {
+	storedUser, err := repo.GetUserByIDWithPass(ID)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -126,15 +126,15 @@ func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
 	}
 }
 
-func (repo UserRepo) DeleteByID(id int) error {
-	result, err := repo.db.Exec("DELETE FROM users WHERE id = $1", id)
+func (repo UserRepo) DeleteByID(ID int64) error {
+	result, err := repo.db.Exec("DELETE FROM users WHERE id = $1", ID)
 	if err != nil {
-		return errors.Wrapf(err, "error in user DeleteByID with id=%v", id)
+		return errors.Wrapf(err, "error in user DeleteByID with id=%v", ID)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return errors.Wrapf(err, "error in user DeleteByID with id=%v", id)
+		return errors.Wrapf(err, "error in user DeleteByID with id=%v", ID)
 	}
 
 	if rowsAffected == 0 {
@@ -168,7 +168,7 @@ func (repo UserRepo) CheckPass(login string, newpass string) (bool, error) {
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(User.Password), []byte(newpass))
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 	return true, nil
 }
@@ -187,9 +187,9 @@ func (repo UserRepo) UploadAvatar(Name string, Content []byte) error {
 	return nil
 }
 
-func (repo UserRepo) GetLoginByID(id int) (string, error) {
+func (repo UserRepo) GetLoginByID(ID int64) (string, error) {
 	var login string
-	err := repo.db.QueryRow("SELECT login FROM users WHERE id = $1", id).Scan(&login)
+	err := repo.db.QueryRow("SELECT login FROM users WHERE id = $1", ID).Scan(&login)
 	switch {
 	case err == sql.ErrNoRows:
 		return login, entityerrors.DoesNotExist()
@@ -199,8 +199,8 @@ func (repo UserRepo) GetLoginByID(id int) (string, error) {
 	return login, err
 }
 
-func (repo UserRepo) GetIDByLogin(login string) (int, error) {
-	var id int
+func (repo UserRepo) GetIDByLogin(login string) (int64, error) {
+	var id int64
 	err := repo.db.QueryRow("SELECT id FROM users WHERE login = $1", login).Scan(&id)
 	switch {
 	case err == sql.ErrNoRows:

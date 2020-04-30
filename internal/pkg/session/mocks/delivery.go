@@ -35,7 +35,7 @@ func (m *MockSessDelivery) EXPECT() *MockSessDeliveryMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockSessDelivery) Create(userID int) (http.Cookie, error) {
+func (m *MockSessDelivery) Create(userID int64) (http.Cookie, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", userID)
 	ret0, _ := ret[0].(http.Cookie)

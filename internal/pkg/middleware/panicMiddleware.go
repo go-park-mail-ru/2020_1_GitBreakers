@@ -7,7 +7,7 @@ import (
 )
 
 func CreatePanicMiddleware(logger logger.Logger) func(http.Handler) http.Handler {
-	return func (next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if e := recover(); e != nil {
@@ -23,4 +23,3 @@ func CreatePanicMiddleware(logger logger.Logger) func(http.Handler) http.Handler
 		})
 	}
 }
-
