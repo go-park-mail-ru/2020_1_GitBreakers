@@ -1,4 +1,4 @@
-package postgres
+package stars
 
 import (
 	"database/sql"
@@ -62,7 +62,9 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 	var isDeleted bool
 
 	err := repo.DB.QueryRow(
-		"DELETE FROM git_repository_user_stars WHERE repository_id = $1 AND user_id = $2 RETURNING TRUE",
+		`DELETE FROM git_repository_user_stars
+				WHERE repository_id = $1 AND user_id = $2
+				RETURNING TRUE AS result`,
 		repoID, userID).Scan(&isDeleted)
 
 	switch {

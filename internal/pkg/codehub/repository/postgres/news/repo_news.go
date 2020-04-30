@@ -1,4 +1,4 @@
-package postgres
+package news
 
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
