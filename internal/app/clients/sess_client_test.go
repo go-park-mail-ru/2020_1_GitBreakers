@@ -151,4 +151,9 @@ func TestSessClient(t *testing.T) {
 
 		require.Empty(t, sessModel)
 	})
+	t.Run("New client ", func(t *testing.T) {
+		client, err := NewSessClient()
+		require.Nil(t, err)
+		require.NotNil(t, client)
+	})
 }

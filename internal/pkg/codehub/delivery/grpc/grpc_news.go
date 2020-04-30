@@ -21,15 +21,15 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 	if err != nil {
 		return &NewsResp{}, err
 	}
-	//todo debug может копировать хренотень
+
 	newsListProto := make([]*NewsModel, 0)
 	for _, v := range newsList {
 		temp := NewsModel{}
 		temp.ID = v.ID
 		temp.AuthorID = v.AuthorID
 		temp.Date, err = ptypes.TimestampProto(v.Date)
-		temp.Message = v.Mess
 		temp.RepoID = v.RepoID
+		temp.Message = v.Mess
 
 		newsListProto = append(newsListProto, &temp)
 	}
