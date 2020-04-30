@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
@@ -49,7 +50,7 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 
 	err = GD.CodeHubUC.ModifyStar(newStar)
 	switch {
-	case err == entityerrors.DoesNotExist() || err == entityerrors.AlreadyExist():
+	case errors.Is(err, entityerrors.DoesNotExist()) || errors.Is(err, entityerrors.AlreadyExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusConflict)
 		return
@@ -121,7 +122,7 @@ func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
 	userlist, err := GD.CodeHubUC.GetUserStaredList(int64(repoID), int64(limit), int64(offset))
 
 	switch {
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -170,15 +171,15 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	err = GD.CodeHubUC.CreateIssue(newIssue)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.AlreadyExist():
+	case errors.Is(err, entityerrors.AlreadyExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusConflict)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -215,11 +216,11 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	oldIssue, err := GD.CodeHubUC.GetIssue(newIssue.ID, userID)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -242,11 +243,11 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	err = GD.CodeHubUC.UpdateIssue(oldIssue)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -263,8 +264,8 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest) //скинули строку, а не число
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest) //скинули строку, а не число
 		return
 	}
 
@@ -276,11 +277,11 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID, 100, 0)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -325,11 +326,11 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 	err := GD.CodeHubUC.CloseIssue(oldIssue.ID, userID)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -358,11 +359,11 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), 100, 0)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return

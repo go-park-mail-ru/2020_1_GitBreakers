@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"fmt"
 	"github.com/bxcodec/faker/v3"
 	mock_clients "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/mocks"
@@ -12,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/steinfletcher/apitest"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -388,13 +388,6 @@ func TestCodeHubNewIssue(t *testing.T) {
 	CodeHubHandlers.UserClient = UClientMock
 	CodeHubHandlers.CodeHubUC = UCCodeHubMock
 
-	const userCount int = 7
-	userlist := make([]models.User, userCount)
-	for i := range userlist {
-		err := faker.FakeData(&userlist[i])
-		require.Nil(t, err)
-	}
-
 	RepoIDstr := "2"
 	someIssue := models.Issue{
 		ID:        0,
@@ -575,13 +568,6 @@ func TestCodeHubUpdateIssue(t *testing.T) {
 	CodeHubHandlers.UserClient = UClientMock
 	CodeHubHandlers.CodeHubUC = UCCodeHubMock
 
-	const userCount int = 7
-	userlist := make([]models.User, userCount)
-	for i := range userlist {
-		err := faker.FakeData(&userlist[i])
-		require.Nil(t, err)
-	}
-
 	RepoIDstr := "2"
 	someIssue := models.Issue{
 		ID:        0,
@@ -626,6 +612,281 @@ func TestCodeHubUpdateIssue(t *testing.T) {
 			Body("kek json").
 			Expect(t).
 			Status(http.StatusBadRequest).
+			End()
+	})
+	t.Run("UpdIssue ok", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, nil).
+				Times(1),
+			UCCodeHubMock.EXPECT().
+				UpdateIssue(gomock.AssignableToTypeOf(someIssue)).
+				Return(nil).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue ok").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	})
+	t.Run("UpdIssue err in getIssue", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, entityerrors.AccessDenied()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue err in getIssue").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusForbidden).
+			End()
+	})
+	t.Run("UpdIssue err in getIssue", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, entityerrors.DoesNotExist()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue err in getIssue").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+	t.Run("UpdIssue err in getIssue", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue err in getIssue").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+	t.Run("UpdIssue err upd not exsist", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, nil).
+				Times(1),
+			UCCodeHubMock.EXPECT().
+				UpdateIssue(gomock.AssignableToTypeOf(someIssue)).
+				Return(entityerrors.DoesNotExist()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue err upd not exsist").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+	t.Run("UpdIssue err upd not exsist", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, nil).
+				Times(1),
+			UCCodeHubMock.EXPECT().
+				UpdateIssue(gomock.AssignableToTypeOf(someIssue)).
+				Return(entityerrors.AccessDenied()).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue err upd not exsist").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusForbidden).
+			End()
+	})
+	t.Run("UpdIssue err upd not exsist", func(t *testing.T) {
+		gomock.InOrder(
+			UCCodeHubMock.EXPECT().
+				GetIssue(someIssue.ID, gomock.AssignableToTypeOf(int64(0))).
+				Return(someIssue, nil).
+				Times(1),
+			UCCodeHubMock.EXPECT().
+				UpdateIssue(gomock.AssignableToTypeOf(someIssue)).
+				Return(errors.New("some error")).
+				Times(1),
+		)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.UpdateIssue, true)
+
+		apitest.New("UpdIssue err upd not exsist").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Body(fmt.Sprintf(`{"title": "%s", "message": "%s"}`, someIssue.Title, someIssue.Message)).
+			Expect(t).
+			Status(http.StatusInternalServerError).
+			End()
+	})
+}
+func TestCodeHubGetIssues(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
+	UClientMock := mock_clients.NewMockUserClientI(ctrl)
+	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+
+	CodeHubHandlers.Logger = &newlogger
+	CodeHubHandlers.NewsClient = NewsClientMock
+	CodeHubHandlers.UserClient = UClientMock
+	CodeHubHandlers.CodeHubUC = UCCodeHubMock
+
+	const issueCount int = 7
+	issuelist := make([]models.Issue, issueCount)
+	for i := range issuelist {
+		err := faker.FakeData(&issuelist[i])
+		require.Nil(t, err)
+	}
+
+	RepoIDstr := "2"
+	someIssue := models.Issue{
+		ID:        0,
+		AuthorID:  12,
+		RepoID:    2,
+		Title:     "ffffff",
+		Message:   "daw",
+		Label:     "kek",
+		IsClosed:  false,
+		CreatedAt: time.Now().UTC(),
+	}
+	var limit int64 = 100
+	var offset int64 = 0
+
+	t.Run("GetIssues unauthorized", func(t *testing.T) {
+		UCCodeHubMock.EXPECT().
+			GetIssuesList(someIssue.RepoID, gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			Return(issuelist, nil).
+			Times(1)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.GetIssues, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"repoID": RepoIDstr})
+
+		apitest.New("GetIssues unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Expect(t).
+			Status(http.StatusOK).
+			End()
+	})
+	t.Run("GetIssues wrong repoID", func(t *testing.T) {
+		UCCodeHubMock.EXPECT().
+			GetIssuesList(someIssue.RepoID, gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			Return(issuelist, nil).
+			Times(0)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.GetIssues, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"repoID": "kekmda"})
+
+		apitest.New("GetIssues wrong repoID").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Expect(t).
+			Status(http.StatusBadRequest).
+			End()
+	})
+	t.Run("GetIssues access denied", func(t *testing.T) {
+		UCCodeHubMock.EXPECT().
+			GetIssuesList(someIssue.RepoID, gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			Return(issuelist, errors.Wrap(entityerrors.AccessDenied(), "some err")).
+			Times(1)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.GetIssues, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"repoID": RepoIDstr})
+
+		apitest.New("GetIssues access denied").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Expect(t).
+			Status(http.StatusForbidden).
+			End()
+	})
+	t.Run("GetIssues doesn't exsist", func(t *testing.T) {
+		UCCodeHubMock.EXPECT().
+			GetIssuesList(someIssue.RepoID, gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			Return(issuelist, errors.Wrap(entityerrors.DoesNotExist(), "some err")).
+			Times(1)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.GetIssues, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"repoID": RepoIDstr})
+
+		apitest.New("GetIssues doesn't exsist").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+	t.Run("GetIssues doesn't exsist", func(t *testing.T) {
+		UCCodeHubMock.EXPECT().
+			GetIssuesList(someIssue.RepoID, gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			Return(issuelist, errors.New("some err")).
+			Times(1)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.GetIssues, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"repoID": RepoIDstr})
+
+		apitest.New("GetIssues doesn't exsist").
+			Handler(middlewareMock).
+			Method(http.MethodGet).
+			URL("/func/repo/" + RepoIDstr + "/issues").
+			Expect(t).
+			Status(http.StatusInternalServerError).
 			End()
 	})
 }
