@@ -35,7 +35,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	u := userMock.NewMockUCUser(ctrl)
-	m := gitMock.NewMockUseCase(ctrl)
+	m := gitMock.NewMockGitUseCaseI(ctrl)
 
 	gitHandlers.UserUC = u
 	gitHandlers.UC = m
@@ -157,7 +157,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	u := userMock.NewMockUCUser(ctrl)
-	m := gitMock.NewMockUseCase(ctrl)
+	m := gitMock.NewMockGitUseCaseI(ctrl)
 
 	gitHandlers.UserUC = u
 	gitHandlers.UC = m
@@ -180,7 +180,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"username": someLogin})
 
 		apitest.New("Get repolist ok").
 			Handler(middlewareMock).
@@ -201,7 +201,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"username": someLogin})
 
 		apitest.New("Get repolist").
 			Handler(middlewareMock).
@@ -280,7 +280,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	u := userMock.NewMockUCUser(ctrl)
-	m := gitMock.NewMockUseCase(ctrl)
+	m := gitMock.NewMockGitUseCaseI(ctrl)
 
 	gitHandlers.UserUC = u
 	gitHandlers.UC = m
@@ -300,8 +300,8 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get repo ok").
 			Handler(middlewareMock).
@@ -320,8 +320,8 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get repo ok").
 			Handler(middlewareMock).
@@ -340,8 +340,8 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get repo not exsist").
 			Handler(middlewareMock).
@@ -360,8 +360,8 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepo, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get repo some error").
 			Handler(middlewareMock).
@@ -379,7 +379,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	u := userMock.NewMockUCUser(ctrl)
-	m := gitMock.NewMockUseCase(ctrl)
+	m := gitMock.NewMockGitUseCaseI(ctrl)
 
 	gitHandlers.UserUC = u
 	gitHandlers.UC = m
@@ -403,8 +403,8 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get branchlist ok").
 			Handler(middlewareMock).
@@ -424,8 +424,8 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get branchlist access denied").
 			Handler(middlewareMock).
@@ -445,8 +445,8 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get branchlist not exsist").
 			Handler(middlewareMock).
@@ -466,8 +466,8 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetBranchList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo})
 
 		apitest.New("Get branchlist some error").
 			Handler(middlewareMock).
@@ -486,7 +486,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	u := userMock.NewMockUCUser(ctrl)
-	m := gitMock.NewMockUseCase(ctrl)
+	m := gitMock.NewMockGitUseCaseI(ctrl)
 
 	gitHandlers.UserUC = u
 	gitHandlers.UC = m
@@ -512,9 +512,9 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist ok").
 			Handler(middlewareMock).
@@ -534,9 +534,9 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist forbidden").
 			Handler(middlewareMock).
@@ -556,9 +556,9 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist not exsist").
 			Handler(middlewareMock).
@@ -578,9 +578,9 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsList, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist some err").
 			Handler(middlewareMock).
@@ -599,7 +599,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
 	u := userMock.NewMockUCUser(ctrl)
-	m := gitMock.NewMockUseCase(ctrl)
+	m := gitMock.NewMockGitUseCaseI(ctrl)
 
 	gitHandlers.UserUC = u
 	gitHandlers.UC = m
@@ -621,14 +621,14 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
-					gomock.Any(), 0, 100, gomock.Any()).
+					gomock.Any(), int64(0), int64(100), gomock.Any()).
 				Return(commitslist, nil).
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist ok").
 			Handler(middlewareMock).
@@ -644,14 +644,14 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
-					gomock.Any(), 0, 100, gomock.Any()).
+					gomock.Any(), int64(0), int64(100), gomock.Any()).
 				Return(commitslist, entityerrors.AccessDenied()).
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist forbidden").
 			Handler(middlewareMock).
@@ -667,14 +667,14 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
-					gomock.Any(), 0, 100, gomock.Any()).
+					gomock.Any(), int64(0), int64(100), gomock.Any()).
 				Return(commitslist, entityerrors.DoesNotExist()).
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist not exsist").
 			Handler(middlewareMock).
@@ -690,14 +690,14 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
 				GetCommitsByBranchName(gomock.Eq(someLogin), gomock.Any(),
-					gomock.Any(), 0, 100, gomock.Any()).
+					gomock.Any(), int64(0), int64(100), gomock.Any()).
 				Return(commitslist, errors.New("some error")).
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetCommitsByBranchName, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "username", someLogin)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "reponame", someRepo)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, "branchname", someBranch)
+		middlewareMock = middleware.SetMuxVars(middlewareMock,
+			map[string]string{"username": someLogin, "reponame": someRepo,
+				"branchname": someBranch})
 
 		apitest.New("Get commitslist some err").
 			Handler(middlewareMock).

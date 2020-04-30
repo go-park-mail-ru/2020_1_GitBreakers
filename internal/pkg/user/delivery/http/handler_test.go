@@ -27,7 +27,7 @@ var testUser = models.User{
 	Image:    "default.png",
 	Email:    "bezbab@mail.ru",
 }
-var userHandlers http2.UserHttp
+var userHandlers UserHttp
 
 func TestUserHttp_Login(t *testing.T) {
 	ctrl := gomock.NewController(t)

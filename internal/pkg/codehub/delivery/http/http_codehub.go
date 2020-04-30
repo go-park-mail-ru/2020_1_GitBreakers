@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/asaskevich/govalidator"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
@@ -16,8 +16,8 @@ import (
 type HttpCodehub struct {
 	Logger     *logger.SimpleLogger
 	CodeHubUC  codehub.UCCodeHubI
-	NewsClient *clients.NewsClient
-	UserClient *clients.UserClient
+	NewsClient interfaces.NewsClientI
+	UserClient interfaces.UserClientI
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
