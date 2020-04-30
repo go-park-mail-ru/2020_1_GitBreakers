@@ -4,7 +4,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	news "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/grpc"
-	dbCodehub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
+	news2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/news"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -42,7 +42,7 @@ func main() {
 	}()
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
-	newsRepos := dbCodehub.NewRepoNews(db)
+	newsRepos := news2.NewRepoNews(db)
 
 	UCRepos := usecase.UCCodeHub{
 		RepoIssue: nil,

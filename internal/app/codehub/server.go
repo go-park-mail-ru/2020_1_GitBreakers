@@ -6,7 +6,9 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
-	postgresCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/issues"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/news"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/stars"
 	usecaseCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
 	gitDeliv "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/delivery"
@@ -187,9 +189,9 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
-	repoCodeHubIssue := postgresCodeHub.NewIssueRepository(db)
-	repoCodeHubStar := postgresCodeHub.NewStarRepository(db)
-	repoCodeHubNews := postgresCodeHub.NewRepoNews(db)
+	repoCodeHubIssue := issues.NewIssueRepository(db)
+	repoCodeHubStar := stars.NewStarRepository(db)
+	repoCodeHubNews := news.NewRepoNews(db)
 
 	codeHubUseCase := usecaseCodeHub.UCCodeHub{
 		RepoIssue: &repoCodeHubIssue,

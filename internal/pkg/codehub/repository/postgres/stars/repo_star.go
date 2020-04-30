@@ -1,4 +1,4 @@
-package postgres
+package stars
 
 import (
 	"database/sql"
