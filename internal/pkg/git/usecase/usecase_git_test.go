@@ -34,13 +34,13 @@ var someUser = models.User{
 func TestGitUseCase_GetRepo(t *testing.T) {
 	username := "keker"
 	repoName := "mdasher"
-	userid := 5
+	var userid int64 = 5
 
 	t.Run("Get repo ok", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		m.EXPECT().
 			CheckReadAccess(&userid, username, repoName).
@@ -63,7 +63,7 @@ func TestGitUseCase_GetRepo(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		m.EXPECT().
 			CheckReadAccess(&userid, username, repoName).
@@ -83,7 +83,7 @@ func TestGitUseCase_GetRepo(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		m.EXPECT().
 			CheckReadAccess(&userid, username, repoName).
@@ -106,8 +106,8 @@ func TestGitUseCase_Create(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
-		userid := 12
+		m := mockGit.NewMockGitRepoI(ctrl)
+		var userid int64 = 12
 
 		m.EXPECT().
 			Create(someRepo).
@@ -126,8 +126,8 @@ func TestGitUseCase_Create(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
-		userid := 12
+		m := mockGit.NewMockGitRepoI(ctrl)
+		var userid int64 = 12
 
 		m.EXPECT().
 			Create(someRepo).
@@ -146,8 +146,8 @@ func TestGitUseCase_Create(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
-		userid := 12
+		m := mockGit.NewMockGitRepoI(ctrl)
+		var userid int64 = 12
 
 		m.EXPECT().
 			Create(someRepo).
@@ -166,7 +166,7 @@ func TestGitUseCase_GetRepoList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := mocks.NewMockRepository(ctrl)
+	m := mockGit.NewMockGitRepoI(ctrl)
 
 	useCase := GitUseCase{
 		Repo: m,
@@ -181,7 +181,7 @@ func TestGitUseCase_GetRepoList(t *testing.T) {
 
 	t.Run("Get repo list ok", func(t *testing.T) {
 		gomock.InOrder(m.EXPECT().
-			GetAnyReposByUserLogin(someUser.Login, 0, 100).
+			GetAnyReposByUserLogin(someUser.Login, int64(0), int64(100)).
 			Return(repolist, nil).Times(1),
 			m.EXPECT().
 				CheckReadAccess(&someUser.ID, gomock.Any(), gomock.Any()).
@@ -190,12 +190,12 @@ func TestGitUseCase_GetRepoList(t *testing.T) {
 		repolistFromDB, err := useCase.GetRepoList(someUser.Login, &someUser.ID)
 
 		require.Nil(t, err)
-		require.Equal(t, repolist, repolistFromDB)
+		require.EqualValues(t, repolist, repolistFromDB)
 	})
 
 	t.Run("Get repo list some err", func(t *testing.T) {
 		gomock.InOrder(m.EXPECT().
-			GetAnyReposByUserLogin(someUser.Login, 0, 100).
+			GetAnyReposByUserLogin(someUser.Login, int64(0), int64(100)).
 			Return(repolist, errors.New("some error")).Times(1),
 			m.EXPECT().
 				CheckReadAccess(&someUser.ID, gomock.Any(), gomock.Any()).
@@ -222,7 +222,7 @@ func TestGitUseCase_GetBranchList(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -238,7 +238,7 @@ func TestGitUseCase_GetBranchList(t *testing.T) {
 
 		repolistFromDB, err := useCase.GetBranchList(&someUser.ID, someUser.Login, someRepo.Name)
 		require.Nil(t, err)
-		require.Equal(t, branchlist, repolistFromDB)
+		require.EqualValues(t, branchlist, repolistFromDB)
 
 	})
 
@@ -246,7 +246,7 @@ func TestGitUseCase_GetBranchList(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -289,7 +289,7 @@ func TestGitUseCase_FilesInCommitByPath(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -307,14 +307,14 @@ func TestGitUseCase_FilesInCommitByPath(t *testing.T) {
 
 		require.Nil(t, err)
 
-		require.Equal(t, fileslist, fileslistFromDB)
+		require.EqualValues(t, fileslist, fileslistFromDB)
 
 	})
 	t.Run("Get null files list", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -358,7 +358,7 @@ func TestGitUseCase_GetCommitsByCommitHash(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -378,7 +378,7 @@ func TestGitUseCase_GetCommitsByCommitHash(t *testing.T) {
 
 		require.Nil(t, err)
 
-		require.Equal(t, commitslist, commitslistFromDB)
+		require.EqualValues(t, commitslist, commitslistFromDB)
 
 	})
 
@@ -386,7 +386,7 @@ func TestGitUseCase_GetCommitsByCommitHash(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -424,10 +424,10 @@ func TestGitUseCase_GetCommitsByBranchName(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 		branchName := "deploy"
-		offset := 5
-		limit := 40
+		var offset int64 = 5
+		var limit int64 = 40
 		gomock.InOrder(
 			m.EXPECT().
 				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
@@ -445,17 +445,17 @@ func TestGitUseCase_GetCommitsByBranchName(t *testing.T) {
 
 		require.Nil(t, err)
 
-		require.Equal(t, commitslist, commitslistFromDB)
+		require.EqualValues(t, commitslist, commitslistFromDB)
 
 	})
 	t.Run("Get commits by branchname access denied", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 		branchName := "deploy"
-		offset := 5
-		limit := 40
+		var offset int64 = 5
+		var limit int64 = 40
 		gomock.InOrder(
 			m.EXPECT().
 				CheckReadAccess(&someUser.ID, someUser.Login, someRepo.Name).
@@ -501,7 +501,7 @@ func TestGitUseCase_GetFileByPath(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().
@@ -525,7 +525,7 @@ func TestGitUseCase_GetFileByPath(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		m := mocks.NewMockRepository(ctrl)
+		m := mockGit.NewMockGitRepoI(ctrl)
 
 		gomock.InOrder(
 			m.EXPECT().

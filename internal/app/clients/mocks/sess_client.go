@@ -2,7 +2,7 @@
 // Source: sess_client.go
 
 // Package mock_interfaces is a generated GoMock package.
-package mock_clients
+package mockClients
 
 import (
 	models "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"

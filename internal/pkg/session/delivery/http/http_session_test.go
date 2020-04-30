@@ -2,8 +2,8 @@ package http
 
 import (
 	"errors"
+	mockClients "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
-	sessMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -25,15 +25,15 @@ func TestSessionHttp_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	s := sessMock.NewMockUCSession(ctrl)
+	s := mockClients.NewMockSessClientI(ctrl)
 
-	sessHandler.SessUC = s
+	sessHandler.Client = s
 
 	t.Run("Delete OK", func(t *testing.T) {
 		someSessID := "somefkw3942"
 
 		s.EXPECT().
-			Delete(someSessID).
+			DelSess(someSessID).
 			Return(nil).
 			Times(1)
 
@@ -47,20 +47,20 @@ func TestSessionHttp_GetBySessID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	s := sessMock.NewMockUCSession(ctrl)
+	s := mockClients.NewMockSessClientI(ctrl)
 
-	sessHandler.SessUC = s
+	sessHandler.Client = s
 
 	t.Run("Get OK", func(t *testing.T) {
 		someSessID := "somefkw3942"
-		someUserID := 20
+		var someUserID int64 = 20
 
 		someSession := models.Session{
 			ID:     someSessID,
 			UserID: someUserID,
 		}
 		s.EXPECT().
-			GetByID(someSessID).
+			GetSess(someSessID).
 			Return(someSession, nil).
 			Times(1)
 
@@ -75,13 +75,13 @@ func TestSessionHttp_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	s := sessMock.NewMockUCSession(ctrl)
+	s := mockClients.NewMockSessClientI(ctrl)
 
-	sessHandler.SessUC = s
+	sessHandler.Client = s
 
 	t.Run("Create OK", func(t *testing.T) {
 		someSessID := "somefkw3942"
-		someUserID := 20
+		var someUserID int64 = 20
 
 		emptySession := models.Session{
 			ID:     "",
@@ -104,7 +104,7 @@ func TestSessionHttp_Create(t *testing.T) {
 		}
 
 		s.EXPECT().
-			Create(emptySession, sessHandler.ExpireTime).
+			CreateSess(emptySession.UserID).
 			Return(fullSession.ID, nil).
 			Times(1)
 
@@ -115,7 +115,7 @@ func TestSessionHttp_Create(t *testing.T) {
 	})
 	t.Run("Create error", func(t *testing.T) {
 		someSessID := "somefkw3942"
-		someUserID := 20
+		var someUserID int64 = 20
 
 		emptySession := models.Session{
 			ID:     "",
@@ -138,7 +138,7 @@ func TestSessionHttp_Create(t *testing.T) {
 		}
 
 		s.EXPECT().
-			Create(emptySession, sessHandler.ExpireTime).
+			CreateSess(emptySession.UserID).
 			Return(fullSession.ID, errors.New("some error")).
 			Times(1)
 

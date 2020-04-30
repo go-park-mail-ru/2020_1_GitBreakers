@@ -5,6 +5,8 @@ go run cmd/auth/main.go &
 sleep 1
 go run cmd/user/main.go &
 sleep 1
-go run cmd/gitserver/main.go > gitservice_logfile.log &
+go run cmd/news/main.go &
+sleep 1
+go run cmd/gitserver/main.go >> gitservice_logfile.log &
 sleep 1
 go run cmd/server/main.go &

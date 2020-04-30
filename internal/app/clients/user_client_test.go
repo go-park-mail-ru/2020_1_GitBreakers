@@ -250,4 +250,9 @@ func TestUserClient(t *testing.T) {
 
 		require.EqualError(t, someError, errGrpc.Message())
 	})
+	t.Run("New client ", func(t *testing.T) {
+		client, err := NewUserClient()
+		require.Nil(t, err)
+		require.NotNil(t, client)
+	})
 }

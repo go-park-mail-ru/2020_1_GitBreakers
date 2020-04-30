@@ -174,8 +174,9 @@ func (s *gitRepoTestSuite) TestGetById() {
 		"owner_id",
 		"name",
 		"description",
-		"is_public",
 		"is_fork",
+		"is_public",
+		"stars",
 		"created_at",
 	})
 	repoDbRow.AddRow(
@@ -183,8 +184,9 @@ func (s *gitRepoTestSuite) TestGetById() {
 		repo.OwnerID,
 		repo.Name,
 		repo.Description,
-		repo.IsPublic,
 		repo.IsFork,
+		repo.IsPublic,
+		repo.Stars,
 		repo.CreatedAt,
 	)
 

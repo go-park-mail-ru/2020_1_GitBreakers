@@ -424,7 +424,7 @@ func TestUCCodeHubIssues(t *testing.T) {
 	t.Run("Update issues ok", func(t *testing.T) {
 		gomock.InOrder(
 			repoIssues.EXPECT().
-				CheckEditAccessIssue(someIssue.AuthorID, someIssue.RepoID).
+				CheckEditAccessIssue(someIssue.AuthorID, someIssue.ID).
 				Return(perm.WriteAccess(), nil).
 				Times(1),
 			repoIssues.EXPECT().
@@ -441,7 +441,7 @@ func TestUCCodeHubIssues(t *testing.T) {
 	t.Run("Update issues access denied", func(t *testing.T) {
 		gomock.InOrder(
 			repoIssues.EXPECT().
-				CheckEditAccessIssue(someIssue.AuthorID, someIssue.RepoID).
+				CheckEditAccessIssue(someIssue.AuthorID, someIssue.ID).
 				Return(perm.NoAccess(), nil).
 				Times(1),
 			repoIssues.EXPECT().

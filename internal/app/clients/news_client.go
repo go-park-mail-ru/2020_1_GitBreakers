@@ -4,7 +4,7 @@ import (
 	"context"
 	news "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/grpc"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
-	"github.com/jinzhu/copier"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
@@ -29,7 +29,7 @@ func (c *NewsClient) Connect() error {
 		return errors.Wrap(err, "grpc.Dial()")
 	}
 	c.conn = conn
-	c.client = news.NewNewsClient(c.conn)
+	c.client = news.NewNewsClient(conn)
 	return nil
 }
 func (c *NewsClient) GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error) {
@@ -45,9 +45,11 @@ func (c *NewsClient) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 	}
 	newsList := make([]models.News, len(newsResp.News))
 	for i, v := range newsResp.News {
-		if err := copier.Copy(newsList[i], v); err != nil {
-			return nil, err
-		}
+		newsList[i].ID = v.ID
+		newsList[i].AuthorID = v.AuthorID
+		newsList[i].Date, err = ptypes.Timestamp(v.Date)
+		newsList[i].Mess = v.Message
+		newsList[i].RepoID = v.RepoID
 	}
 	return newsList, err
 }

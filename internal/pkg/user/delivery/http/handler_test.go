@@ -27,7 +27,7 @@ var testUser = models.User{
 	Image:    "default.png",
 	Email:    "bezbab@mail.ru",
 }
-var userHandlers http2.UserHttp
+var userHandlers UserHttp
 
 func TestUserHttp_Login(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -834,7 +834,7 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 			Debug().
 			Handler(middlewareMock).
 			Method(http.MethodPut).
-			URL("/avatar").
+			URL("user/avatar").
 			Expect(t).
 			Status(http.StatusBadRequest).
 			End()
