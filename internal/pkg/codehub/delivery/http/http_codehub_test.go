@@ -38,13 +38,14 @@ func TestUserHttp_Login(t *testing.T) {
 	CodeHubHandlers.NewsClient = NewsClientMock
 	CodeHubHandlers.UserClient = UClientMock
 	CodeHubHandlers.CodeHubUC = UCCodeHubMock
+	star := models.Star{
+		AuthorID: 12,
+		RepoID:   12,
+		Vote:     true,
+	}
 
-	t.Run("Modify star", func(t *testing.T) {
-		star := models.Star{
-			AuthorID: 12,
-			RepoID:   12,
-			Vote:     true,
-		}
+	t.Run("Modify star ok", func(t *testing.T) {
+
 		repoID := strconv.Itoa(int(star.RepoID))
 
 		UCCodeHubMock.EXPECT().
@@ -56,13 +57,34 @@ func TestUserHttp_Login(t *testing.T) {
 		middlewareMock = middleware.SetMuxVars(middlewareMock,
 			map[string]string{"repoID": repoID})
 
-		apitest.New("Login-OK").
+		apitest.New("Modify star ok").
 			Handler(middlewareMock).
 			Method(http.MethodPut).
 			URL("/func/repo/" + repoID + "/stars").
 			Body(fmt.Sprintf(`{"vote": true }`)).
 			Expect(t).
 			Status(http.StatusOK).
+			End()
+	})
+
+	t.Run("Modify star unauthorized", func(t *testing.T) {
+
+		repoID := strconv.Itoa(int(star.RepoID))
+
+		UCCodeHubMock.EXPECT().
+			ModifyStar(gomock.AssignableToTypeOf(star)).
+			Return(nil).
+			Times(0)
+
+		middlewareMock := middleware.AuthMiddlewareMock(CodeHubHandlers.ModifyStar, false)
+
+		apitest.New("Modify star unauthorized").
+			Handler(middlewareMock).
+			Method(http.MethodPut).
+			URL("/func/repo/" + repoID + "/stars").
+			Body(fmt.Sprintf(`{"vote": true }`)).
+			Expect(t).
+			Status(http.StatusUnauthorized).
 			End()
 	})
 }
