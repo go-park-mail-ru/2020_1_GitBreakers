@@ -78,7 +78,11 @@ func StartNew() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
-	r := mux.NewRouter()
+	mainRouter := mux.NewRouter()
+
+	metricsRouter := mainRouter.PathPrefix("").Subrouter()
+
+	r := mainRouter.PathPrefix("").Subrouter()
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
@@ -94,6 +98,11 @@ func StartNew() {
 		middleware.ProtectHeadersMiddleware,
 	)
 
+	metricsRouter.Use(
+		middlewareCommon.CreateAccessLogMiddleware(1, customLogger),
+		middleware.CreatePanicMiddleware(customLogger),
+	)
+
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
 		conf.ALLOWED_ORIGINS,
@@ -105,7 +114,7 @@ func StartNew() {
 
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
-	r.Handle("/metrics", promhttp.Handler())
+	metricsRouter.Handle("/metrics", promhttp.Handler())
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)

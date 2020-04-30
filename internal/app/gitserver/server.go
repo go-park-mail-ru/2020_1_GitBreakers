@@ -71,22 +71,26 @@ func StartNew() {
 	}
 
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	accessLogMiddleware := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
 
 	routerTemplate := fmt.Sprintf("/{%s}/{%s}.git",
 		delivery.OwnerLoginMuxParameter, delivery.RepositoryNameMuxParameter)
 
 	mainRouter := mux.NewRouter()
+
+	metricsRouter := mainRouter.PathPrefix("").Subrouter()
 	gitRouter := mainRouter.PathPrefix(routerTemplate).Subrouter()
 
-	mainRouter.Use(middleware.PrometheusMetricsMiddleware, loggerMWare, panicMiddleware)
+	metricsRouter.Use(accessLogMiddleware, panicMiddleware)
+
+	gitRouter.Use(middleware.PrometheusMetricsMiddleware, accessLogMiddleware, panicMiddleware)
 
 	gitServerDelivery := delivery.GitServerDelivery{
 		UseCase: usecase.NewUseCase(repogit, userClient),
 		Logger:  customLogger,
 	}
 
-	mainRouter.Handle("/metrics", promhttp.Handler())
+	metricsRouter.Handle("/metrics", promhttp.Handler())
 
 	gitInfoRefsHandler := delivery.CreateGitIfoRefsMiddleware(gitServerDelivery)(gitkitServer)
 	gitUploadPackHandler := delivery.CreateGitUploadPackMiddleware(gitServerDelivery)(gitkitServer)
