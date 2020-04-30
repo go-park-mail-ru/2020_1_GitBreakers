@@ -77,7 +77,7 @@ func (repo *IssueRepository) CloseIssue(issueID int64) error {
 	err := repo.DB.QueryRow(`
 			UPDATE issues 
 			SET is_closed = TRUE
-			WHERE id = $1 AND is_closed = FALSE RETURNING TRUE
+			WHERE id = $1 AND is_closed = FALSE RETURNING TRUE AS result
 		`,
 		issueID).Scan(&isAffected)
 
