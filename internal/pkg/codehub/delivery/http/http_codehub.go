@@ -225,9 +225,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newIssue.AuthorID = userID //чтобы автора не подменяли
-
-	oldIssue, err := GD.CodeHubUC.GetIssue(newIssue.ID, newIssue.AuthorID)
+	oldIssue, err := GD.CodeHubUC.GetIssue(newIssue.ID, userID)
 
 	switch {
 	case err == entityerrors.AccessDenied():
@@ -253,7 +251,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	if govalidator.IsByteLength(newIssue.Label, 0, 100) {
 		oldIssue.Label = newIssue.Label
 	}
-
+	oldIssue.AuthorID = userID
 	err = GD.CodeHubUC.UpdateIssue(oldIssue)
 
 	switch {
