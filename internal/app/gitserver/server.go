@@ -78,7 +78,7 @@ func StartNew() {
 
 	mainRouter := mux.NewRouter()
 
-	metricsRouter := mainRouter.PathPrefix("").Subrouter()
+	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
 	gitRouter := mainRouter.PathPrefix(routerTemplate).Subrouter()
 
 	metricsRouter.Use(accessLogMiddleware, panicMiddleware)
@@ -90,7 +90,7 @@ func StartNew() {
 		Logger:  customLogger,
 	}
 
-	metricsRouter.Handle("/metrics", promhttp.Handler()).Methods(http.MethodGet)
+	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
 	gitInfoRefsHandler := delivery.CreateGitIfoRefsMiddleware(gitServerDelivery)(gitkitServer)
 	gitUploadPackHandler := delivery.CreateGitUploadPackMiddleware(gitServerDelivery)(gitkitServer)

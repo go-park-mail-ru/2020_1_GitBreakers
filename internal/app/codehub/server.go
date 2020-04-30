@@ -80,7 +80,7 @@ func StartNew() {
 
 	mainRouter := mux.NewRouter()
 
-	metricsRouter := mainRouter.PathPrefix("").Subrouter()
+	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
 
 	r := mainRouter.PathPrefix("").Subrouter()
 	c := cors.New(cors.Options{
@@ -114,7 +114,7 @@ func StartNew() {
 
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
-	metricsRouter.Handle("/metrics", promhttp.Handler()).Methods(http.MethodGet)
+	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Use(csrfMiddleware)
