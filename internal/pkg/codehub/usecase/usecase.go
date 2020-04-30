@@ -26,7 +26,11 @@ func (UC *UCCodeHub) ModifyStar(star models.Star) error {
 }
 
 func (UC *UCCodeHub) GetStarredRepos(userID, limit, offset int64) (models.RepoSet, error) {
-	return UC.RepoStar.GetStarredRepos(userID, limit, offset)
+	repolist, err := UC.RepoStar.GetStarredRepos(userID, limit, offset)
+	if repolist != nil {
+		return repolist, err
+	}
+	return models.RepoSet{}, err
 }
 
 func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
@@ -53,7 +57,7 @@ func (UC *UCCodeHub) CreateIssue(issue models.Issue) error {
 }
 
 func (GD *UCCodeHub) UpdateIssue(issue models.Issue) error {
-	permis, _ := GD.RepoIssue.CheckEditAccessIssue(issue.AuthorID, issue.RepoID)
+	permis, _ := GD.RepoIssue.CheckEditAccessIssue(issue.AuthorID, issue.ID)
 	//todo check that work
 	if permis == perm.WriteAccess() || permis == perm.AdminAccess() || permis == perm.OwnerAccess() {
 		return GD.RepoIssue.UpdateIssue(issue)
@@ -120,5 +124,9 @@ func (UC *UCCodeHub) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 	}
 }
 func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) (models.UserSet, error) {
-	return UC.RepoStar.GetUserStaredList(repoID, limit, offset)
+	UserSet, err := UC.RepoStar.GetUserStaredList(repoID, limit, offset)
+	if UserSet != nil {
+		return UserSet, err
+	}
+	return models.UserSet{}, err
 }
