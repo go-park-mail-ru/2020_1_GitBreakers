@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"net/http"
 	"time"
@@ -9,7 +9,7 @@ import (
 
 type SessionHttp struct {
 	ExpireTime time.Duration
-	Client     *clients.SessClient
+	Client     interfaces.SessClientI
 }
 
 func (UC *SessionHttp) Create(userID int64) (http.Cookie, error) {
