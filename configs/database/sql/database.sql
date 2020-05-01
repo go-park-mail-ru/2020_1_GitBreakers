@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
 (
     user_id       BIGINT                                             NOT NULL,
     repository_id BIGINT                                             NOT NULL,
-    role          VARCHAR(64)              DEFAULT ''                NOT NULL,
+    role          VARCHAR(64)                                        NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
