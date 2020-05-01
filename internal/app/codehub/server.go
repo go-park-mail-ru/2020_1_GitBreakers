@@ -103,10 +103,7 @@ func StartNew() {
 		middleware.ProtectHeadersMiddleware,
 	)
 
-	metricsRouter.Use(
-		loggerMWare,
-		panicMiddleware,
-	)
+	metricsRouter.Use(panicMiddleware)
 
 	csrfMiddleware := middleware.CreateCsrfMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),

@@ -81,7 +81,7 @@ func StartNew() {
 	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
 	gitRouter := mainRouter.PathPrefix(routerTemplate).Subrouter()
 
-	metricsRouter.Use(accessLogMiddleware, panicMiddleware)
+	metricsRouter.Use(panicMiddleware)
 
 	gitRouter.Use(middleware.PrometheusMetricsMiddleware, accessLogMiddleware, panicMiddleware)
 
