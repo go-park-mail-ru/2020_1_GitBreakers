@@ -154,7 +154,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (status) (increase(codehub_services_hits{job=\"gitservice\"}[5m]))",
+          "expr": "sum by (status) (increase(codehub_services_hits{job=\"gitserver\"}[5m]))",
           "interval": "",
           "legendFormat": "{{status}}",
           "refId": "A"
@@ -235,5 +235,5 @@
   "variables": {
     "list": []
   },
-  "version": 31
+  "version": 32
 }
