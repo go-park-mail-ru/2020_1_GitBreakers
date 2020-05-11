@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
@@ -12,7 +13,6 @@ import (
 	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"net/http"
-	"strconv"
 )
 
 type GitDelivery struct {
@@ -94,23 +94,30 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 //
 ////все репозитории юзера
 func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("UserID")
-	userRealID := *GD.idToIntPointer(userID)
+	userIDFromContext := r.Context().Value("UserID")
+	userIDPtr := GD.idToIntPointer(userIDFromContext)
+
 	userName := mux.Vars(r)["username"]
-	if userName == "" {
-		userModel, err := GD.UserUC.GetByID(userRealID)
+
+	if userName == "" && userIDPtr != nil {
+		userModel, err := GD.UserUC.GetByID(*userIDPtr)
 		if err != nil {
-			GD.Logger.HttpInfo(r.Context(), "user doesn't exsist", http.StatusNotFound)
+			GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		userName = userModel.Login
+
+		userName = userModel.Name
+	} else {
+		GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
-	repo, err := GD.UC.GetRepoList(userName, &userRealID)
+	repo, err := GD.UC.GetRepoList(userName, userIDPtr)
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
-		GD.Logger.HttpInfo(r.Context(), "access denied for user "+strconv.Itoa(int(userRealID)), http.StatusForbidden)
+		GD.Logger.HttpInfo(r.Context(), fmt.Sprintf("access denied for user=%s", userName), http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
