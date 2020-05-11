@@ -139,8 +139,16 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isUser, err := UsHttp.UClient.CheckPass(User.Login, input.Password)
-	if err != nil || !isUser {
-		UsHttp.Logger.HttpLogWarning(r.Context(), " ", "CheckPass", errors.Cause(err).Error())
+	if err != nil {
+		UsHttp.Logger.HttpLogError(r.Context(), "user/delivery/http", "Login: ",
+			errors.Cause(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if !isUser {
+		UsHttp.Logger.HttpLogWarning(r.Context(), "user/delivery/http", "Login",
+			"bad credentials")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
