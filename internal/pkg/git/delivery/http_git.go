@@ -99,7 +99,13 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 
 	userName := mux.Vars(r)["username"]
 
-	if userName == "" && userIDPtr != nil {
+	if userName == "" {
+		if userIDPtr == nil {
+			GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		userModel, err := GD.UserUC.GetByID(*userIDPtr)
 		if err != nil {
 			GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
@@ -108,10 +114,6 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		userName = userModel.Name
-	} else {
-		GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
-		w.WriteHeader(http.StatusNotFound)
-		return
 	}
 
 	repo, err := GD.UC.GetRepoList(userName, userIDPtr)
