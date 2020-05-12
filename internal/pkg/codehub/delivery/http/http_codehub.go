@@ -381,3 +381,53 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 
 	GD.Logger.HttpLogInfo(r.Context(), "news got success")
 }
+
+func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	query := r.URL.Query().Get("query")
+	params := mux.Vars(r)["params"]
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset))
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	repolist, ok := data.(models.RepoSet)
+	if ok {
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(repolist, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	userlist, ok := data.(models.UserSet)
+	if ok {
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(userlist, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	w.WriteHeader(http.StatusBadRequest)
+	return
+
+}

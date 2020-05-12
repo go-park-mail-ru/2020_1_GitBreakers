@@ -151,6 +151,8 @@ func StartNew() {
 
 	r.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 
+	r.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
+
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
 
@@ -191,11 +193,12 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repoCodeHubNews := news.NewRepoNews(db)
 
 	codeHubUseCase := usecaseCodeHub.UCCodeHub{
-		RepoIssue: &repoCodeHubIssue,
-		RepoStar:  &repoCodeHubStar,
-		RepoNews:  &repoCodeHubNews,
-		GitRepo:   repogit,
-		UserRepo:  userRepos,
+		RepoIssue:  &repoCodeHubIssue,
+		RepoStar:   &repoCodeHubStar,
+		RepoNews:   &repoCodeHubNews,
+		GitRepo:    repogit,
+		UserRepo:   userRepos,
+		SearchRepo: nil,
 	}
 
 	codeHubDelivery := http4.HttpCodehub{

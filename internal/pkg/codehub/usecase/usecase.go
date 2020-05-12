@@ -10,11 +10,12 @@ import (
 )
 
 type UCCodeHub struct {
-	RepoIssue codehub.RepoIssueI
-	RepoStar  codehub.RepoStarI
-	RepoNews  codehub.RepoNewsI
-	GitRepo   git.GitRepoI
-	UserRepo  user.RepoUser
+	RepoIssue  codehub.RepoIssueI
+	RepoStar   codehub.RepoStarI
+	RepoNews   codehub.RepoNewsI
+	GitRepo    git.GitRepoI
+	UserRepo   user.RepoUser
+	SearchRepo codehub.RepoSearchI
 }
 
 func (UC *UCCodeHub) ModifyStar(star models.Star) error {
@@ -129,4 +130,22 @@ func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) 
 		return UserSet, err
 	}
 	return models.UserSet{}, err
+}
+func (UC *UCCodeHub) Search(query, params string, limit, offset int64) (interface{}, error) {
+	switch params {
+	case "allusers":
+		return UC.SearchRepo.GetFromUsers(query, limit, offset)
+
+	case "allrepo":
+		return UC.SearchRepo.GetFromAllRepos(query, limit, offset)
+
+	case "myrepo":
+		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset)
+
+	case "starredrepo":
+		return UC.SearchRepo.GetFromStarredRepos(query, limit, offset)
+
+	default:
+		return nil, entityerrors.Invalid()
+	}
 }
