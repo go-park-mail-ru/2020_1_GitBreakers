@@ -1,6 +1,7 @@
 create or replace function upd_news_with_collaborator() returns trigger
     language plpgsql
-as $$
+as
+$$
 DECLARE
     mess  varchar;
     login varchar;
@@ -12,7 +13,7 @@ BEGIN
     ELSIF (TG_OP = 'INSERT') THEN
         mess = concat('New collaborator ', login);
     END IF;
-    INSERT INTO news(author_id, repo_id, message) values (new.user_id, new.repository_id, mess);
+    INSERT INTO news(author_id, repository_id, message) values (new.user_id, new.repository_id, mess);
     RETURN null;
 END;
 $$;
@@ -31,7 +32,7 @@ BEGIN
     ELSIF (TG_OP = 'INSERT') THEN
         mess = concat('New issues');
     END IF;
-    INSERT INTO news(author_id, repo_id, message) values (new.author_id, new.repo_id, mess);
+    INSERT INTO news(author_id, repository_id, message) values (new.author_id, new.repository_id, mess);
     RETURN null;
 END;
 $$;
@@ -47,14 +48,14 @@ DECLARE
     login varchar;
 BEGIN
     IF (TG_OP = 'INSERT') THEN
-        select users.login from users where id = new.user_id into login;
+        select users.login from users where id = new.author_id into login;
         mess = concat('Star added by ', login);
-        INSERT INTO news(author_id, repo_id, message) values (new.user_id, new.repository_id, mess);
+        INSERT INTO news(author_id, repository_id, message) values (new.author_id, new.repository_id, mess);
 
     ELSIF (TG_OP = 'DELETE') THEN
-        select users.login from users where id = old.user_id into login;
+        select users.login from users where id = old.author_id into login;
         mess = concat('Star deleted by ', login);
-        INSERT INTO news(author_id, repo_id, message) values (old.user_id, old.repository_id, mess);
+        INSERT INTO news(author_id, repository_id, message) values (old.author_id, old.repository_id, mess);
 
     END IF;
     RETURN null;

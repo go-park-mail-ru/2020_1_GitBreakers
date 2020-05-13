@@ -51,18 +51,18 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
 CREATE TABLE IF NOT EXISTS git_repository_user_stars
 (
     repository_id BIGINT                                             NOT NULL,
-    user_id       BIGINT                                             NOT NULL,
+    author_id       BIGINT                                             NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    FOREIGN KEY (author_id) REFERENCES users (id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
-    UNIQUE (repository_id, user_id),
-    CONSTRAINT git_repository_user_star_pk PRIMARY KEY (repository_id, user_id)
+    UNIQUE (repository_id, author_id),
+    CONSTRAINT git_repository_user_star_pk PRIMARY KEY (repository_id, author_id)
 );
 
 CREATE TABLE IF NOT EXISTS issues
@@ -100,3 +100,65 @@ CREATE TABLE IF NOT EXISTS news
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+-- Views
+
+DROP VIEW IF EXISTS user_profile_view CASCADE;
+CREATE VIEW user_profile_view AS
+SELECT id,
+       login,
+       email,
+       name,
+       avatar_path,
+       created_at
+FROM users;
+
+DROP VIEW IF EXISTS git_repository_user_stars_view CASCADE;
+CREATE VIEW git_repository_user_stars_view AS
+SELECT grus.repository_id,
+       grus.author_id,
+       grus.created_at,
+       upv.id AS user_id,
+       upv.login AS user_login,
+       upv.email AS user_email,
+       upv.name AS user_name,
+       upv.avatar_path AS user_avatar_path,
+       upv.created_at AS user_created_at
+FROM git_repository_user_stars AS grus
+         JOIN user_profile_view AS upv ON grus.author_id = upv.id;
+
+DROP VIEW IF EXISTS issues_users_view CASCADE;
+CREATE VIEW issues_users_view AS
+SELECT i.id,
+       i.author_id,
+       i.repository_id,
+       i.title,
+       i.message,
+       i.label,
+       i.is_closed,
+       i.created_at,
+       upv.id AS user_id,
+       upv.login AS user_login,
+       upv.email AS user_email,
+       upv.name AS user_name,
+       upv.avatar_path AS user_avatar_path,
+       upv.created_at AS user_created_at
+FROM issues AS i
+         JOIN user_profile_view AS upv on i.author_id = upv.id;
+
+DROP VIEW IF EXISTS news_users_view CASCADE;
+CREATE VIEW news_users_view AS
+SELECT n.id,
+       n.author_id,
+       n.repository_id,
+       n.message,
+       n.label,
+       n.created_at,
+       upv.id AS user_id,
+       upv.login AS user_login,
+       upv.email AS user_email,
+       upv.name AS user_name,
+       upv.avatar_path AS user_avatar_path,
+       upv.created_at AS user_created_at
+FROM news AS n
+         JOIN user_profile_view AS upv ON n.author_id = upv.id;
