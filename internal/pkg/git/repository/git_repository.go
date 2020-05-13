@@ -336,7 +336,7 @@ func (repo Repository) GetPermission(currentUserId *int64, userLogin, repoName s
 	case err == sql.ErrNoRows:
 		return perm.NoAccess(), nil
 	case err != nil:
-		return perm.NoAccess(), errors.Wrapf(err, "error in repository for git repositories in GetBranchesByName "+
+		return perm.NoAccess(), errors.Wrapf(err, "error in repository for git repositories in GetPermission "+
 			"with userLogin=%s, repoName=%s", userLogin, repoName)
 	}
 
@@ -370,9 +370,13 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 					userLogin, repoName, reference.Name().String())
 			}
 
+			referenceName := reference.Name().String()
+
+			branchName := strings.TrimLeft(referenceName, gogitPlumbing.NewBranchReferenceName("").String())
+
 			gitRepoBranches = append(gitRepoBranches,
 				git.Branch{
-					Name:   strings.TrimLeft(reference.Name().String(), gogitPlumbing.NewBranchReferenceName("").String()),
+					Name:   branchName,
 					Commit: convertToGitCommitModel(gogitCommit),
 				},
 			)
