@@ -8,6 +8,7 @@ import (
 	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/issues"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/news"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/search"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/stars"
 	usecaseCodeHub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/csrf"
@@ -191,6 +192,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repoCodeHubIssue := issues.NewIssueRepository(db)
 	repoCodeHubStar := stars.NewStarRepository(db)
 	repoCodeHubNews := news.NewRepoNews(db)
+	repoCodeHubSearch := search.NewSearchRepository(db)
 
 	codeHubUseCase := usecaseCodeHub.UCCodeHub{
 		RepoIssue:  &repoCodeHubIssue,
@@ -198,7 +200,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		RepoNews:   &repoCodeHubNews,
 		GitRepo:    repogit,
 		UserRepo:   userRepos,
-		SearchRepo: nil,
+		SearchRepo: repoCodeHubSearch,
 	}
 
 	codeHubDelivery := http4.HttpCodehub{

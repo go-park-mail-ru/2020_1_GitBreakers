@@ -580,3 +580,18 @@ params=**myrepo**
 ### 8.4 Поиск среди избранных репозиториев(на которые юзер повесил звезду)     
 Аналогично 8.1  
 params=**starredrepo**   
+## 9. Fork  
+### 9.1 Ответвление репозитория к себе
+Запрос: `/user/repo` типа `POST`  
+Required: name(alphanumeric), 
+```json
+{
+    "author_name": "string",
+    "repo_name": "string"
+}
+```
+Ответ:  
+1. 200 ok  
+2. 400 невалидный json или сами данные
+3. 401 unauthorized  
+4. 403 форкаем приватный репак    
