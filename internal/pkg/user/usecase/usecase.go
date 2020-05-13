@@ -43,7 +43,7 @@ func (UC *UCUser) Update(userID int64, newUserData models.User) error {
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
-	if govalidator.IsByteLength(newUserData.Name, 5, 128) {
+	if govalidator.IsByteLength(newUserData.Name, 0, 128) {
 		oldUserData.Name = newUserData.Name
 	}
 	if govalidator.IsEmail(newUserData.Email) {

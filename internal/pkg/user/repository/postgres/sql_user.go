@@ -119,7 +119,7 @@ func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if usercount > 1 {
+	if usercount != 1 {
 		return false, nil
 	} else {
 		return true, nil
