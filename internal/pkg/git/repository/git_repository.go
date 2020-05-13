@@ -372,7 +372,7 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 
 			referenceName := reference.Name().String()
 
-			branchName := strings.TrimLeft(referenceName, gogitPlumbing.NewBranchReferenceName("").String())
+			branchName := strings.TrimPrefix(referenceName, gogitPlumbing.NewBranchReferenceName("").String())
 
 			gitRepoBranches = append(gitRepoBranches,
 				git.Branch{
