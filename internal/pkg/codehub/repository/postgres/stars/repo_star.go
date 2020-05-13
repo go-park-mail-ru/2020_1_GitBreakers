@@ -118,6 +118,7 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 			return nil, errors.Wrapf(err, "error occurs in StarRepository in GetStarredRepos function "+
 				"while scanning repositories with starUserId=%v", userID)
 		}
+
 		gitRepos = append(gitRepos, gitRepo)
 	}
 

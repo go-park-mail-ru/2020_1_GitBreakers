@@ -120,6 +120,8 @@ func easyjson97a49f66DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			out.IsPublic = bool(in.Bool())
 		case "stars":
 			out.Stars = int64(in.Int64())
+		case "author_login":
+			out.AuthorLogin = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -173,6 +175,11 @@ func easyjson97a49f66EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"stars\":"
 		out.RawString(prefix)
 		out.Int64(int64(in.Stars))
+	}
+	{
+		const prefix string = ",\"author_login\":"
+		out.RawString(prefix)
+		out.String(string(in.AuthorLogin))
 	}
 	out.RawByte('}')
 }

@@ -11,6 +11,7 @@ type Repository struct {
 	CreatedAt   time.Time `json:"created_at" valid:"-"`
 	IsPublic    bool      `json:"is_public" valid:"-"`
 	Stars       int64     `json:"stars" valid:"-"`
+	AuthorLogin string    `json:"author_login"`
 }
 
 //easyjson:json

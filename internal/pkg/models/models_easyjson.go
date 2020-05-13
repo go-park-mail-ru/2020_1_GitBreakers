@@ -217,6 +217,10 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			out.RepoID = int64(in.Int64())
 		case "vote":
 			out.Vote = bool(in.Bool())
+		case "author_login":
+			out.AuthorLogin = string(in.String())
+		case "repo_name":
+			out.RepoName = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -245,6 +249,16 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"vote\":"
 		out.RawString(prefix)
 		out.Bool(bool(in.Vote))
+	}
+	{
+		const prefix string = ",\"author_login\":"
+		out.RawString(prefix)
+		out.String(string(in.AuthorLogin))
+	}
+	{
+		const prefix string = ",\"repo_name\":"
+		out.RawString(prefix)
+		out.String(string(in.RepoName))
 	}
 	out.RawByte('}')
 }
@@ -581,6 +595,10 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Date).UnmarshalJSON(data))
 			}
+		case "author_login":
+			out.AuthorLogin = string(in.String())
+		case "repo_name":
+			out.RepoName = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -619,6 +637,16 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"date\":"
 		out.RawString(prefix)
 		out.Raw((in.Date).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"author_login\":"
+		out.RawString(prefix)
+		out.String(string(in.AuthorLogin))
+	}
+	{
+		const prefix string = ",\"repo_name\":"
+		out.RawString(prefix)
+		out.String(string(in.RepoName))
 	}
 	out.RawByte('}')
 }
@@ -749,6 +777,10 @@ func easyjsonD2b7633eDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.CreatedAt).UnmarshalJSON(data))
 			}
+		case "author_login":
+			out.AuthorLogin = string(in.String())
+		case "repo_name":
+			out.RepoName = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -802,6 +834,16 @@ func easyjsonD2b7633eEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"created_at\":"
 		out.RawString(prefix)
 		out.Raw((in.CreatedAt).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"author_login\":"
+		out.RawString(prefix)
+		out.String(string(in.AuthorLogin))
+	}
+	{
+		const prefix string = ",\"repo_name\":"
+		out.RawString(prefix)
+		out.String(string(in.RepoName))
 	}
 	out.RawByte('}')
 }
