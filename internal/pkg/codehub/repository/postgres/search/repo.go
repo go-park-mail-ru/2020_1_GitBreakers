@@ -6,17 +6,17 @@ type RepoSearch struct {
 }
 
 func (repo RepoSearch) GetFromUsers(query string, limit int64, offset int64) (models.UserSet, error) {
-	panic("implement me")
+	return models.UserSet{}, nil
 }
 
 func (repo RepoSearch) GetFromStarredRepos(query string, limit int64, offset int64) (models.RepoSet, error) {
-	panic("implement me")
+	return models.RepoSet{}, nil
 }
 
 func (repo RepoSearch) GetFromAllRepos(query string, limit int64, offset int64) (models.RepoSet, error) {
-	panic("implement me")
+	return models.RepoSet{}, nil
 }
 
 func (repo RepoSearch) GetFromOwnRepos(query string, limit int64, offset int64) (models.RepoSet, error) {
-	panic("implement me")
+	return models.RepoSet{}, nil
 }
