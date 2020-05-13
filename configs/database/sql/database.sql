@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
 CREATE TABLE IF NOT EXISTS git_repository_user_stars
 (
     repository_id BIGINT                                             NOT NULL,
-    author_id       BIGINT                                             NOT NULL,
+    author_id     BIGINT                                             NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS git_repository_user_stars
 CREATE TABLE IF NOT EXISTS issues
 (
     id            BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
-    author_id     BIGINT                   DEFAULT 0                 NOT NULL,
+    author_id     BIGINT                                             NOT NULL,
     repository_id BIGINT                                             NOT NULL,
     title         VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
     message       VARCHAR(2048)                                      NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS issues
 CREATE TABLE IF NOT EXISTS news
 (
     id            BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
-    author_id     BIGINT                   DEFAULT 0                 NOT NULL,
+    author_id     BIGINT                                             NOT NULL,
     repository_id BIGINT                                             NOT NULL,
     message       VARCHAR(2048)                                      NOT NULL CHECK ( message <> '' ),
     label         VARCHAR(64)              DEFAULT ''                NOT NULL,
@@ -113,19 +113,41 @@ SELECT id,
        created_at
 FROM users;
 
+
+DROP VIEW IF EXISTS git_repository_user_view CASCADE;
+CREATE VIEW git_repository_user_view AS
+SELECT gr.id,
+       gr.owner_id,
+       gr.name,
+       gr.description,
+       gr.is_fork,
+       gr.is_public,
+       gr.stars,
+       gr.created_at,
+       upv.id          AS user_id,
+       upv.login       AS user_login,
+       upv.email       AS user_email,
+       upv.name        AS user_name,
+       upv.avatar_path AS user_avatar_path,
+       upv.created_at  AS user_created_at
+FROM git_repositories AS gr
+         JOIN user_profile_view upv ON gr.owner_id = upv.id;
+
+
 DROP VIEW IF EXISTS git_repository_user_stars_view CASCADE;
 CREATE VIEW git_repository_user_stars_view AS
 SELECT grus.repository_id,
        grus.author_id,
        grus.created_at,
-       upv.id AS user_id,
-       upv.login AS user_login,
-       upv.email AS user_email,
-       upv.name AS user_name,
+       upv.id          AS user_id,
+       upv.login       AS user_login,
+       upv.email       AS user_email,
+       upv.name        AS user_name,
        upv.avatar_path AS user_avatar_path,
-       upv.created_at AS user_created_at
+       upv.created_at  AS user_created_at
 FROM git_repository_user_stars AS grus
          JOIN user_profile_view AS upv ON grus.author_id = upv.id;
+
 
 DROP VIEW IF EXISTS issues_users_view CASCADE;
 CREATE VIEW issues_users_view AS
@@ -137,14 +159,15 @@ SELECT i.id,
        i.label,
        i.is_closed,
        i.created_at,
-       upv.id AS user_id,
-       upv.login AS user_login,
-       upv.email AS user_email,
-       upv.name AS user_name,
+       upv.id          AS user_id,
+       upv.login       AS user_login,
+       upv.email       AS user_email,
+       upv.name        AS user_name,
        upv.avatar_path AS user_avatar_path,
-       upv.created_at AS user_created_at
+       upv.created_at  AS user_created_at
 FROM issues AS i
          JOIN user_profile_view AS upv on i.author_id = upv.id;
+
 
 DROP VIEW IF EXISTS news_users_view CASCADE;
 CREATE VIEW news_users_view AS
@@ -154,11 +177,11 @@ SELECT n.id,
        n.message,
        n.label,
        n.created_at,
-       upv.id AS user_id,
-       upv.login AS user_login,
-       upv.email AS user_email,
-       upv.name AS user_name,
+       upv.id          AS user_id,
+       upv.login       AS user_login,
+       upv.email       AS user_email,
+       upv.name        AS user_name,
        upv.avatar_path AS user_avatar_path,
-       upv.created_at AS user_created_at
+       upv.created_at  AS user_created_at
 FROM news AS n
          JOIN user_profile_view AS upv ON n.author_id = upv.id;
