@@ -140,10 +140,10 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset int64) (interfac
 		return UC.SearchRepo.GetFromAllRepos(query, limit, offset)
 
 	case "myrepo":
-		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset)
+		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset, -1)
 
 	case "starredrepo":
-		return UC.SearchRepo.GetFromStarredRepos(query, limit, offset)
+		return UC.SearchRepo.GetFromStarredRepos(query, limit, offset, -1)
 
 	default:
 		return nil, entityerrors.Invalid()

@@ -1,7 +1,9 @@
 package search
 
 import (
+	"database/sql"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,17 +18,64 @@ func NewSearchRepository(db *sqlx.DB) RepoSearch {
 }
 
 func (repo RepoSearch) GetFromUsers(query string, limit int64, offset int64) (models.UserSet, error) {
-	return models.UserSet{}, nil
+	var userlist []models.User
+	err := repo.DB.Select(&userlist, `select * from users where login like $1 || '%' limit $2 offset $3`,
+		query, limit, offset)
+
+	switch {
+	case err == sql.ErrNoRows:
+		break
+	default:
+		return userlist, err
+	}
+
+	return userlist, nil
 }
 
-func (repo RepoSearch) GetFromStarredRepos(query string, limit int64, offset int64) (models.RepoSet, error) {
-	return models.RepoSet{}, nil
+func (repo RepoSearch) GetFromStarredRepos(query string, limit int64, offset int64, userID int64) (models.RepoSet, error) {
+	var repolist []gitmodels.Repository
+	err := repo.DB.Select(&repolist, `select * from git_repositories where id in 
+					  (select repository_id from git_repository_user_stars where
+				  		user_id=$1) and name like $4 ||'%' order by created_at limit $2 offset $3`,
+		userID, limit, offset, query)
+
+	switch {
+	case err == sql.ErrNoRows:
+		break
+	default:
+		return repolist, err
+	}
+
+	return repolist, nil
 }
 
 func (repo RepoSearch) GetFromAllRepos(query string, limit int64, offset int64) (models.RepoSet, error) {
-	return models.RepoSet{}, nil
+	var repolist []gitmodels.Repository
+	err := repo.DB.Select(&repolist, `select * from git_repositories where name like $1 || '%' limit $2 offset $3`,
+		query, limit, offset)
+
+	switch {
+	case err == sql.ErrNoRows:
+		break
+	default:
+		return repolist, err
+	}
+
+	return repolist, nil
 }
 
-func (repo RepoSearch) GetFromOwnRepos(query string, limit int64, offset int64) (models.RepoSet, error) {
-	return models.RepoSet{}, nil
+func (repo RepoSearch) GetFromOwnRepos(query string, limit int64, offset int64, userID int64) (models.RepoSet, error) {
+	var repolist []gitmodels.Repository
+	err := repo.DB.Select(&repolist, `select * from git_repositories where
+				  		owner_id=$1 and name like $4 ||'%' order by created_at limit $2 offset $3`,
+		userID, limit, offset, query)
+
+	switch {
+	case err == sql.ErrNoRows:
+		break
+	default:
+		return repolist, err
+	}
+
+	return repolist, nil
 }
