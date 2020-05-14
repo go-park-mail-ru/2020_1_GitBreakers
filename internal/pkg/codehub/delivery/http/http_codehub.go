@@ -356,15 +356,32 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), 100, 0)
+
+	query := r.URL.Query()
+
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	offset, err := strconv.Atoi(query.Get("offset"))
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), int64(limit), int64(offset))
 
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		GD.Logger.HttpLogInfo(r.Context(), "news access denied")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		GD.Logger.HttpLogInfo(r.Context(), "news does not exist")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
