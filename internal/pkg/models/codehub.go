@@ -35,6 +35,7 @@ type News struct {
 	Label       string    `json:"label" db:"label"`
 	Date        time.Time `json:"date" db:"created_at"`
 	AuthorLogin string    `json:"author_login" db:"user_login"`
+	AuthorImage string    `json:"author_image" db:"user_avatar_path"`
 }
 
 //easyjson:json

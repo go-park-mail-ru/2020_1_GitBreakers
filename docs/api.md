@@ -78,7 +78,7 @@ required email, login(>3 симв), password(>5 симв)
 | `login`       | Логин                    |
 | `email`       | Адрес электронной почты  |
 | `name`        | Имя+Фамилия              |
-| `avatar`      | Ссылка на аватарку (url) |
+| `image`       | Ссылка на аватарку (url) |
 2. 401 unauthorized  
 3. 404 юзера не существует  
 ### 2.2 Обновить данные юзера
@@ -573,14 +573,20 @@ limit и offset опциональные параметры
     "author_id": 5,
     "repo_id": 654433,
     "message": "dwrwrwsfdfrfe",
-    "date": "2020-04-26T19:02:10.073Z"
+    "label": "",
+    "date": "2020-04-26T19:02:10.073Z",
+    "author_login": "nickeskov",
+    "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 },
 {
     "id": 5,
     "author_id": 5,
     "repo_id": 654433,
     "message": "dwrwrwrfsffe",
-    "date": "2020-04-26T19:02:10.073Z"
+    "label": "",
+    "date": "2020-04-26T19:02:10.073Z",
+    "author_login": "nickeskov",
+    "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 }]
 ``` 
 Ответ:  

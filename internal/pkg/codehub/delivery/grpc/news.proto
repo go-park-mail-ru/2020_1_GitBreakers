@@ -23,4 +23,5 @@ message NewsModel{
   int64 RepoID = 4;
   google.protobuf.Timestamp Date = 5;
   string AuthorLogin = 6;
+  string AuthorImage = 7;
 }

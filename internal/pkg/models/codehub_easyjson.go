@@ -128,7 +128,7 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		}
 		for !in.IsDelim(']') {
 			var v1 git.Repository
-			easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit(in, &v1)
+			(v1).UnmarshalEasyJSON(in)
 			*out = append(*out, v1)
 			in.WantComma()
 		}
@@ -147,7 +147,7 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			if v2 > 0 {
 				out.RawByte(',')
 			}
-			easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit(out, v3)
+			(v3).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -175,106 +175,6 @@ func (v *RepoSet) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *RepoSet) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels1(l, v)
-}
-func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit(in *jlexer.Lexer, out *git.Repository) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.ID = int64(in.Int64())
-		case "owner_id":
-			out.OwnerID = int64(in.Int64())
-		case "name":
-			out.Name = string(in.String())
-		case "description":
-			out.Description = string(in.String())
-		case "is_fork":
-			out.IsFork = bool(in.Bool())
-		case "created_at":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.CreatedAt).UnmarshalJSON(data))
-			}
-		case "is_public":
-			out.IsPublic = bool(in.Bool())
-		case "stars":
-			out.Stars = int64(in.Int64())
-		case "author_login":
-			out.AuthorLogin = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit(out *jwriter.Writer, in git.Repository) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.Int64(int64(in.ID))
-	}
-	{
-		const prefix string = ",\"owner_id\":"
-		out.RawString(prefix)
-		out.Int64(int64(in.OwnerID))
-	}
-	{
-		const prefix string = ",\"name\":"
-		out.RawString(prefix)
-		out.String(string(in.Name))
-	}
-	{
-		const prefix string = ",\"description\":"
-		out.RawString(prefix)
-		out.String(string(in.Description))
-	}
-	{
-		const prefix string = ",\"is_fork\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.IsFork))
-	}
-	{
-		const prefix string = ",\"created_at\":"
-		out.RawString(prefix)
-		out.Raw((in.CreatedAt).MarshalJSON())
-	}
-	{
-		const prefix string = ",\"is_public\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.IsPublic))
-	}
-	{
-		const prefix string = ",\"stars\":"
-		out.RawString(prefix)
-		out.Int64(int64(in.Stars))
-	}
-	{
-		const prefix string = ",\"author_login\":"
-		out.RawString(prefix)
-		out.String(string(in.AuthorLogin))
-	}
-	out.RawByte('}')
 }
 func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels2(in *jlexer.Lexer, out *NewsSet) {
 	isTopLevel := in.IsStart()
@@ -377,6 +277,8 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			}
 		case "author_login":
 			out.AuthorLogin = string(in.String())
+		case "author_image":
+			out.AuthorImage = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -425,6 +327,11 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		const prefix string = ",\"author_login\":"
 		out.RawString(prefix)
 		out.String(string(in.AuthorLogin))
+	}
+	{
+		const prefix string = ",\"author_image\":"
+		out.RawString(prefix)
+		out.String(string(in.AuthorImage))
 	}
 	out.RawByte('}')
 }

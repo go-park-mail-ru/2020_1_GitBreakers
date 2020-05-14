@@ -22,7 +22,7 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 		return &NewsResp{}, err
 	}
 
-	newsListProto := make([]*NewsModel, 0)
+	newsListProto := make([]*NewsModel, len(newsList))
 	for _, v := range newsList {
 		temp := NewsModel{}
 		temp.ID = v.ID
@@ -31,6 +31,7 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 		temp.RepoID = v.RepoID
 		temp.Message = v.Mess
 		temp.AuthorLogin = v.AuthorLogin
+		temp.AuthorImage = v.AuthorImage
 
 		newsListProto = append(newsListProto, &temp)
 	}

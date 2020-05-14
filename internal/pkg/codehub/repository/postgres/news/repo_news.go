@@ -26,7 +26,8 @@ func (R *RepoNews) GetNews(repoID int64, limit int64, offset int64) (models.News
 	       				message,
 	       				label,
 	       				created_at,
-	       				user_login
+	       				user_login,
+	       				user_avatar_path
 				FROM news_users_view WHERE repository_id=$1 LIMIT $2 OFFSET $3`,
 		repoID, limit, offset)
 	if err != nil {
@@ -44,6 +45,7 @@ func (R *RepoNews) GetNews(repoID int64, limit int64, offset int64) (models.News
 			&newsModel.Label,
 			&newsModel.Date,
 			&newsModel.AuthorLogin,
+			&newsModel.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.WithStack(err)

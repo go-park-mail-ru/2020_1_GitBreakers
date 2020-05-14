@@ -51,6 +51,7 @@ func (c *NewsClient) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 		newsList[i].Mess = v.Message
 		newsList[i].RepoID = v.RepoID
 		newsList[i].AuthorLogin = v.AuthorLogin
+		newsList[i].AuthorImage = v.AuthorImage
 	}
 	return newsList, err
 }
