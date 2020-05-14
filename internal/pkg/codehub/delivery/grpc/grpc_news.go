@@ -24,7 +24,8 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 
 	newsListProto := make([]*NewsModel, 0)
 	for _, v := range newsList {
-		temp := NewsModel{}
+		var temp NewsModel
+
 		temp.ID = v.ID
 		temp.AuthorID = v.AuthorID
 		temp.Date, err = ptypes.TimestampProto(v.Date)
