@@ -448,7 +448,9 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
   "message": "kekekfafafasfasfasfasfasfas",
   "label": "resolved",
   "is_closed": true,
-  "created_at": "2020-04-22T17:34:07.529Z"
+  "created_at": "2020-04-22T17:34:07.529Z",
+  "author_login": "nickeskov",
+  "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 },
 {
   "id": 45,
@@ -458,7 +460,9 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
   "message": "kekek",
   "label": "resolved",
   "is_closed": true,
-  "created_at": "2020-04-22T17:34:07.529Z"
+  "created_at": "2020-04-22T17:34:07.529Z",
+  "author_login": "nickeskov",
+  "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 }]
 ``` 
  2. 400 указана строка на месте repo_id  
@@ -516,14 +520,15 @@ Required: id
 Запрос: `/func/repo/{login}/stars?limit=100&offset=2` типа `GET`  
 Тело: 
 ```json
-   [{
+[{
     "id": "int",
     "owner_id": "int",
     "name": "string",
     "description": "string",
     "is_public": "bool",
     "is_fork": "bool",
-    "created_at": "date"
+    "created_at": "date",
+    "author_login": "string"
 },
 {
     "id": "int",
@@ -532,7 +537,8 @@ Required: id
     "description": "string",
     "is_public": "bool",
     "is_fork": "bool",
-    "created_at": "date"
+    "created_at": "date",
+    "author_login": "string"
 }]
 ``` 
 Ответ:  

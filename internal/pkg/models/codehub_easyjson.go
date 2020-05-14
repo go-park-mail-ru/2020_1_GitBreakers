@@ -464,8 +464,8 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			}
 		case "author_login":
 			out.AuthorLogin = string(in.String())
-		case "repo_name":
-			out.RepoName = string(in.String())
+		case "author_image":
+			out.AuthorImage = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -526,9 +526,9 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		out.String(string(in.AuthorLogin))
 	}
 	{
-		const prefix string = ",\"repo_name\":"
+		const prefix string = ",\"author_image\":"
 		out.RawString(prefix)
-		out.String(string(in.RepoName))
+		out.String(string(in.AuthorImage))
 	}
 	out.RawByte('}')
 }

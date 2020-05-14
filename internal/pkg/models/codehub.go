@@ -15,7 +15,7 @@ type Issue struct {
 	IsClosed    bool      `json:"is_closed" valid:"-" db:"is_closed"`
 	CreatedAt   time.Time `json:"created_at,omitempty" valid:"-" db:"created_at"`
 	AuthorLogin string    `json:"author_login" valid:"-" db:"user_login"`
-	RepoName    string    `json:"repo_name" valid:"-"`
+	AuthorImage string    `json:"author_image" valid:"-" db:"user_avatar_path"`
 }
 
 //пока нигде не использую

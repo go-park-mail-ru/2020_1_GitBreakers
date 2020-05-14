@@ -104,7 +104,8 @@ func (repo *IssueRepository) GetIssuesList(repoID int64, limit int64, offset int
 				   	label,
 				   	is_closed,
 				   	created_at,
-			       	user_login
+			       	user_login,
+			       	user_avatar_path
 			FROM issues_users_view
 			WHERE repository_id = $1
 			LIMIT $2 OFFSET $3`,
@@ -135,6 +136,7 @@ func (repo *IssueRepository) GetIssuesList(repoID int64, limit int64, offset int
 			&issue.IsClosed,
 			&issue.CreatedAt,
 			&issue.AuthorLogin,
+			&issue.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in IssuesRepository in GetIssuesList "+
@@ -157,7 +159,8 @@ func (repo *IssueRepository) GetOpenedIssuesList(repoID int64, limit int64, offs
 				   	label,
 				   	is_closed,
 				   	created_at,
-			       	user_login
+			       	user_login,
+			       	user_avatar_path
 			FROM issues_users_view
 			WHERE repository_id = $1 AND is_closed = FALSE
 			LIMIT $2 OFFSET $3`,
@@ -188,6 +191,7 @@ func (repo *IssueRepository) GetOpenedIssuesList(repoID int64, limit int64, offs
 			&issue.IsClosed,
 			&issue.CreatedAt,
 			&issue.AuthorLogin,
+			&issue.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in IssuesRepository in GetOpenedIssuesList "+
@@ -210,7 +214,8 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 				   	label,
 				   	is_closed,
 				   	created_at,
-			       	user_login
+			       	user_login,
+			       	user_avatar_path
 			FROM issues_users_view
 			WHERE repository_id = $1 AND is_closed = TRUE
 			LIMIT $2 OFFSET $3`,
@@ -241,6 +246,7 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 			&issue.IsClosed,
 			&issue.CreatedAt,
 			&issue.AuthorLogin,
+			&issue.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in IssuesRepository in GetClosedIssuesList "+
@@ -305,7 +311,8 @@ func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err er
 					label,
 					is_closed,
 					created_at,
-			       	user_login
+			       	user_login,
+			       	user_avatar_path
 			FROM issues_users_view
 			WHERE id = $1`, issueID,
 	).Scan(
@@ -318,6 +325,7 @@ func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err er
 		&issue.IsClosed,
 		&issue.CreatedAt,
 		&issue.AuthorLogin,
+		&issue.AuthorImage,
 	)
 
 	switch {
