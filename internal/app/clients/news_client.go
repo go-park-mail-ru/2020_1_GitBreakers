@@ -50,6 +50,7 @@ func (c *NewsClient) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 		newsList[i].Date, err = ptypes.Timestamp(v.Date)
 		newsList[i].Mess = v.Message
 		newsList[i].RepoID = v.RepoID
+		newsList[i].AuthorLogin = v.AuthorLogin
 	}
 	return newsList, err
 }

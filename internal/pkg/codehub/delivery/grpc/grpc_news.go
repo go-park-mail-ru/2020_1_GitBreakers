@@ -30,6 +30,7 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 		temp.Date, err = ptypes.TimestampProto(v.Date)
 		temp.RepoID = v.RepoID
 		temp.Message = v.Mess
+		temp.AuthorLogin = v.AuthorLogin
 
 		newsListProto = append(newsListProto, &temp)
 	}
