@@ -22,7 +22,7 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 		return &NewsResp{}, err
 	}
 
-	newsListProto := make([]*NewsModel, len(newsList))
+	newsListProto := make([]*NewsModel, 0)
 	for _, v := range newsList {
 		temp := NewsModel{}
 		temp.ID = v.ID
