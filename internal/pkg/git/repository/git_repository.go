@@ -678,3 +678,40 @@ func (repo Repository) GetFileByPath(userLogin, repoName, commitHash, path strin
 
 	return file, nil
 }
+
+func (repo Repository) GetRepoHead(userLogin, repoName string) (defaultBranch git.Branch, err error) {
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return defaultBranch, entityerrors.DoesNotExist()
+	case err != nil:
+		return defaultBranch, errors.WithStack(err)
+	}
+
+	headReference, err := gogitRepo.Head()
+	switch {
+	case err == gogitPlumbing.ErrReferenceNotFound:
+		return defaultBranch, entityerrors.ContentEmpty()
+	case err != nil:
+		return defaultBranch, errors.WithStack(err)
+	}
+
+	gogitCommit, err := gogitPlumbingObj.GetCommit(gogitRepo.Storer, headReference.Hash())
+	switch {
+	case err == gogitPlumbing.ErrObjectNotFound:
+		return defaultBranch, entityerrors.DoesNotExist()
+	case err != nil:
+		return defaultBranch, errors.WithStack(err)
+	}
+
+	referenceName := headReference.Name().String()
+
+	branchName := strings.TrimPrefix(referenceName, gogitPlumbing.NewBranchReferenceName("").String())
+
+	defaultBranch = git.Branch{
+		Name:   branchName,
+		Commit: convertToGitCommitModel(gogitCommit),
+	}
+
+	return defaultBranch, nil
+}

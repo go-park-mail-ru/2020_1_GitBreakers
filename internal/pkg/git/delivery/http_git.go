@@ -300,6 +300,59 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
 }
 
+func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
+	userIDPointer := GD.idToIntPointer(r.Context().Value("UserID"))
+
+	vars := mux.Vars(r)
+
+	userName := vars["username"]
+	repoName := vars["reponame"]
+
+	res, err := GD.UC.GetRepoHead(userName, repoName, userIDPointer)
+	switch {
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("access denied to repository=%s/%s", userName, repoName),
+			http.StatusForbidden,
+		)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("not found repository=%s/%s", userName, repoName),
+			http.StatusNotFound,
+		)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+
+	case errors.Is(err, entityerrors.ContentEmpty()):
+		w.WriteHeader(http.StatusNoContent)
+
+	case err != nil:
+		GD.Logger.HttpLogError(
+			r.Context(),
+			"git/delivery/http_git",
+			"GetRepoHead",
+			err,
+		)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+	default:
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else {
+			GD.Logger.HttpInfo(
+				r.Context(),
+				fmt.Sprintf("successfully returned HEAD=%s for repository=%s/%s",
+					res.Name, userName, repoName),
+				http.StatusOK,
+			)
+		}
+	}
+}
+
 func (GD *GitDelivery) idToIntPointer(id interface{}) *int64 {
 	intID, ok := id.(int64)
 	if !ok {

@@ -136,6 +136,7 @@ func StartNew() {
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 
 	r.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
+	r.HandleFunc("/repo/{username}/{reponame}/head", repoHandler.GetRepoHead).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}", repoHandler.GetCommitsList).Methods(http.MethodGet)
 	r.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)

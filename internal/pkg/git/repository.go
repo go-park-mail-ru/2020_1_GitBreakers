@@ -24,4 +24,5 @@ type GitRepoI interface {
 	GetFileByPath(userLogin, repoName, commitHash, path string) (git.FileCommitted, error)
 	GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int64) ([]git.Commit, error)
 	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64) ([]git.Commit, error)
+	GetRepoHead(userLogin, repoName string) (git.Branch, error)
 }

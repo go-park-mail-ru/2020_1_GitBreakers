@@ -13,4 +13,5 @@ type GitUseCaseI interface {
 	GetCommitsByCommitHash(params gitmodels.CommitRequest, requestUserID *int64) (gitmodels.CommitSet, error)
 	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64, requestUserID *int64) (gitmodels.CommitSet, error)
 	GetFileByPath(params gitmodels.FilesCommitRequest, requestUserID *int64) (file gitmodels.FileCommitted, err error)
+	GetRepoHead(userLogin, repoName string, requestUserID *int64) (gitmodels.Branch, error)
 }

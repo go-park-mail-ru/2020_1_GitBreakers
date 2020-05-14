@@ -384,7 +384,36 @@ Required: name(alphanumeric),
 - is_binary всегда false, иначе ошибка (нельзя 
     посмотреть бинарный файл)
 2. 403 (нет прав на просмотр)  
-3. 404 (нет такого юзера, репозитория, файла или коммита)   
+3. 404 (нет такого юзера, репозитория, файла или коммита)
+
+### 4.6 Получение HEAD репозитория (его состояния по умолчанию)
+Запрос: `/repo/{username}/{reponame}/head` типа `GET`  
+Образец: `89.208.198.186:8080/repo/logggers/hefherser/head`
+Ответ:  
+1. 200 ok
+    ```json
+    {
+        "name": "master",
+        "commit": {
+            "commit_hash": "1e16727dfaf12c018cb4c069762d9ab9d62c0814",
+            "commit_author_name": "UlianaBespalova",
+            "commit_author_email": "43138516+UlianaBespalova@users.noreply.github.com",
+            "commit_author_when": "2020-04-27T20:06:36+03:00",
+            "committer_name": "GitHub",
+            "committer_email": "noreply@github.com",
+            "committer_when": "2020-04-27T20:06:36+03:00",
+            "tree_hash": "88b5bc91f0d49751be59e28ee5e5e4204ab12733",
+            "commit_parents": [
+                "4a7bc0859ace4e7c479d3739756d81f0c9cb7bc8"
+            ]
+        }
+    }
+    ```
+2. 204 no content - репозиторий существует, 
+    но не имеет состояния по умолчанию (ветки master)
+3. 403 - нет прав доступа на просмотр
+4. 404 - запрашиваемый репозиторий не существует 
+   
 ## 5. Issues  
 ### 5.1 Создать issues  
 Запрос: `/func/repo/{repoID}/issues` типа `POST`  

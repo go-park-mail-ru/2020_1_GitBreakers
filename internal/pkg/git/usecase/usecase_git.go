@@ -101,3 +101,16 @@ func (GU *GitUseCase) GetFileByPath(params gitmodels.FilesCommitRequest, request
 
 	return gitmodels.FileCommitted{}, entityerrors.AccessDenied()
 }
+
+func (GU *GitUseCase) GetRepoHead(userLogin, repoName string, requestUserID *int64) (gitmodels.Branch, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, userLogin, repoName)
+	if err != nil {
+		return gitmodels.Branch{}, err
+	}
+
+	if !isReadyToRead {
+		return gitmodels.Branch{}, entityerrors.AccessDenied()
+	}
+
+	return GU.Repo.GetRepoHead(userLogin, repoName)
+}
