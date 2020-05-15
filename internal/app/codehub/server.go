@@ -83,45 +83,62 @@ func StartNew() {
 
 	mainRouter := mux.NewRouter()
 
+	r := mainRouter.PathPrefix("").Subrouter()
+
 	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
 
-	r := mainRouter.PathPrefix("").Subrouter()
+	CsrfRouter := r.PathPrefix("").Subrouter()
+
+	// middleware
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.ALLOWED_ORIGINS,
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		Debug:            false,
-		AllowedHeaders: []string{"Content-Type", "User-Agent",
-			"Cache-Control", "Accept", "X-Requested-With", "If-Modified-Since", "Origin", "X-CSRF-Token"},
+		AllowedHeaders: []string{
+			"Content-Type",
+			"User-Agent",
+			"Cache-Control",
+			"Accept",
+			"X-Requested-With",
+			"If-Modified-Since",
+			"Origin",
+			"X-CSRF-Token",
+		},
 	})
 
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
 	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	checkAuthMiddleware := middleware.CreateCheckAuthMiddleware(customLogger)
 
-	r.Use(
-		middleware.PrometheusMetricsMiddleware,
-		middleware.JsonContentTypeMiddleware,
-		middleware.ProtectHeadersMiddleware,
-	)
-
-	metricsRouter.Use(panicMiddleware)
-
-	csrfMiddleware := middleware.CreateCsrfMiddleware(
+	csrfMiddleware := middleware.CreateCSRFMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
 		conf.ALLOWED_ORIGINS,
 		false,
-		conf.COOKIE_EXPIRE_HOURS*3600)
-
-	CsrfRouter := r.PathPrefix("").Subrouter()
-	CsrfRouter.Use(csrfMiddleware)
-
+		conf.COOKIE_EXPIRE_HOURS*3600,
+	)
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
+
+	// set middleware
+
+	mainRouter.Use(panicMiddleware)
+
+	r.Use(
+		loggerMWare,
+		middleware.PrometheusMetricsMiddleware,
+		middleware.JsonContentTypeMiddleware,
+		middleware.ProtectHeadersMiddleware,
+		m.AuthMiddleware,
+	)
+
+	CsrfRouter.Use(checkAuthMiddleware, csrfMiddleware)
+
+	// Handlers
 
 	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
-	api := r.PathPrefix("/api/v1").Subrouter()
-	api.Use(csrfMiddleware)
-	api.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/api/v1/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
@@ -157,12 +174,6 @@ func StartNew() {
 
 	staticHandler := http.FileServer(http.Dir("./static"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
-
-	r.Use(
-		loggerMWare,
-		middleware.CreatePanicMiddleware(customLogger),
-		m.AuthMiddleware,
-	)
 
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(mainRouter)); err != nil {
 		log.Fatal(err)
@@ -230,7 +241,6 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 
 	m := middleware.Middleware{
 		SessDeliv: &sessClient,
-		UCUser:    &userUCase,
 	}
 
 	return &userDelivery, &m, &gitDelivery, &codeHubDelivery

@@ -8,10 +8,6 @@ import (
 const TokenHeaderName = "X-Csrf-Token"
 
 func GetNewCsrfToken(w http.ResponseWriter, r *http.Request) {
-	if r.Context().Value("UserID") == nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
 	w.Header().Set("Access-Control-Expose-Headers", TokenHeaderName)
 	w.Header().Set(TokenHeaderName, csrf.Token(r))
 }
