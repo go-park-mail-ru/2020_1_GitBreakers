@@ -131,7 +131,7 @@ func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) 
 	}
 	return models.UserSet{}, err
 }
-func (UC *UCCodeHub) Search(query, params string, limit, offset int64) (interface{}, error) {
+func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (interface{}, error) {
 	switch params {
 	case "allusers":
 		return UC.SearchRepo.GetFromUsers(query, limit, offset)
@@ -140,10 +140,10 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset int64) (interfac
 		return UC.SearchRepo.GetFromAllRepos(query, limit, offset)
 
 	case "myrepo":
-		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset, -1)
+		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset, userID)
 
 	case "starredrepo":
-		return UC.SearchRepo.GetFromStarredRepos(query, limit, offset, -1)
+		return UC.SearchRepo.GetFromStarredRepos(query, limit, offset, userID)
 
 	default:
 		return nil, entityerrors.Invalid()

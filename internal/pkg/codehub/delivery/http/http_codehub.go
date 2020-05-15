@@ -406,6 +406,7 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	userID := res.(int64)
 
 	query := r.URL.Query().Get("query")
 	params := mux.Vars(r)["params"]
@@ -418,7 +419,7 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		offset = 0
 	}
-	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset))
+	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset), userID)
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
