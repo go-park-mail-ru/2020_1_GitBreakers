@@ -66,8 +66,9 @@ func (repo RepoSearch) GetFromAllRepos(query string, limit int64, offset int64) 
 
 func (repo RepoSearch) GetFromOwnRepos(query string, limit int64, offset int64, userID int64) (models.RepoSet, error) {
 	var repolist []gitmodels.Repository
-	err := repo.DB.Select(&repolist, `select * from git_repositories where
-				  		owner_id=$1 and name like $4 ||'%' order by created_at limit $2 offset $3`,
+	err := repo.DB.Select(&repolist, `select * from git_repositories  join 
+    	users_git_repositories us_git on id=repository_id where
+				  		user_id=$1 and name like $4 ||'%' order by us_git.created_at limit $2 offset $3`,
 		userID, limit, offset, query)
 
 	switch {
