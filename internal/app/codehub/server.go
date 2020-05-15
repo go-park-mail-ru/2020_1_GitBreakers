@@ -141,7 +141,7 @@ func StartNew() {
 	CsrfRouter.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
-	CsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
+	r.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
 
 	r.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
 	r.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
