@@ -15,16 +15,20 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS git_repositories
 (
     id          BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
-    owner_id    INTEGER                                            NOT NULL,
+    owner_id    BIGINT                                             NOT NULL,
     name        VARCHAR(512)                                       NOT NULL CHECK ( name <> '' ),
     description VARCHAR(2048)            DEFAULT ''                NOT NULL,
     is_fork     BOOLEAN                                            NOT NULL,
     is_public   BOOLEAN                                            NOT NULL,
     stars       BIGINT                   DEFAULT 0                 NOT NULL,
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    parent_id   BIGINT                   DEFAULT NULL,
 
     FOREIGN KEY (owner_id) REFERENCES users (id)
         ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES git_repositories (id)
+        ON DELETE SET NULL
         ON UPDATE CASCADE,
 
     UNIQUE (id, owner_id)
@@ -44,8 +48,8 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
         ON DELETE CASCADE
         ON UPDATE CASCADE,
 
-    UNIQUE (repository_id, user_id),
-    CONSTRAINT users_git_repositories_pk PRIMARY KEY (repository_id, user_id)
+    UNIQUE (user_id, repository_id),
+    CONSTRAINT users_git_repositories_pk PRIMARY KEY (user_id, repository_id)
 );
 
 CREATE TABLE IF NOT EXISTS git_repository_user_stars
@@ -68,7 +72,7 @@ CREATE TABLE IF NOT EXISTS git_repository_user_stars
 CREATE TABLE IF NOT EXISTS issues
 (
     id            BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
-    author_id     BIGINT                                             NOT NULL,
+    author_id     BIGINT,
     repository_id BIGINT                                             NOT NULL,
     title         VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
     message       VARCHAR(2048)                                      NOT NULL,
@@ -77,7 +81,7 @@ CREATE TABLE IF NOT EXISTS issues
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (author_id) REFERENCES users (id)
-        ON DELETE SET DEFAULT
+        ON DELETE SET NULL
         ON UPDATE CASCADE,
     FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
         ON DELETE CASCADE
@@ -87,14 +91,14 @@ CREATE TABLE IF NOT EXISTS issues
 CREATE TABLE IF NOT EXISTS news
 (
     id            BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
-    author_id     BIGINT                                             NOT NULL,
+    author_id     BIGINT,
     repository_id BIGINT                                             NOT NULL,
     message       VARCHAR(2048)                                      NOT NULL CHECK ( message <> '' ),
     label         VARCHAR(64)              DEFAULT ''                NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (author_id) REFERENCES users (id)
-        ON DELETE SET DEFAULT
+        ON DELETE SET NULL
         ON UPDATE CASCADE,
     FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
         ON DELETE CASCADE
