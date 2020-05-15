@@ -36,7 +36,7 @@ func (repo RepoSearch) GetFromStarredRepos(query string, limit int64, offset int
 	var repolist []gitmodels.Repository
 	err := repo.DB.Select(&repolist, `select * from git_repositories where id in 
 					  (select repository_id from git_repository_user_stars where
-				  		user_id=$1) and name like $4 ||'%' order by created_at limit $2 offset $3`,
+				  		author_id=$1) and name like $4 ||'%' order by created_at limit $2 offset $3`,
 		userID, limit, offset, query)
 
 	switch {

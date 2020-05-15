@@ -83,9 +83,9 @@ func StartNew() {
 
 	mainRouter := mux.NewRouter()
 
-	r := mainRouter.PathPrefix("").Subrouter()
+	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter() // prometheus /metrics route
 
-	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
+	r := mainRouter.PathPrefix("/api/v1").Subrouter() // all methods start with /api/v1
 
 	CsrfRouter := r.PathPrefix("").Subrouter()
 
@@ -138,7 +138,7 @@ func StartNew() {
 
 	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
-	CsrfRouter.HandleFunc("/api/v1/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
 
 	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
