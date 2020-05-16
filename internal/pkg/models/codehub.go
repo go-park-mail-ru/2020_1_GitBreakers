@@ -37,6 +37,10 @@ type News struct {
 	AuthorLogin string    `json:"author_login" db:"user_login"`
 	AuthorImage string    `json:"author_image" db:"user_avatar_path"`
 }
+type PullRequest struct {
+	ID int64
+}
+type PullReqSet []PullRequest
 
 //easyjson:json
 type NewsSet []News

@@ -25,4 +25,5 @@ type GitRepoI interface {
 	GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int64) ([]git.Commit, error)
 	GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64) ([]git.Commit, error)
 	GetRepoHead(userLogin, repoName string) (git.Branch, error)
+	Fork(name string, userID, repoBaseID int64) error
 }

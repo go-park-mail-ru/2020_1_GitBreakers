@@ -715,3 +715,6 @@ func (repo Repository) GetRepoHead(userLogin, repoName string) (defaultBranch gi
 
 	return defaultBranch, nil
 }
+func (repo Repository) Fork(name string, userID, repoBaseID int64) error {
+	return nil
+}
