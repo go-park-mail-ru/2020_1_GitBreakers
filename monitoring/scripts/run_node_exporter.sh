@@ -1,7 +1,7 @@
 #!/bin/bash
 
 nohup \
-  docker run --rm \
+  docker run \
     -p 9100:9100 \
     --add-host host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') \
     --name node_exporter \

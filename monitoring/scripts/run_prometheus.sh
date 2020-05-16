@@ -3,7 +3,7 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 nohup \
-    docker run --rm \
+    docker run \
       --add-host host.docker.internal:"$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+')" \
       -p 9090:9090 \
       --name prometheus \
