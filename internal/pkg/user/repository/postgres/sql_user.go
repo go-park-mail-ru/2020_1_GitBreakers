@@ -77,7 +77,7 @@ func (repo UserRepo) Create(newUser models.User) error {
 	}
 	userQuery := `INSERT INTO users (login, email, password, name, avatar_path) VALUES ($1, $2, $3, $4,$5);`
 	_, err := repo.db.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password,
-		newUser.Name, repo.hostToSave+repo.defaultImagePath+repo.defaultAvatar)
+		newUser.Name, repo.defaultImagePath+repo.defaultAvatar)
 
 	if err != nil {
 		return errors.Wrap(err, "error in user Create ")
@@ -174,7 +174,7 @@ func (repo UserRepo) CheckPass(login string, newpass string) (bool, error) {
 }
 
 func (repo UserRepo) UpdateAvatarPath(User models.User, Name string) error {
-	User.Image = repo.hostToSave + repo.defaultImagePath + Name
+	User.Image = repo.defaultImagePath + Name
 	if err := repo.Update(User); err != nil {
 		return errors.Wrap(err, "error in db")
 	}
