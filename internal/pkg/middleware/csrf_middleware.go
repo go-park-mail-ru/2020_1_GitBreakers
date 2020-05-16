@@ -15,7 +15,7 @@ func CreateCSRFMiddleware(secret []byte, trustedOrigins []string, secure bool, m
 		csrf.TrustedOrigins(trustedOrigins),
 		csrf.Secure(secure),
 		csrf.CookieName(CookieName),
-		csrf.SameSite(csrf.SameSiteNoneMode),
+		csrf.SameSite(csrf.SameSiteDefaultMode),
 		csrf.HttpOnly(true),
 		csrf.MaxAge(int(maxAge)),
 		csrf.Path("/"),
