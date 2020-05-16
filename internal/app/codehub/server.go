@@ -85,7 +85,7 @@ func StartNew() {
 
 	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter() // prometheus /metrics route
 
-	r := mainRouter.PathPrefix("").Subrouter() // all methods start with /api/v1
+	r := mainRouter.PathPrefix("/api/v1").Subrouter() // all methods start with /api/v1
 
 	CsrfRouter := r.PathPrefix("").Subrouter()
 
