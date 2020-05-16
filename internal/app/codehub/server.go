@@ -115,7 +115,7 @@ func StartNew() {
 	csrfMiddleware := middleware.CreateCSRFMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
 		conf.ALLOWED_ORIGINS,
-		false,
+		true,
 		conf.COOKIE_EXPIRE_HOURS*3600,
 	)
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
