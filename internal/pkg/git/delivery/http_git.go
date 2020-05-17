@@ -380,6 +380,10 @@ func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
 	err = GD.UC.Fork(forkData.FromRepoID, forkData.FromAuthorName, forkData.FromRepoName, forkData.NewName, userID)
 
 	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
