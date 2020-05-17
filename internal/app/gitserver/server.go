@@ -100,10 +100,10 @@ func StartNew() {
 	gitRouter.Handle("/"+delivery.GitUploadPackService, gitUploadPackHandler).Methods(http.MethodPost)
 	gitRouter.Handle("/"+delivery.GitReceivePackService, gitReceivePackHandler).Methods(http.MethodPost)
 
-	customLogger.Printf("starting git server with GIT_SERVER_PORT=%v\n", conf.GIT_SERVER_PORT)
+	customLogger.Printf("starting git server with GIT_SERVER_ENDPOINT=%v\n", conf.GIT_SERVER_ENDPOINT)
 	customLogger.Printf("starting git server with GIT_USER_REPOS_DIR=%v\n", conf.GIT_USER_REPOS_DIR)
 
-	if err := http.ListenAndServe(conf.GIT_SERVER_PORT, mainRouter); err != nil {
+	if err := http.ListenAndServe(conf.GIT_SERVER_ENDPOINT, mainRouter); err != nil {
 		customLogger.Fatalln("cannot start http git server:", err)
 	}
 }

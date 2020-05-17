@@ -188,7 +188,7 @@ func StartNew() {
 	)
 
 	// use cors middleware firs and start
-	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(mainRouter)); err != nil {
+	if err = http.ListenAndServe(conf.MAIN_LISTEN_ENDPOINT, c.Handler(mainRouter)); err != nil {
 		log.Fatal(err)
 	}
 }
