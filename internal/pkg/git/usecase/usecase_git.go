@@ -115,15 +115,25 @@ func (GU *GitUseCase) GetRepoHead(userLogin, repoName string, requestUserID *int
 	return GU.Repo.GetRepoHead(userLogin, repoName)
 }
 func (GU *GitUseCase) Fork(repoID int64, author, repoName, newName string, currUserID int64) error {
+	repoFromDB := gitmodels.Repository{}
 	if repoID < 0 {
-		repoFromDB, err := GU.Repo.GetByName(author, repoName)
+		var err error
+		repoFromDB, err = GU.Repo.GetByName(author, repoName)
 		if err != nil {
 			return err
 		}
 		//переопределелили id
 		repoID = repoFromDB.ID
 	}
+	isCorrectPerm, err := GU.Repo.CheckReadAccess(&currUserID, repoFromDB.AuthorLogin, repoFromDB.Name)
 
-	err := GU.Repo.Fork(newName, currUserID, repoID)
+	if isCorrectPerm && err == nil {
+		err = GU.Repo.Fork(newName, currUserID, repoID)
+	}
+
+	if isCorrectPerm == false {
+		return entityerrors.AccessDenied()
+	}
+
 	return err
 }
