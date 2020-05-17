@@ -366,17 +366,27 @@ func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	valid, err := govalidator.ValidateStruct(forkData)
+	if !valid || err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	if forkData.FromRepoID <= 0 {
 		forkData.FromRepoID = -1
 	}
 
-	err := GD.UC.Fork(forkData.FromRepoID, forkData.FromAuthorName, forkData.FromRepoName, forkData.NewName, userID)
+	err = GD.UC.Fork(forkData.FromRepoID, forkData.FromAuthorName, forkData.FromRepoName, forkData.NewName, userID)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
+		return
+	case errors.Is(err, entityerrors.AlreadyExist()) || errors.Is(err, entityerrors.Conflict()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
 		return
 	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
