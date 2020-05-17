@@ -621,14 +621,19 @@ params=**myrepo**
 ### 8.4 Поиск среди избранных репозиториев(на которые юзер повесил звезду)     
 Аналогично 8.1  
 params=**starredrepo**   
+**!пока не трогать**
 ## 9. Fork  
 ### 9.1 Ответвление репозитория к себе
-Запрос: `/api/v1/user/repo` типа `POST`  
-Required: name(alphanumeric), 
+Запрос: `/api/v1/func/repo/fork` типа `POST`  
+Указать либо id от чего форкаемся(from_repo_id), либо связку логин+название репы  
+new_name новое имя которое будет отображатся   
+при указании и id и логин+название репы приоритет будет у id  
 ```json
 {
-    "author_name": "string",
-    "repo_name": "string"
+  "from_repo_id": 45,
+  "from_author_name": "pesntv",
+  "from_repo_name": "muhtar",
+  "new_name": "muhtar2"
 }
 ```
 Ответ:  

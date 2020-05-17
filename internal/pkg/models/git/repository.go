@@ -22,6 +22,12 @@ type Repository struct {
 	AuthorLogin          string               `json:"author_login,omitempty" valid:"-"`
 	ParentRepositoryInfo ParentRepositoryInfo `json:"parent_repository_info,omitempty" valid:"-"`
 }
+type RepoFork struct {
+	FromRepoID     int64  `json:"from_repo_id" valid:"-"`
+	FromAuthorName string `json:"from_author_name" valid:"-"`
+	FromRepoName   string `json:"from_repo_name" valid:"-"`
+	NewName        string `json:"new_name" valid:"stringlength(1|512)"`
+}
 
 //easyjson:json
 type RepositorySet []Repository
