@@ -194,7 +194,7 @@ func StartNew() {
 }
 
 func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config) (*http3.UserHttp, *middleware.Middleware, *gitDeliv.GitDelivery, *http4.HttpCodehub) {
-	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
+	userRepos := postgres.NewUserRepo(db, conf.DEFAULT_USER_AVATAR_NAME, "/static/image/avatar/", conf.HOST_TO_SAVE)
 	sessClient, err := clients.NewSessClient()
 	if err != nil {
 		logger.Fatal(err, "not connect to auth server")

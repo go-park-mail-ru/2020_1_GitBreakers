@@ -7,21 +7,22 @@ import (
 )
 
 type Config struct {
-	REDIS_ADDR           string
-	POSTGRES_USER        string
-	POSTGRES_PASS        string
-	POSTGRES_DBNAME      string
-	MAX_DB_OPEN_CONN     int64
-	MAIN_LISTEN_ENDPOINT string
-	ALLOWED_ORIGINS      []string
-	REDIS_PASS           string
-	LOGFILE              string
-	HOST_TO_SAVE         string
-	GIT_USER_REPOS_DIR   string
-	GIT_SERVER_ENDPOINT  string
-	NEWS_SERVER_ENDPOINT string
-	CSRF_SECRET_KEY      string
-	COOKIE_EXPIRE_HOURS  int64
+	REDIS_ADDR               string
+	POSTGRES_USER            string
+	POSTGRES_PASS            string
+	POSTGRES_DBNAME          string
+	MAX_DB_OPEN_CONN         int64
+	MAIN_LISTEN_ENDPOINT     string
+	ALLOWED_ORIGINS          []string
+	REDIS_PASS               string
+	LOGFILE                  string
+	HOST_TO_SAVE             string
+	GIT_USER_REPOS_DIR       string
+	GIT_SERVER_ENDPOINT      string
+	NEWS_SERVER_ENDPOINT     string
+	CSRF_SECRET_KEY          string
+	COOKIE_EXPIRE_HOURS      int64
+	DEFAULT_USER_AVATAR_NAME string
 }
 
 // New returns a new Config struct(!!!пароль не задан по дефолту и csrf secret key)
@@ -43,6 +44,7 @@ func New() *Config {
 		COOKIE_EXPIRE_HOURS:  getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
 		GIT_SERVER_ENDPOINT:  getEnv("GIT_SERVER_ENDPOINT", "127.0.0.1:5000"),
 		NEWS_SERVER_ENDPOINT: getEnv("NEWS_SERVER_ENDPOINT", "127.0.0.1:8083"),
+		DEFAULT_USER_AVATAR_NAME: getEnv("DEFAULT_USER_AVATAR_NAME", "default.png"),
 	}
 }
 
