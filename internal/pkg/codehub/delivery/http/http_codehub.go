@@ -420,7 +420,12 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset), userID)
-	if err != nil {
+	switch {
+	case errors.Is(err, entityerrors.Invalid()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -446,8 +451,6 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusBadRequest)
-	return
-
 }
 
 func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
