@@ -610,44 +610,33 @@ params=**allusers**
 Тело: 
 Ответ:  
 ```json
-[{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date",
-    "author_login": "string",
-    "forks": "int"
-},
-{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date",
-    "author_login": "string",
-    "forks": "int"
-}]
+[
+    {
+        "id": 4,
+        "owner_id": 1,
+        "name": "loshok",
+        "description": "",
+        "is_fork": false,
+        "created_at": "2020-05-17T22:23:25.185682+03:00",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "author_login": "keksik500",
+        "parent_repository_info": {}
+    }
+]
 ```
 ```json
-[{
-     "id": "int",
-     "name": "string",
-     "login": "string",
-     "image": "http://localhost:8080/static/image/avatar/default.jpg",
-     "email": "string"
- },
-{
-    "id": "int",
-    "name": "string",
-    "login": "string",
-    "image": "http://localhost:8080/static/image/avatar/default.jpg",
-    "email": "string"
-}]
+[
+    {
+        "id": 1,
+        "name": "sddd",
+        "login": "keksik500",
+        "image": "/static/image/avatar/default.jpg",
+        "email": "keksik@mail.ru",
+        "created_at": "2020-05-17T22:18:18.711999+03:00"
+    }
+]
 ```
 1. 200 ок   
 2. 400 невалдиные get параметры  
