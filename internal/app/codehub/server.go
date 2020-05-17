@@ -85,9 +85,15 @@ func StartNew() {
 
 	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter() // prometheus /metrics route
 
-	r := mainRouter.PathPrefix("/api/v1").Subrouter() // all methods start with /api/v1
+	const apiMainRoute = "/api/v1" // all api methods start with /api/v1
 
-	CsrfRouter := r.PathPrefix("").Subrouter()
+	apiRouter := mainRouter.PathPrefix(apiMainRoute).Subrouter()
+
+	staticRouter := apiRouter.PathPrefix("").Subrouter()
+
+	handlersRouter := apiRouter.PathPrefix("").Subrouter()
+
+	CsrfRouter := handlersRouter.PathPrefix("").Subrouter()
 
 	// middleware
 
@@ -124,11 +130,14 @@ func StartNew() {
 
 	mainRouter.Use(panicMiddleware)
 
-	r.Use(
+	apiRouter.Use(
 		loggerMWare,
 		middleware.PrometheusMetricsMiddleware,
-		middleware.JsonContentTypeMiddleware,
 		middleware.ProtectHeadersMiddleware,
+	)
+
+	handlersRouter.Use(
+		middleware.JsonContentTypeMiddleware,
 		m.AuthMiddleware,
 	)
 
@@ -138,43 +147,47 @@ func StartNew() {
 
 	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
-	CsrfRouter.HandleFunc("/csrftoken", csrf.GetNewCsrfToken).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/csrftoken", csrf.GetNewCsrfTokenHandler).Methods(http.MethodGet)
 
-	r.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
-	r.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
+	handlersRouter.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
+	handlersRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
 
-	r.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
-	r.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
+	handlersRouter.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
-	r.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
-	r.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
-	r.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 
-	r.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
-	r.HandleFunc("/repo/{username}/{reponame}/head", repoHandler.GetRepoHead).Methods(http.MethodGet)
-	r.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
-	r.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}", repoHandler.GetCommitsList).Methods(http.MethodGet)
-	r.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
-	r.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/head", repoHandler.GetRepoHead).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}", repoHandler.GetCommitsList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
-	r.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
 	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
-	r.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 
-	r.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 
-	r.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
 
+	// static files server
 	staticHandler := http.FileServer(http.Dir("./static"))
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", staticHandler))
+	staticRouter.PathPrefix("/static").Handler(
+		http.StripPrefix(apiMainRoute+"/static", staticHandler),
+	)
 
+	// use cors middleware firs and start
 	if err = http.ListenAndServe(conf.MAIN_LISTEN_PORT, c.Handler(mainRouter)); err != nil {
 		log.Fatal(err)
 	}

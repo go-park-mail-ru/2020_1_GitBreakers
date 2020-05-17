@@ -7,7 +7,7 @@ import (
 
 const TokenHeaderName = "X-Csrf-Token"
 
-func GetNewCsrfToken(w http.ResponseWriter, r *http.Request) {
+func GetNewCsrfTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Expose-Headers", TokenHeaderName)
 	w.Header().Set(TokenHeaderName, csrf.Token(r))
 }
