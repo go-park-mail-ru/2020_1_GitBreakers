@@ -221,7 +221,94 @@ func (v *Repository) UnmarshalJSON(data []byte) error {
 func (v *Repository) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit1(l, v)
 }
-func easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(in *jlexer.Lexer, out *ParentRepositoryInfo) {
+func easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(in *jlexer.Lexer, out *RepoFork) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "from_repo_id":
+			out.FromRepoID = int64(in.Int64())
+		case "from_author_name":
+			out.FromAuthorName = string(in.String())
+		case "from_repo_name":
+			out.FromRepoName = string(in.String())
+		case "new_name":
+			out.NewName = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(out *jwriter.Writer, in RepoFork) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"from_repo_id\":"
+		out.RawString(prefix[1:])
+		out.Int64(int64(in.FromRepoID))
+	}
+	{
+		const prefix string = ",\"from_author_name\":"
+		out.RawString(prefix)
+		out.String(string(in.FromAuthorName))
+	}
+	{
+		const prefix string = ",\"from_repo_name\":"
+		out.RawString(prefix)
+		out.String(string(in.FromRepoName))
+	}
+	{
+		const prefix string = ",\"new_name\":"
+		out.RawString(prefix)
+		out.String(string(in.NewName))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v RepoFork) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v RepoFork) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *RepoFork) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *RepoFork) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(l, v)
+}
+func easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit3(in *jlexer.Lexer, out *ParentRepositoryInfo) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -258,7 +345,7 @@ func easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		in.Consumed()
 	}
 }
-func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(out *jwriter.Writer, in ParentRepositoryInfo) {
+func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit3(out *jwriter.Writer, in ParentRepositoryInfo) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -304,23 +391,23 @@ func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 // MarshalJSON supports json.Marshaler interface
 func (v ParentRepositoryInfo) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(&w, v)
+	easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ParentRepositoryInfo) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(w, v)
+	easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ParentRepositoryInfo) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(&r, v)
+	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ParentRepositoryInfo) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit2(l, v)
+	easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModelsGit3(l, v)
 }

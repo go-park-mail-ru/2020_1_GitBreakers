@@ -352,6 +352,39 @@ func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+	forkData := gitmodels.RepoFork{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &forkData); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if forkData.FromRepoID <= 0 {
+		forkData.FromRepoID = -1
+	}
+
+	err := GD.UC.Fork(forkData.FromRepoID, forkData.FromAuthorName, forkData.FromRepoName, forkData.NewName, userID)
+
+	switch {
+	case err == entityerrors.AccessDenied():
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+}
 
 func (GD *GitDelivery) idToIntPointer(id interface{}) *int64 {
 	intID, ok := id.(int64)

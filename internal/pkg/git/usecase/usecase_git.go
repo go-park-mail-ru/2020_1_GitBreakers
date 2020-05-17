@@ -114,3 +114,16 @@ func (GU *GitUseCase) GetRepoHead(userLogin, repoName string, requestUserID *int
 
 	return GU.Repo.GetRepoHead(userLogin, repoName)
 }
+func (GU *GitUseCase) Fork(repoID int64, author, repoName, newName string, currUserID int64) error {
+	if repoID < 0 {
+		repoFromDB, err := GU.Repo.GetByName(author, repoName)
+		if err != nil {
+			return err
+		}
+		//переопределелили id
+		repoID = repoFromDB.ID
+	}
+
+	err := GU.Repo.Fork(newName, currUserID, repoID)
+	return err
+}
