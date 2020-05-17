@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS git_repositories
     is_fork     BOOLEAN                                            NOT NULL,
     is_public   BOOLEAN                                            NOT NULL,
     stars       BIGINT                   DEFAULT 0                 NOT NULL,
+    forks       BIGINT                   DEFAULT 0                 NOT NULL,
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     parent_id   BIGINT                   DEFAULT NULL,
 
@@ -127,6 +128,7 @@ SELECT gr.id,
        gr.is_fork,
        gr.is_public,
        gr.stars,
+       gr.forks,
        gr.created_at,
        upv.id          AS user_id,
        upv.login       AS user_login,
@@ -136,6 +138,31 @@ SELECT gr.id,
        upv.created_at  AS user_created_at
 FROM git_repositories AS gr
          JOIN user_profile_view upv ON gr.owner_id = upv.id;
+
+
+DROP VIEW IF EXISTS users_git_repositories_view CASCADE;
+CREATE VIEW users_git_repositories_view AS
+SELECT ugr.repository_id,
+       ugr.user_id,
+       ugr.role,
+       ugr.created_at,
+       gr.owner_id     AS git_repository_owner_id,
+       gr.name         AS git_repository_name,
+       gr.description  AS git_repository_description,
+       gr.is_fork      AS git_repository_is_fork,
+       gr.is_public    AS git_repository_is_public,
+       gr.stars        AS git_repository_stars,
+       gr.forks        AS git_repository_forks,
+       gr.created_at   AS git_repository_created_at,
+       gr.parent_id    AS git_repository_parent_id,
+       upv.login       AS user_login,
+       upv.email       AS user_email,
+       upv.name        AS user_name,
+       upv.avatar_path AS user_avatar_path,
+       upv.created_at  AS user_created_at
+FROM users_git_repositories AS ugr
+         JOIN git_repositories AS gr ON ugr.repository_id = gr.id
+         JOIN user_profile_view AS upv ON ugr.user_id = upv.id;
 
 
 DROP VIEW IF EXISTS git_repository_user_stars_view CASCADE;

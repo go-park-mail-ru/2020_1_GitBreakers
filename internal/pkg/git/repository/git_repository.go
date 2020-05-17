@@ -32,6 +32,15 @@ type queryer interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 }
 
+type execer interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+
+type execqueryer interface {
+	execer
+	queryer
+}
+
 func NewRepository(db *sqlx.DB, reposDir string) Repository {
 	return Repository{db: db, reposDir: reposDir}
 }
@@ -85,6 +94,89 @@ func isRepoExistsInDb(queryer queryer, ownerId int64, repoName string) (bool, er
 	return isRepoExists, nil
 }
 
+func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
+	var gitRepo git.Repository
+	err := queryer.QueryRow(`
+			SELECT 	id,
+			       	owner_id,
+			       	name,
+			       	description,
+			       	is_fork, 
+			       	is_public,
+					forks,
+			       	stars,
+			       	created_at
+			FROM git_repositories WHERE id = $1`, id).Scan(
+		&gitRepo.ID,
+		&gitRepo.OwnerID,
+		&gitRepo.Name,
+		&gitRepo.Description,
+		&gitRepo.IsFork,
+		&gitRepo.IsPublic,
+		&gitRepo.Stars,
+		&gitRepo.Forks,
+		&gitRepo.CreatedAt,
+	)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return gitRepo, entityerrors.DoesNotExist()
+	case err != nil:
+		return gitRepo, errors.Wrapf(err, "error in repository for git repositories in getByIdQ "+
+			"with id=%d", id)
+	}
+
+	return gitRepo, nil
+}
+
+func createNewRepoSQLEntity(qrexec execqueryer, newRepo git.Repository) (newRepoId int64, err error) {
+	err = qrexec.QueryRow(
+		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork) 
+				VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+		newRepo.OwnerID,
+		newRepo.Name,
+		newRepo.Description,
+		newRepo.IsPublic,
+		newRepo.IsFork,
+	).Scan(
+		&newRepoId,
+	)
+
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+
+	return newRepoId, nil
+}
+
+func createNewPermissionSQLEntity(exec execer, userID, repoID int64,
+	role permission_types.Permission) error {
+
+	_, err := exec.Exec(
+		`	INSERT INTO users_git_repositories (user_id, repository_id, role)
+				VALUES ($1, $2, $3)`,
+		userID,
+		repoID,
+		role)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func finishTransaction(tx *sql.Tx, err error) error {
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			err = errors.WithMessage(err, rollbackErr.Error())
+		}
+	} else if commitErr := tx.Commit(); commitErr != nil {
+		err = errors.WithMessage(commitErr, commitErr.Error())
+	}
+
+	return err
+}
+
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
 	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepositoryNameSuffix
 }
@@ -94,7 +186,7 @@ func (repo Repository) createRepoPath(queryer queryer, ownerId int64, repoName s
 		return "", entityerrors.Invalid()
 	}
 	var userLogin string
-	err := queryer.QueryRow("SELECT login FROM users	 WHERE id = $1",
+	err := queryer.QueryRow("SELECT login FROM users WHERE id = $1",
 		ownerId).Scan(&userLogin)
 	if err != nil {
 		return "", err
@@ -117,54 +209,43 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	// Begin transaction
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return -1, errors.Wrap(err, "cannot begin transaction in create repository")
+		return 0, errors.Wrap(err, "cannot begin transaction in create repository")
 	}
 	// Transaction cleanups
 	defer func() {
-		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				err = errors.Wrap(err, rollbackErr.Error())
-			}
-		} else if commitErr := tx.Commit(); commitErr != nil {
-			err = errors.Wrap(commitErr, commitErr.Error())
-		}
+		err = finishTransaction(tx, err)
 	}()
 
 	isRepoExist, err := isRepoExistsInDb(tx, newRepo.OwnerID, newRepo.Name)
 	if err != nil {
-		return -1, errors.Wrap(err, "error in create repository while checking if repository is not exits")
+		return 0, errors.Wrap(err, "error in create repository while checking if repository is not exits")
 	}
 	if isRepoExist {
 		return -1, entityerrors.AlreadyExist()
 	}
 
-	var newRepoId int64
 	// Create new db entity of git_repository
-	err = tx.QueryRow(
-		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork) 
-				VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-		newRepo.OwnerID, newRepo.Name, newRepo.Description, newRepo.IsPublic, newRepo.IsFork).Scan(&newRepoId)
+	newRepoId, err := createNewRepoSQLEntity(tx, newRepo)
 	if err != nil {
-		return -1, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v",
+		return 0, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v",
 			newRepo)
 	}
 
-	_, err = tx.Exec("INSERT INTO users_git_repositories (user_id, repository_id, role) VALUES ($1, $2, $3)",
-		newRepo.OwnerID, newRepoId, permission_types.OwnerAccess())
+	err = createNewPermissionSQLEntity(tx, newRepo.OwnerID, newRepoId, perm.OwnerAccess())
 	if err != nil {
-		return -1, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
+		return 0, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
 	}
 
 	// Calculate path where git creates new repository on filesystem
 	repoPath, err = repo.createRepoPath(tx, newRepo.OwnerID, newRepo.Name)
 	if err != nil {
-		return -1, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
+		return 0, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
 	}
 
 	// Create new bare repository aka 'git init --bare' on repoPath
 	_, err = gogit.PlainInit(repoPath, true)
 	if err == gogit.ErrRepositoryAlreadyExists {
-		return -1, entityerrors.AlreadyExist()
+		return 0, entityerrors.AlreadyExist()
 	}
 
 	return newRepoId, nil
@@ -179,6 +260,7 @@ func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string,
 			   			repo.is_fork,
 			   			repo.is_public,
  						repo.stars,
+        				repo.forks,
         			   	repo.created_at
 				FROM git_repositories AS repo
 					JOIN users AS owner ON repo.owner_id = owner.id
@@ -211,6 +293,7 @@ func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string,
 			&gitRepo.IsFork,
 			&gitRepo.IsPublic,
 			&gitRepo.Stars,
+			&gitRepo.Forks,
 			&gitRepo.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
@@ -230,6 +313,7 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 				repo.is_fork,
 				repo.is_public,
 		       	repo.stars,
+		       	repo.forks,
 		       	repo.created_at
 		FROM git_repositories AS repo
 			JOIN users AS owner ON repo.owner_id = owner.id
@@ -260,6 +344,7 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 			&gitRepo.IsFork,
 			&gitRepo.IsPublic,
 			&gitRepo.Stars,
+			&gitRepo.Forks,
 			&gitRepo.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
@@ -311,10 +396,14 @@ func (repo Repository) CheckReadAccess(currentUserId *int64, userLogin, repoName
 	var haveAccess bool
 	err := repo.db.QueryRow(`
 		SELECT EXISTS(
-		    SELECT * FROM users_git_repositories AS ugr 
-		        JOIN git_repositories AS gr ON ugr.repository_id = gr.id
-		    	JOIN users AS u ON gr.owner_id = u.id
-		    WHERE gr.is_public = TRUE OR u.login = $1 AND gr.name = $2 AND ugr.user_id = $3 
+				SELECT 1
+				FROM users_git_repositories_view AS ugrv
+						 JOIN user_profile_view AS own
+							  ON ugrv.git_repository_owner_id = own.id
+								  AND own.login = $1
+								  AND ugrv.git_repository_name = $2
+				WHERE ugrv.git_repository_is_public = TRUE
+				   OR ugrv.user_id = $3
 		    )`, userLogin, repoName, currentUserId).Scan(&haveAccess)
 	if err != nil {
 		return false, errors.Wrapf(err, "error in repository for git repositories in CheckReadAccess "+
@@ -392,36 +481,7 @@ func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Bran
 }
 
 func (repo Repository) GetByID(id int64) (git.Repository, error) {
-	var gitRepo git.Repository
-	err := repo.db.QueryRow(`
-			SELECT 	id,
-			       	owner_id,
-			       	name,
-			       	description,
-			       	is_fork, 
-			       	is_public,
-			       	stars,
-			       	created_at
-			FROM git_repositories WHERE id = $1`, id).Scan(
-		&gitRepo.ID,
-		&gitRepo.OwnerID,
-		&gitRepo.Name,
-		&gitRepo.Description,
-		&gitRepo.IsFork,
-		&gitRepo.IsPublic,
-		&gitRepo.Stars,
-		&gitRepo.CreatedAt,
-	)
-
-	switch {
-	case err == sql.ErrNoRows:
-		return gitRepo, entityerrors.DoesNotExist()
-	case err != nil:
-		return gitRepo, errors.Wrapf(err, "error in repository for git repositories in GetByID "+
-			"with id=%d", id)
-	}
-
-	return gitRepo, nil
+	return getByIdQ(repo.db, id)
 }
 
 func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error) {
@@ -715,6 +775,43 @@ func (repo Repository) GetRepoHead(userLogin, repoName string) (defaultBranch gi
 
 	return defaultBranch, nil
 }
-func (repo Repository) Fork(name string, userID, repoBaseID int64) error {
+
+func (repo Repository) Fork(name string, userID, repoBaseID int64) (err error) {
+	//tx, err := repo.db.Begin()
+	//if err != nil {
+	//	return errors.WithStack(err)
+	//}
+	//defer func() {
+	//	err = finishTransaction(tx, err)
+	//}()
+	//
+	//forkFromRepo, err := getByIdQ(tx, repoBaseID)
+	//if err != nil {
+	//	return err
+	//}
+	//if forkFromRepo.OwnerID == userID {
+	//	return entityerrors.Conflict()
+	//}
+	//
+	//if isForkExist, err := isRepoExistsInDb(tx, userID, name); err != nil {
+	//	return err
+	//} else if isForkExist {
+	//	return entityerrors.AlreadyExist()
+	//}
+	//
+	//forkRepoPath, err := repo.createRepoPath(tx, userID, name)
+	//if err != nil {
+	//	return err
+	//}
+	//defer func() {
+	//	if err != nil {
+	//		if _, existsErr := os.Stat(forkRepoPath); !os.IsNotExist(existsErr) {
+	//			if removeErr := os.RemoveAll(forkRepoPath); removeErr != nil {
+	//				err = errors.WithMessage(err, removeErr.Error())
+	//			}
+	//		}
+	//	}
+	//}()
+
 	return nil
 }
