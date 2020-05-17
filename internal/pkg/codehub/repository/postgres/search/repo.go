@@ -19,7 +19,7 @@ func NewSearchRepository(db *sqlx.DB) RepoSearch {
 
 func (repo RepoSearch) GetFromUsers(query string, limit int64, offset int64) (models.UserSet, error) {
 	var userlist []models.User
-	err := repo.DB.Select(&userlist, `select * from users where login like $1 || '%' limit $2 offset $3`,
+	err := repo.DB.Select(&userlist, `select id, login, email, password, name, avatar_path, created_at from users where login like $1 || '%' limit $2 offset $3`,
 		query, limit, offset)
 
 	switch {

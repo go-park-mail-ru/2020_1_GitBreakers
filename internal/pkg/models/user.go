@@ -11,7 +11,7 @@ type User struct {
 	Login     string    `json:"login" valid:"stringlength(3|128)" db:"login"`
 	Image     string    `json:"image" valid:"-" db:"avatar_path"`
 	Email     string    `json:"email" valid:"email,stringlength(4|128)" db:"email"`
-	CreatedAt time.Time `json:"created_at" valid:"-"`
+	CreatedAt time.Time `json:"created_at" valid:"-" db:"created_at"`
 }
 
 type SignInForm struct {

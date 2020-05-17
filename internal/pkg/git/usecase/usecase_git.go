@@ -130,7 +130,9 @@ func (GU *GitUseCase) Fork(repoID int64, author, repoName, newName string, currU
 	if isCorrectPerm && err == nil {
 		err = GU.Repo.Fork(newName, currUserID, repoID)
 	}
-
+	if err == entityerrors.DoesNotExist() {
+		return err
+	}
 	if isCorrectPerm == false {
 		return entityerrors.AccessDenied()
 	}

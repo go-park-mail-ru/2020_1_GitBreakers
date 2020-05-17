@@ -609,6 +609,46 @@ query это левая часть ника, по которой идет пои
 params=**allusers**  
 Тело: 
 Ответ:  
+```json
+[{
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date",
+    "author_login": "string",
+    "forks": "int"
+},
+{
+    "id": "int",
+    "owner_id": "int",
+    "name": "string",
+    "description": "string",
+    "is_public": "bool",
+    "is_fork": "bool",
+    "created_at": "date",
+    "author_login": "string",
+    "forks": "int"
+}]
+```
+```json
+[{
+     "id": "int",
+     "name": "string",
+     "login": "string",
+     "image": "http://localhost:8080/static/image/avatar/default.jpg",
+     "email": "string"
+ },
+{
+    "id": "int",
+    "name": "string",
+    "login": "string",
+    "image": "http://localhost:8080/static/image/avatar/default.jpg",
+    "email": "string"
+}]
+```
 1. 200 ок   
 2. 400 невалдиные get параметры  
 3. 401 неавторизован  
