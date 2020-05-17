@@ -19,7 +19,12 @@ var testUser = models.User{
 	Image:    "default.png",
 	Email:    "bezbab@mail.ru",
 }
-var sessHandler SessionHttp
+var sessHandler = SessionHttp{
+	CookieName:     "session_id",
+	CookieSecure:   false,
+	CookieSiteMode: http.SameSiteNoneMode,
+	CookiePath:     "/",
+}
 
 func TestSessionHttp_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -97,7 +102,7 @@ func TestSessionHttp_Create(t *testing.T) {
 			Name:     "session_id",
 			Value:    fullSession.ID,
 			HttpOnly: true,
-			Expires:  time.Now().Add(sessHandler.ExpireTime),
+			Expires:  time.Now().Add(sessHandler.CookieExpireTime),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   false,
@@ -131,7 +136,7 @@ func TestSessionHttp_Create(t *testing.T) {
 			Name:     "session_id",
 			Value:    fullSession.ID,
 			HttpOnly: true,
-			Expires:  time.Now().Add(sessHandler.ExpireTime),
+			Expires:  time.Now().Add(sessHandler.CookieExpireTime),
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
 			Secure:   false,

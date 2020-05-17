@@ -22,6 +22,7 @@ import (
 	userUC "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	middlewareCommon "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/middleware"
+	gorCSRF "github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -121,7 +122,8 @@ func StartNew() {
 	csrfMiddleware := middleware.CreateCSRFMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
 		conf.ALLOWED_ORIGINS,
-		true,
+		false,
+		gorCSRF.SameSiteNoneMode,
 		conf.COOKIE_EXPIRE_HOURS*3600,
 	)
 	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
@@ -236,8 +238,12 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	}
 
 	sessDelivery := http2.SessionHttp{
-		ExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
-		Client:     &sessClient,
+		CookieName:       "session_id",
+		CookieExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
+		CookieSecure:     false,
+		CookieSiteMode:   http.SameSiteNoneMode,
+		CookiePath:       "/",
+		Client:           &sessClient,
 	}
 
 	userDelivery := http3.UserHttp{
