@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
+	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
@@ -80,18 +81,70 @@ func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
 	return http.DetectContentType(buffer), nil
 }
 
-func isRepoExistsInDb(queryer queryer, ownerId int64, repoName string) (bool, error) {
+func isRepoExistsInDbByOwnerId(queryer queryer, ownerId int64, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
 	var isRepoExists bool
 	err := queryer.QueryRow(
 		"SELECT EXISTS(SELECT 1 FROM git_repositories WHERE owner_id = $1 and name = $2)",
-		ownerId, repoName).Scan(&isRepoExists)
+		ownerId,
+		repoName,
+	).Scan(
+		&isRepoExists,
+	)
 	if err != nil {
-		return false, errors.Wrap(err, "error while checking if git repository exists")
+		return false, errors.WithStack(err)
 	}
 	return isRepoExists, nil
+}
+
+func isRepoExistsInDbByOwnerLogin(queryer queryer, ownerLogin string, repoName string) (bool, error) {
+	if repoName == "" {
+		return false, entityerrors.Invalid()
+	}
+	var isRepoExists bool
+	err := queryer.QueryRow(`
+			SELECT EXISTS(
+						   SELECT 1
+						   FROM git_repository_user_view
+						   WHERE user_login = $1
+							 AND name = $2
+					   )`,
+		ownerLogin,
+		repoName,
+	).Scan(
+		&isRepoExists,
+	)
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+	return isRepoExists, nil
+}
+
+func getParentInfoById(queryer queryer, parentID *int64) (parentInfo git.ParentRepositoryInfo, err error) {
+	if parentID == nil {
+		return
+	}
+
+	err = queryer.QueryRow(`
+			SELECT 	id,
+					owner_id,
+			       	name,
+					user_login
+			FROM git_repository_user_view WHERE id = $1`,
+		parentID,
+	).Scan(
+		&parentInfo.ID,
+		&parentInfo.OwnerID,
+		&parentInfo.Name,
+		&parentInfo.AuthorLogin,
+	)
+	if err != nil {
+		return git.ParentRepositoryInfo{}, errors.WithStack(err)
+	}
+
+	return parentInfo, nil
 }
 
 func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
@@ -103,10 +156,15 @@ func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
 			       	description,
 			       	is_fork, 
 			       	is_public,
-					forks,
 			       	stars,
-			       	created_at
-			FROM git_repositories WHERE id = $1`, id).Scan(
+					forks,
+			       	created_at,
+					user_login,
+					parent_id,
+					parent_owner_id,
+					parent_name,
+					parent_user_login
+			FROM git_repository_parent_user_view WHERE id = $1`, id).Scan(
 		&gitRepo.ID,
 		&gitRepo.OwnerID,
 		&gitRepo.Name,
@@ -116,6 +174,11 @@ func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
 		&gitRepo.Stars,
 		&gitRepo.Forks,
 		&gitRepo.CreatedAt,
+		&gitRepo.AuthorLogin,
+		&gitRepo.ParentRepositoryInfo.ID,
+		&gitRepo.ParentRepositoryInfo.OwnerID,
+		&gitRepo.ParentRepositoryInfo.Name,
+		&gitRepo.ParentRepositoryInfo.AuthorLogin,
 	)
 
 	switch {
@@ -129,15 +192,16 @@ func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
 	return gitRepo, nil
 }
 
-func createNewRepoSQLEntity(qrexec execqueryer, newRepo git.Repository) (newRepoId int64, err error) {
-	err = qrexec.QueryRow(
-		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork) 
-				VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+func createNewRepoSQLEntity(queryer queryer, newRepo git.Repository) (newRepoId int64, err error) {
+	err = queryer.QueryRow(
+		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork, parent_id) 
+				VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 		newRepo.OwnerID,
 		newRepo.Name,
 		newRepo.Description,
 		newRepo.IsPublic,
 		newRepo.IsFork,
+		newRepo.ParentRepositoryInfo.ID,
 	).Scan(
 		&newRepoId,
 	)
@@ -157,7 +221,8 @@ func createNewPermissionSQLEntity(exec execer, userID, repoID int64,
 				VALUES ($1, $2, $3)`,
 		userID,
 		repoID,
-		role)
+		role,
+	)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -186,8 +251,12 @@ func (repo Repository) createRepoPath(queryer queryer, ownerId int64, repoName s
 		return "", entityerrors.Invalid()
 	}
 	var userLogin string
-	err := queryer.QueryRow("SELECT login FROM users WHERE id = $1",
-		ownerId).Scan(&userLogin)
+	err := queryer.QueryRow(
+		"SELECT login FROM users WHERE id = $1",
+		ownerId,
+	).Scan(
+		&userLogin,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -216,7 +285,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 		err = finishTransaction(tx, err)
 	}()
 
-	isRepoExist, err := isRepoExistsInDb(tx, newRepo.OwnerID, newRepo.Name)
+	isRepoExist, err := isRepoExistsInDbByOwnerId(tx, newRepo.OwnerID, newRepo.Name)
 	if err != nil {
 		return 0, errors.Wrap(err, "error in create repository while checking if repository is not exits")
 	}
@@ -254,21 +323,25 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error) {
 	rows, err := repo.db.Query(
 		` SELECT 	repo.id,
-			   			repo.owner_id,
-			   			repo.name,
-			   			repo.description,
-			   			repo.is_fork,
-			   			repo.is_public,
- 						repo.stars,
-        				repo.forks,
-        			   	repo.created_at
-				FROM git_repositories AS repo
-					JOIN users AS owner ON repo.owner_id = owner.id
+						repo.owner_id,
+						repo.name,
+						repo.description,
+						repo.is_fork,
+						repo.is_public,
+						repo.stars,
+						repo.forks,
+						repo.created_at,
+						repo.user_login,
+						repo.parent_id,
+						repo.parent_owner_id,
+						repo.parent_name,
+						repo.parent_user_login
+				FROM git_repository_parent_user_view AS repo
 					JOIN users_git_repositories AS ugr ON repo.id = ugr.repository_id
-				WHERE owner.login = $1
-				AND (ugr.user_id = $2 OR repo.is_public = TRUE) OFFSET $3
-				LIMIT $4`,
-		userLogin, requesterId, offset, limit)
+				WHERE repo.user_login = $1
+				AND (ugr.user_id = $2 AND ugr.role <> $3 OR repo.is_public = TRUE) OFFSET $4
+				LIMIT $5`,
+		userLogin, requesterId, perm.NoAccess(), offset, limit)
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while performing query in repository "+
@@ -294,11 +367,18 @@ func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string,
 			&gitRepo.IsPublic,
 			&gitRepo.Stars,
 			&gitRepo.Forks,
-			&gitRepo.CreatedAt)
+			&gitRepo.CreatedAt,
+			&gitRepo.AuthorLogin,
+			&gitRepo.ParentRepositoryInfo.ID,
+			&gitRepo.ParentRepositoryInfo.OwnerID,
+			&gitRepo.ParentRepositoryInfo.Name,
+			&gitRepo.ParentRepositoryInfo.AuthorLogin,
+		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
 				"while scanning in GetReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
 		}
+
 		gitRepos = append(gitRepos, gitRepo)
 	}
 	return gitRepos, nil
@@ -314,10 +394,14 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 				repo.is_public,
 		       	repo.stars,
 		       	repo.forks,
-		       	repo.created_at
-		FROM git_repositories AS repo
-			JOIN users AS owner ON repo.owner_id = owner.id
-		WHERE owner.login = $1 OFFSET $2
+		       	repo.created_at,
+		       	repo.user_login,
+    			repo.parent_id,
+				repo.parent_owner_id,
+				repo.parent_name,
+				repo.parent_user_login
+		FROM git_repository_parent_user_view AS repo
+			WHERE repo.user_login = $1 OFFSET $2
 		LIMIT $3`,
 		userLogin, offset, limit)
 
@@ -345,11 +429,19 @@ func (repo Repository) GetAnyReposByUserLogin(userLogin string, offset, limit in
 			&gitRepo.IsPublic,
 			&gitRepo.Stars,
 			&gitRepo.Forks,
-			&gitRepo.CreatedAt)
+			&gitRepo.CreatedAt,
+			&gitRepo.AuthorLogin,
+			&gitRepo.ParentRepositoryInfo.ID,
+			&gitRepo.ParentRepositoryInfo.OwnerID,
+			&gitRepo.ParentRepositoryInfo.Name,
+			&gitRepo.ParentRepositoryInfo.AuthorLogin,
+		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error in repository for git repositories "+
-				"while scanning in GetAnyReposByUserLogin userLogin=%s, offset=%d, limit=%d", userLogin, offset, limit)
+				"while scanning in GetAnyReposByUserLogin userLogin=%s, offset=%d, limit=%d",
+				userLogin, offset, limit)
 		}
+
 		gitRepos = append(gitRepos, gitRepo)
 	}
 	return gitRepos, nil
@@ -359,19 +451,25 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 	var gitRepo git.Repository
 
 	err := repo.db.QueryRow(`
-		SELECT 	r.id,
-			   	r.owner_id,
-			   	r.name,
-			   	r.description,
-			   	r.is_fork,
-			   	r.is_public,
-		       	r.stars,
-				r.created_at
-		FROM git_repositories AS r
-				 JOIN users AS u ON r.owner_id = u.id
-		WHERE u.login = $1
-		  AND r.name = $2`,
-		userLogin, repoName).Scan(
+			SELECT 	repo.id,
+					repo.owner_id,
+					repo.name,
+					repo.description,
+					repo.is_fork,
+					repo.is_public,
+					repo.stars,
+			       	repo.forks,
+					repo.created_at,
+			        repo.user_login,
+					repo.parent_id,
+					repo.parent_owner_id,
+					repo.parent_name,
+					repo.parent_user_login
+			FROM git_repository_parent_user_view AS repo
+			WHERE repo.user_login = $1 AND repo.name = $2`,
+		userLogin,
+		repoName,
+	).Scan(
 		&gitRepo.ID,
 		&gitRepo.OwnerID,
 		&gitRepo.Name,
@@ -379,7 +477,14 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 		&gitRepo.IsFork,
 		&gitRepo.IsPublic,
 		&gitRepo.Stars,
-		&gitRepo.CreatedAt)
+		&gitRepo.Forks,
+		&gitRepo.CreatedAt,
+		&gitRepo.AuthorLogin,
+		&gitRepo.ParentRepositoryInfo.ID,
+		&gitRepo.ParentRepositoryInfo.OwnerID,
+		&gitRepo.ParentRepositoryInfo.Name,
+		&gitRepo.ParentRepositoryInfo.AuthorLogin,
+	)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -393,8 +498,16 @@ func (repo Repository) GetByName(userLogin, repoName string) (git.Repository, er
 }
 
 func (repo Repository) CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error) {
+	isExist, err := isRepoExistsInDbByOwnerLogin(repo.db, userLogin, repoName)
+	if err != nil {
+		return false, err
+	}
+	if !isExist {
+		return false, entityerrors.DoesNotExist()
+	}
+
 	var haveAccess bool
-	err := repo.db.QueryRow(`
+	err = repo.db.QueryRow(`
 		SELECT EXISTS(
 				SELECT 1
 				FROM users_git_repositories_view AS ugrv
@@ -512,7 +625,7 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 	}
 
 	var treeByPath *gogitPlumbingObj.Tree
-	if path != "" && path != "/" && path != "./" { // TODO
+	if path != "" && path != "/" && path != "./" { // FIXME(nickeskov): this is a crunch to check root of repo
 		treeByPath, err = rootTree.Tree(path)
 		if err != nil {
 			return nil, entityerrors.DoesNotExist()
@@ -776,42 +889,84 @@ func (repo Repository) GetRepoHead(userLogin, repoName string) (defaultBranch gi
 	return defaultBranch, nil
 }
 
-func (repo Repository) Fork(name string, userID, repoBaseID int64) (err error) {
-	//tx, err := repo.db.Begin()
-	//if err != nil {
-	//	return errors.WithStack(err)
-	//}
-	//defer func() {
-	//	err = finishTransaction(tx, err)
-	//}()
-	//
-	//forkFromRepo, err := getByIdQ(tx, repoBaseID)
-	//if err != nil {
-	//	return err
-	//}
-	//if forkFromRepo.OwnerID == userID {
-	//	return entityerrors.Conflict()
-	//}
-	//
-	//if isForkExist, err := isRepoExistsInDb(tx, userID, name); err != nil {
-	//	return err
-	//} else if isForkExist {
-	//	return entityerrors.AlreadyExist()
-	//}
-	//
-	//forkRepoPath, err := repo.createRepoPath(tx, userID, name)
-	//if err != nil {
-	//	return err
-	//}
-	//defer func() {
-	//	if err != nil {
-	//		if _, existsErr := os.Stat(forkRepoPath); !os.IsNotExist(existsErr) {
-	//			if removeErr := os.RemoveAll(forkRepoPath); removeErr != nil {
-	//				err = errors.WithMessage(err, removeErr.Error())
-	//			}
-	//		}
-	//	}
-	//}()
+func (repo Repository) Fork(forkRepoName string, userID, repoBaseID int64) (err error) {
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer func() {
+		err = finishTransaction(tx, err)
+	}()
+
+	forkFromRepo, err := getByIdQ(tx, repoBaseID)
+	if err != nil {
+		return err
+	}
+	if forkFromRepo.OwnerID == userID {
+		return entityerrors.Conflict()
+	}
+
+	if isForkExist, err := isRepoExistsInDbByOwnerId(tx, userID, forkRepoName); err != nil {
+		return err
+	} else if isForkExist {
+		return entityerrors.AlreadyExist()
+	}
+
+	newForkRepoPath, err := repo.createRepoPath(tx, userID, forkRepoName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if _, existsErr := os.Stat(newForkRepoPath); !os.IsNotExist(existsErr) {
+				if removeErr := os.RemoveAll(newForkRepoPath); removeErr != nil {
+					err = errors.WithMessage(err, removeErr.Error())
+				}
+			}
+		}
+	}()
+
+	newForkedRepo := git.Repository{
+		OwnerID:     userID,
+		Name:        forkRepoName,
+		Description: forkFromRepo.Description,
+		IsFork:      true,
+		IsPublic:    forkFromRepo.IsPublic,
+		ParentRepositoryInfo: git.ParentRepositoryInfo{
+			ID: &forkFromRepo.ID,
+		},
+	}
+
+	newForkedRepo.ID, err = createNewRepoSQLEntity(tx, newForkedRepo)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	err = createNewPermissionSQLEntity(tx, userID, newForkedRepo.ID, perm.OwnerAccess())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if !newForkedRepo.IsPublic {
+		_, err := tx.Exec(`
+				INSERT INTO users_git_repositories (user_id, repository_id, role)
+				SELECT user_id, $2, $3
+				FROM users_git_repositories
+				WHERE repository_id = $1`,
+			forkFromRepo.ID,
+			newForkedRepo.ID,
+			perm.ReadAccess(),
+		)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	forkFromRepoPath := repo.convertToRepoPath(forkFromRepo.AuthorLogin, forkFromRepo.Name)
+
+	if err = copy.Copy(forkFromRepoPath, newForkRepoPath); err != nil {
+		return errors.WithStack(err)
+	}
 
 	return nil
 }
