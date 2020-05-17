@@ -1,12 +1,16 @@
 package usecase
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"math/rand"
 	"net/http"
 )
 
@@ -82,6 +86,10 @@ func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) e
 	if err := checkFileContentType(fileData); err != nil {
 		return err
 	}
+
+	fileNameRandHash := md5.Sum([]byte(fmt.Sprintf("%s%d", fileName, rand.Int63())))
+
+	fileName = fmt.Sprintf("%s.img", hex.EncodeToString(fileNameRandHash[:]))
 
 	if err := UC.RepUser.UploadAvatar(fileName, fileData); err != nil {
 		return errors.Wrap(err, "err in repo UploadAvatar")

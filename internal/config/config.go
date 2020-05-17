@@ -39,11 +39,11 @@ func New() *Config {
 		LOGFILE:              getEnv("LOGFILE", "logfile.log"),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://code-hub.space"}, ","),
-		GIT_USER_REPOS_DIR:   getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
-		CSRF_SECRET_KEY:      getEnv("CSRF_SECRET_KEY", ""),
-		COOKIE_EXPIRE_HOURS:  getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
-		GIT_SERVER_ENDPOINT:  getEnv("GIT_SERVER_ENDPOINT", "127.0.0.1:5000"),
-		NEWS_SERVER_ENDPOINT: getEnv("NEWS_SERVER_ENDPOINT", "127.0.0.1:8083"),
+		GIT_USER_REPOS_DIR:       getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
+		CSRF_SECRET_KEY:          getEnv("CSRF_SECRET_KEY", ""),
+		COOKIE_EXPIRE_HOURS:      getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
+		GIT_SERVER_ENDPOINT:      getEnv("GIT_SERVER_ENDPOINT", "127.0.0.1:5000"),
+		NEWS_SERVER_ENDPOINT:     getEnv("NEWS_SERVER_ENDPOINT", "127.0.0.1:8083"),
 		DEFAULT_USER_AVATAR_NAME: getEnv("DEFAULT_USER_AVATAR_NAME", "default.png"),
 	}
 }
