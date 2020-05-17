@@ -13,7 +13,7 @@
 ## 1. Авторизация
 ### 1.1 Логин
 
-Запрос: `/session` типа `POST`
+Запрос: `/api/v1/session` типа `POST`
 required: login: string(>3 симв), password:string(>5 симв)  
 
 Тело запроса:
@@ -32,7 +32,7 @@ required: login: string(>3 симв), password:string(>5 симв)
 
 ### 1.2 Регистрация
 
-Запрос: `/user/profile` типа `POST`
+Запрос: `/api/v1/user/profile` типа `POST`
 
 Тело запроса:  
 required email, login(>3 симв), password(>5 симв)  
@@ -51,7 +51,7 @@ required email, login(>3 симв), password(>5 симв)
 
 ### 1.3 Логаут
 
-Запрос: `/session` типа `DELETE`
+Запрос: `/api/v1/session` типа `DELETE`
 
 Ответ:  
 1. 200 OK+уберет куки session_id
@@ -60,7 +60,7 @@ required email, login(>3 симв), password(>5 симв)
 ## 2. Профиль
 ### 2.1 Получение информации профиля
 
-Запрос: `/user/profile` типа `GET`
+Запрос: `/api/v1/user/profile` типа `GET`
 
 Ответ:
 1. 200 ok
@@ -98,7 +98,7 @@ required email, login(>3 симв), password(>5 симв)
 3. 400 json невалидный  
 4. 409 уже есть юзер с такими данными  
 ### 2.3 Получить инфу по логину
-Запрос: `/user/profile/{login}` типа `GET`  
+Запрос: `/api/v1/user/profile/{login}` типа `GET`  
 
 Ответ:  
 1. 200 ok
@@ -114,7 +114,7 @@ required email, login(>3 симв), password(>5 симв)
 2. 404 не найден такой юзер  
 ### 2.4 Загрузить аватарку
 
-Запрос: `/user/avatar` типа `PUT`  
+Запрос: `/api/v1/user/avatar` типа `PUT`  
 Запрос: Картинка(6MB max size), имя поля **avatar**  
 ```html
 <form enctype="multipart/form-data">
@@ -127,7 +127,7 @@ required email, login(>3 симв), password(>5 симв)
 2. 401 не авторизован  
 ## 3. Репозиторий
 ### 3.1 Создать новый репозиторий
-Запрос: `/user/repo` типа `POST`  
+Запрос: `/api/v1/user/repo` типа `POST`  
 Required: name(alphanumeric), 
 ```json
 {
@@ -143,7 +143,7 @@ Required: name(alphanumeric),
 3. 401 unauthorized
 4. 409 есть репак с таким названием  
 ### 3.2 Получить репозиторий по имени юзера и названию
-Запрос: `/repo/{username}/{reponame}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
@@ -160,7 +160,7 @@ Required: name(alphanumeric),
 2. 403 нет прав на просмотр(приватный)  
 3. 404 не найден репозиторий с таким username+reponame  
 ### 3.3 Получить список своих репозиториев
-Запрос: `/user/repo` типа `GET`  
+Запрос: `/api/v1/user/repo` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
@@ -184,7 +184,7 @@ Required: name(alphanumeric),
 }]
 ```
 ### 3.4 Получить список репозиториев юзера его логину
-Запрос: `/user/repo/{username}` типа `GET`  
+Запрос: `/api/v1/user/repo/{username}` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
@@ -210,7 +210,7 @@ Required: name(alphanumeric),
 2. 404 не найден такой юзер  
 ## 4. Ветки и коммиты  
 ### 4.1 Получить список веток по логину и названию репозитория  
-Запрос: `/repo/{username}/{reponame}/branches` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/branches` типа `GET`  
 Ответ:  
 1. 200 ok  
 ```json
@@ -252,10 +252,10 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория)  
 ### 4.2 Получить список коммитов 
-Запрос: `/repo/{username}/{reponame}/commits/hash/{hash}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/commits/hash/{hash}` типа `GET`  
 {commithash} - **хеш коммита** или последний коммит ветки(передается при получении списка веток)
 Образец:  
-`89.208.198.186:8080/repo/logggers/hefherser/commits/hash/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
+`89.208.198.186:8080/api/v1/repo/logggers/hefherser/commits/hash/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
 Ответ:  
 1. 200 ok
 ```json
@@ -289,10 +289,10 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория или коммита)  
 ### 4.3 Получить список коммитов ветки (аналог 4.2)
-Запрос: `/repo/{username}/{reponame}/commits/branch/{branchname}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/commits/branch/{branchname}` типа `GET`  
 {branchname} - обычное название ветки (master, dev,prod ...)  
 Образец:  
-`89.208.198.186:8080/localhost:8080/repo/lox5000/testname/commits/branch/master`  
+`89.208.198.186:8080/api/v1/localhost:8080/repo/lox5000/testname/commits/branch/master`  
 Ответ:  
 1. 200 ok
 ```json
@@ -328,13 +328,13 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория или ветки)  
 ### 4.4 Получить список файлов по коммиту 
-Запрос: `/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`
+Запрос: `/api/v1/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`
 с параметрами:
 - `path` - путь до папки с файлами, например `./`, или `files/`.
 Если параметр пустой, то считается, что  `path=./` 
    
 Образец:  
-`89.208.198.186:8080/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`
+`89.208.198.186:8080/api/v1/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`
 Ответ:  
 1. 200 ok
 ```json
@@ -362,9 +362,9 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера, репозитория, файла или коммита)   
 ### 4.5 Просмотр одного файла  
-Запрос: `/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`  
 Образец:  
-`89.208.198.186:8080/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/main.go`
+`89.208.198.186:8080/api/v1/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/main.go`
 Ответ:  
 1. 200 ok  
 ```json
@@ -387,8 +387,8 @@ Required: name(alphanumeric),
 3. 404 (нет такого юзера, репозитория, файла или коммита)
 
 ### 4.6 Получение HEAD репозитория (его состояния по умолчанию)
-Запрос: `/repo/{username}/{reponame}/head` типа `GET`  
-Образец: `89.208.198.186:8080/repo/logggers/hefherser/head`
+Запрос: `/api/v1/repo/{username}/{reponame}/head` типа `GET`  
+Образец: `89.208.198.186:8080/api/v1/repo/logggers/hefherser/head`
 Ответ:  
 1. 200 ok
     ```json
@@ -416,7 +416,7 @@ Required: name(alphanumeric),
    
 ## 5. Issues  
 ### 5.1 Создать issues  
-Запрос: `/func/repo/{repoID}/issues` типа `POST`  
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `POST`  
 Required: author_id, repo_id,title(>0 symbol),message(>0symbol)    
 Тело: 
 ```json
@@ -436,7 +436,7 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
 4. 403 (нет прав на создание в этом репозитории)  
 5. 404 (нет такого юзера или репозитория)  
 ### 5.2 Получить список issues  
-Запрос: `/func/repo/{repoID}/issues` типа `GET` 
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `GET` 
 Ответ:  
 1.200 ok
 ```json
@@ -469,7 +469,7 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
  3. 403 (нет прав на просмтор в этом репозитории)  
  4. 404 (нет такого юзера или репозитория) 
 ### 5.3 Обновить issues  
-Запрос: `/func/repo/{repoID}/issues` типа `POST`  
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `POST`  
 Можно обновить: message,title,label  
 Required: id
 Тело: 
@@ -488,7 +488,7 @@ Required: id
 4. 403 (нет прав на апдейт)  
 5. 404 (нет такого вопроса или репозитория)  
 ### 5.4 Закрыть issues  
-Запрос: `/func/repo/{repoID}/issues` типа `DELETE`   
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `DELETE`   
 Тело: 
 ```json
 {
@@ -503,7 +503,7 @@ Required: id
 5. 404 (нет такого вопроса или репозитория)  
 ## 6. Stars 
 ### 6.1 Добавить/удалить звезду  
-Запрос: `/func/repo/{repoID}/stars` типа `PUT`  
+Запрос: `/api/v1/func/repo/{repoID}/stars` типа `PUT`  
 Описание: true добавит звезду/false уберет  
 Тело: 
 ```json
@@ -517,7 +517,7 @@ Required: id
 3. 401 (не авторизован)
 4. 409 double vote    
 ### 6.2 Список избранных репозиториев  
-Запрос: `/func/repo/{login}/stars?limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/repo/{login}/stars?limit=100&offset=2` типа `GET`  
 Тело: 
 ```json
 [{
@@ -545,7 +545,7 @@ Required: id
 1. 200 ок  
 2. 404 нет юзера с таким логином  
 ### 6.3 Список юзеров которые лайкнули репозиторий  
-Запрос: `/func/repo/{repoID}/stars/users?limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/repo/{repoID}/stars/users?limit=100&offset=2` типа `GET`  
 Тело: 
 ```json
 [{
@@ -570,7 +570,7 @@ Required: id
 4. 404 нет такого repoID  
 ## 7. News  
 ### 7.1 Список новостей   
-Запрос: `/func/repo/{repoID}/news?limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/repo/{repoID}/news?limit=100&offset=2` типа `GET`  
 limit и offset опциональные параметры  
 Тело: 
 ```json
@@ -603,7 +603,7 @@ limit и offset опциональные параметры
 5. 404 нет репки с таким repoid    
 ## 8. Search  
 ### 8.1 Поиск юзеров среди всей базы   
-Запрос: `/func/search/{params}?query=keksik&limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/search/{params}?query=keksik&limit=100&offset=2` типа `GET`  
 limit и offset опциональные параметры  
 query это левая часть ника, по которой идет поиск  
 params=**allusers**  
@@ -624,7 +624,7 @@ params=**starredrepo**
 **!пока не трогать**
 ## 9. Fork  
 ### 9.1 Ответвление репозитория к себе
-Запрос: `/func/repo/fork` типа `POST`  
+Запрос: `/api/v1/func/repo/fork` типа `POST`  
 Указать либо id от чего форкаемся(from_repo_id), либо связку логин+название репы  
 new_name новое имя которое будет отображатся   
 при указании и id и логин+название репы приоритет будет у id  

@@ -3,10 +3,10 @@ package git
 import "time"
 
 type ParentRepositoryInfo struct {
-	ID          int64  `json:"id,omitempty" valid:"-"`
-	OwnerID     int64  `json:"owner_id,omitempty" valid:"-"`
-	Name        string `json:"name,omitempty" valid:"-"`
-	AuthorLogin string `json:"author_login,omitempty" valid:"-"`
+	ID          *int64  `json:"id,omitempty" valid:"-"`
+	OwnerID     *int64  `json:"owner_id,omitempty" valid:"-"`
+	Name        *string `json:"name,omitempty" valid:"-"`
+	AuthorLogin *string `json:"author_login,omitempty" valid:"-"`
 }
 
 type Repository struct {

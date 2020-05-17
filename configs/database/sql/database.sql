@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS git_repositories
     is_public   BOOLEAN                                            NOT NULL,
     stars       BIGINT                   DEFAULT 0                 NOT NULL,
     forks       BIGINT                   DEFAULT 0                 NOT NULL,
-    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     parent_id   BIGINT                   DEFAULT NULL,
+    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (owner_id) REFERENCES users (id)
         ON DELETE CASCADE
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS git_repositories
         ON DELETE SET NULL
         ON UPDATE CASCADE,
 
-    UNIQUE (id, owner_id)
+    UNIQUE (owner_id, name)
 );
 
 CREATE TABLE IF NOT EXISTS users_git_repositories
@@ -129,8 +129,8 @@ SELECT gr.id,
        gr.is_public,
        gr.stars,
        gr.forks,
+       gr.parent_id,
        gr.created_at,
-       upv.id          AS user_id,
        upv.login       AS user_login,
        upv.email       AS user_email,
        upv.name        AS user_name,
@@ -138,6 +138,41 @@ SELECT gr.id,
        upv.created_at  AS user_created_at
 FROM git_repositories AS gr
          JOIN user_profile_view upv ON gr.owner_id = upv.id;
+
+
+DROP VIEW IF EXISTS git_repository_parent_user_view CASCADE;
+CREATE VIEW git_repository_parent_user_view AS
+SELECT gr.id,
+       gr.owner_id,
+       gr.name,
+       gr.description,
+       gr.is_fork,
+       gr.is_public,
+       gr.stars,
+       gr.forks,
+       gr.parent_id,
+       gr.created_at,
+       gr.user_login,
+       gr.user_email,
+       gr.user_name,
+       gr.user_avatar_path,
+       gr.user_created_at,
+       grparent.owner_id         AS parent_owner_id,
+       grparent.name             AS parent_name,
+       grparent.description      AS parent_description,
+       grparent.is_fork          AS parent_is_fork,
+       grparent.is_public        AS parent_is_public,
+       grparent.stars            AS parent_stars,
+       grparent.forks            AS parent_forks,
+       grparent.parent_id        AS parent_parent_id,
+       grparent.created_at       AS parent_created_at,
+       grparent.user_login       AS parent_user_login,
+       grparent.user_email       AS parent_user_email,
+       grparent.user_name        AS parent_user_name,
+       grparent.user_avatar_path AS parent_user_avatar_path,
+       grparent.user_created_at  AS parent_user_created_at
+FROM git_repository_user_view AS gr
+         LEFT JOIN git_repository_user_view grparent ON gr.parent_id = grparent.id;
 
 
 DROP VIEW IF EXISTS users_git_repositories_view CASCADE;
@@ -216,3 +251,8 @@ SELECT n.id,
        upv.created_at  AS user_created_at
 FROM news AS n
          JOIN user_profile_view AS upv ON n.author_id = upv.id;
+
+-- Indexes
+
+CREATE INDEX IF NOT EXISTS issues_repository_id_idx ON issues (repository_id);
+CREATE INDEX IF NOT EXISTS news_repository_id_idx ON news (repository_id);

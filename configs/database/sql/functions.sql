@@ -80,3 +80,27 @@ $$;
 
 alter function upd_stars_repo() owner to codehub_dev;
 
+DROP FUNCTION IF EXISTS update_forks_on_git_repository_insert_or_delete CASCADE;
+CREATE OR REPLACE FUNCTION update_forks_on_git_repository_insert_or_delete() RETURNS TRIGGER AS
+$$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE git_repositories SET forks = forks + 1 WHERE id = new.parent_id;
+    ELSEIF (TG_OP = 'DELETE') THEN
+        UPDATE git_repositories SET forks = forks - 1 WHERE id = old.parent_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_forks_on_git_repository_insert
+    AFTER INSERT
+    ON git_repositories
+    FOR EACH ROW
+EXECUTE PROCEDURE update_forks_on_git_repository_insert_or_delete();
+
+CREATE TRIGGER update_forks_on_git_repository_delete
+    AFTER DELETE
+    ON git_repositories
+    FOR EACH ROW
+EXECUTE PROCEDURE update_forks_on_git_repository_insert_or_delete();

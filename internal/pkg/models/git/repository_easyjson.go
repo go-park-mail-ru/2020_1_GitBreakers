@@ -328,13 +328,45 @@ func easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		}
 		switch key {
 		case "id":
-			out.ID = int64(in.Int64())
+			if in.IsNull() {
+				in.Skip()
+				out.ID = nil
+			} else {
+				if out.ID == nil {
+					out.ID = new(int64)
+				}
+				*out.ID = int64(in.Int64())
+			}
 		case "owner_id":
-			out.OwnerID = int64(in.Int64())
+			if in.IsNull() {
+				in.Skip()
+				out.OwnerID = nil
+			} else {
+				if out.OwnerID == nil {
+					out.OwnerID = new(int64)
+				}
+				*out.OwnerID = int64(in.Int64())
+			}
 		case "name":
-			out.Name = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.Name = nil
+			} else {
+				if out.Name == nil {
+					out.Name = new(string)
+				}
+				*out.Name = string(in.String())
+			}
 		case "author_login":
-			out.AuthorLogin = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.AuthorLogin = nil
+			} else {
+				if out.AuthorLogin == nil {
+					out.AuthorLogin = new(string)
+				}
+				*out.AuthorLogin = string(in.String())
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -349,13 +381,13 @@ func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.ID != 0 {
+	if in.ID != nil {
 		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
-		out.Int64(int64(in.ID))
+		out.Int64(int64(*in.ID))
 	}
-	if in.OwnerID != 0 {
+	if in.OwnerID != nil {
 		const prefix string = ",\"owner_id\":"
 		if first {
 			first = false
@@ -363,9 +395,9 @@ func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int64(int64(in.OwnerID))
+		out.Int64(int64(*in.OwnerID))
 	}
-	if in.Name != "" {
+	if in.Name != nil {
 		const prefix string = ",\"name\":"
 		if first {
 			first = false
@@ -373,9 +405,9 @@ func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Name))
+		out.String(string(*in.Name))
 	}
-	if in.AuthorLogin != "" {
+	if in.AuthorLogin != nil {
 		const prefix string = ",\"author_login\":"
 		if first {
 			first = false
@@ -383,7 +415,7 @@ func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.AuthorLogin))
+		out.String(string(*in.AuthorLogin))
 	}
 	out.RawByte('}')
 }
