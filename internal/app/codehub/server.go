@@ -180,7 +180,13 @@ func StartNew() {
 	handlersRouter.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/func/repo/fork", repoHandler.Fork).Methods(http.MethodPost)
+
+	CsrfRouter.HandleFunc("/func/repo/fork", repoHandler.Fork).Methods(http.MethodPost)
+
+	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.CreatePullReq).Methods(http.MethodPost)
+	handlersRouter.HandleFunc("/func/repo/{repoID}/pullrequests", CHubHandler.GetPullReqList).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.UndoPullReq).Methods(http.MethodDelete)
+	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.ApproveMerge).Methods(http.MethodPut)
 
 	handlersRouter.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
 

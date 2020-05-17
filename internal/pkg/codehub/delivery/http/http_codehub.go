@@ -449,3 +449,17 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 	return
 
 }
+
+func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
+
+}
+func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
+
+}
+func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
+
+}
