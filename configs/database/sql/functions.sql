@@ -104,3 +104,63 @@ CREATE TRIGGER update_forks_on_git_repository_delete
     ON git_repositories
     FOR EACH ROW
 EXECUTE PROCEDURE update_forks_on_git_repository_insert_or_delete();
+
+-- Mr trigger functions
+
+DROP FUNCTION IF EXISTS update_git_repository_on_merge_requests_insert CASCADE;
+CREATE OR REPLACE FUNCTION update_git_repository_on_merge_requests_insert() RETURNS TRIGGER AS
+$$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE git_repositories SET merge_requests_open = merge_requests_open + 1 WHERE id = new.to_repository_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+DROP FUNCTION IF EXISTS update_git_repository_on_merge_requests_delete CASCADE;
+CREATE OR REPLACE FUNCTION update_git_repository_on_merge_requests_delete() RETURNS TRIGGER AS
+$$
+BEGIN
+    IF (TG_OP = 'DELETE') THEN
+        UPDATE git_repositories SET merge_requests_open = merge_requests_open - 1 WHERE id = old.to_repository_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP FUNCTION IF EXISTS update_git_repository_on_merge_requests_update CASCADE;
+CREATE OR REPLACE FUNCTION update_git_repository_on_merge_requests_update() RETURNS TRIGGER AS
+$$
+BEGIN
+    IF (TG_OP = 'UPDATE') THEN
+        IF (old.is_closed = FALSE AND new.is_closed = TRUE) THEN
+            UPDATE git_repositories SET merge_requests_open = merge_requests_open - 1 WHERE id = old.to_repository_id;
+        ELSEIF (old.is_closed = TRUE AND new.is_closed = FALSE) THEN
+            UPDATE git_repositories SET merge_requests_open = merge_requests_open + 1 WHERE id = new.to_repository_id;
+        END IF;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mr triggers
+
+CREATE TRIGGER update_git_repository_on_merge_requests_insert
+    AFTER INSERT
+    ON merge_requests
+    FOR EACH ROW
+EXECUTE PROCEDURE update_git_repository_on_merge_requests_insert();
+
+CREATE TRIGGER update_git_repository_on_merge_requests_delete
+    AFTER DELETE
+    ON merge_requests
+    FOR EACH ROW
+EXECUTE PROCEDURE update_git_repository_on_merge_requests_delete();
+
+CREATE TRIGGER update_git_repository_on_merge_requests_update
+    AFTER UPDATE
+    ON merge_requests
+    FOR EACH ROW
+EXECUTE PROCEDURE update_git_repository_on_merge_requests_update();

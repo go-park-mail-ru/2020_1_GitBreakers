@@ -122,6 +122,8 @@ func easyjson32ceb8acDecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			out.Stars = int64(in.Int64())
 		case "forks":
 			out.Forks = int64(in.Int64())
+		case "merge_requests_open":
+			out.MergeRequestsOpen = int64(in.Int64())
 		case "author_login":
 			out.AuthorLogin = string(in.String())
 		case "parent_repository_info":
@@ -184,6 +186,11 @@ func easyjson32ceb8acEncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"forks\":"
 		out.RawString(prefix)
 		out.Int64(int64(in.Forks))
+	}
+	{
+		const prefix string = ",\"merge_requests_open\":"
+		out.RawString(prefix)
+		out.Int64(int64(in.MergeRequestsOpen))
 	}
 	if in.AuthorLogin != "" {
 		const prefix string = ",\"author_login\":"
