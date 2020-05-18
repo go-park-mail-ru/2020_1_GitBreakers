@@ -672,15 +672,15 @@ branch указываем название веток текстовое
   "from_repo_id": 440,
   "to_repo_id": 550,
   "branch_from": "string",
-  "branch_to": "string"
+  "branch_to": "string",
+  "message": "kekeka"
 }
 ```
 Ответ:  
 1. 201 created  
 2. 400 невалидный json или сами данные
 3. 401 unauthorized  
-4. 403 форкаем приватный репак    
-5. 409 уже форкали или форкаем свой же репак 
+4. 403 приватный репак  
 ### 10.2 Получение списка всех PullRequest в наш репо
 Запрос: `/api/v1/func/repo/{repoID}/pullrequests?limit=2&offset=0` типа `GET`  
 limit offset лимит и смещение  
