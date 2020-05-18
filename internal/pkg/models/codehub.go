@@ -52,6 +52,8 @@ type PullRequest struct {
 	BranchFrom string    `json:"branch_from" db:"from_repository_branch"`
 	BranchTo   string    `json:"branch_to" db:"to_repository_branch"`
 }
+
+//easyjson:json
 type PullReqSet []PullRequest
 
 //easyjson:json

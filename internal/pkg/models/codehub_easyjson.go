@@ -321,7 +321,73 @@ func (v *PullRequest) UnmarshalJSON(data []byte) error {
 func (v *PullRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels2(l, v)
 }
-func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(in *jlexer.Lexer, out *NewsSet) {
+func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(in *jlexer.Lexer, out *PullReqSet) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(PullReqSet, 0, 1)
+			} else {
+				*out = PullReqSet{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v4 PullRequest
+			(v4).UnmarshalEasyJSON(in)
+			*out = append(*out, v4)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(out *jwriter.Writer, in PullReqSet) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v5, v6 := range in {
+			if v5 > 0 {
+				out.RawByte(',')
+			}
+			(v6).MarshalEasyJSON(out)
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v PullReqSet) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v PullReqSet) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *PullReqSet) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *PullReqSet) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(l, v)
+}
+func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(in *jlexer.Lexer, out *NewsSet) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -338,9 +404,9 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v4 News
-			(v4).UnmarshalEasyJSON(in)
-			*out = append(*out, v4)
+			var v7 News
+			(v7).UnmarshalEasyJSON(in)
+			*out = append(*out, v7)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -349,16 +415,16 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		in.Consumed()
 	}
 }
-func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(out *jwriter.Writer, in NewsSet) {
+func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(out *jwriter.Writer, in NewsSet) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v5, v6 := range in {
-			if v5 > 0 {
+		for v8, v9 := range in {
+			if v8 > 0 {
 				out.RawByte(',')
 			}
-			(v6).MarshalEasyJSON(out)
+			(v9).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -367,27 +433,27 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 // MarshalJSON supports json.Marshaler interface
 func (v NewsSet) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(&w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v NewsSet) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *NewsSet) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(&r, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *NewsSet) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels3(l, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(l, v)
 }
-func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(in *jlexer.Lexer, out *News) {
+func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(in *jlexer.Lexer, out *News) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -434,7 +500,7 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		in.Consumed()
 	}
 }
-func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(out *jwriter.Writer, in News) {
+func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(out *jwriter.Writer, in News) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -484,27 +550,27 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 // MarshalJSON supports json.Marshaler interface
 func (v News) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(&w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v News) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *News) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(&r, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *News) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels4(l, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(l, v)
 }
-func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(in *jlexer.Lexer, out *IssuesSet) {
+func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(in *jlexer.Lexer, out *IssuesSet) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -521,9 +587,9 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v7 Issue
-			(v7).UnmarshalEasyJSON(in)
-			*out = append(*out, v7)
+			var v10 Issue
+			(v10).UnmarshalEasyJSON(in)
+			*out = append(*out, v10)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -532,16 +598,16 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		in.Consumed()
 	}
 }
-func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(out *jwriter.Writer, in IssuesSet) {
+func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(out *jwriter.Writer, in IssuesSet) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v8, v9 := range in {
-			if v8 > 0 {
+		for v11, v12 := range in {
+			if v11 > 0 {
 				out.RawByte(',')
 			}
-			(v9).MarshalEasyJSON(out)
+			(v12).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -550,27 +616,27 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 // MarshalJSON supports json.Marshaler interface
 func (v IssuesSet) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(&w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v IssuesSet) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *IssuesSet) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(&r, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *IssuesSet) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels5(l, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(l, v)
 }
-func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(in *jlexer.Lexer, out *Issue) {
+func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels7(in *jlexer.Lexer, out *Issue) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -621,7 +687,7 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		in.Consumed()
 	}
 }
-func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(out *jwriter.Writer, in Issue) {
+func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels7(out *jwriter.Writer, in Issue) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -681,23 +747,23 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 // MarshalJSON supports json.Marshaler interface
 func (v Issue) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(&w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels7(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Issue) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(w, v)
+	easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels7(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Issue) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(&r, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels7(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Issue) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels6(l, v)
+	easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels7(l, v)
 }

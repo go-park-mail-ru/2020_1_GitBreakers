@@ -681,8 +681,9 @@ branch указываем название веток текстовое
 2. 400 невалидный json или сами данные
 3. 401 unauthorized  
 4. 403 приватный репак  
-### 10.2 Получение списка всех PullRequest в наш репо
-Запрос: `/api/v1/func/repo/{repoID}/pullrequests?limit=2&offset=0` типа `GET`  
+### 10.2 Получение списка всех PullRequest в наш репо или из нашего репока
+Запрос: `/api/v1/func/repo/{repoID}/pullrequests/in?limit=2&offset=0` типа `GET`
+Запрос: `/api/v1/func/repo/{repoID}/pullrequests/out?limit=2&offset=0` типа `GET`   
 limit offset лимит и смещение  
 Ответ:  
 ```json
