@@ -30,22 +30,22 @@ func scanPullReq(rows *sql.Rows) (pullRequests models.PullReqSet, err error) {
 		var pr models.PullRequest
 
 		err = rows.Scan(
-			pr.ID,
-			pr.AuthorId,
-			pr.FromRepoID,
-			pr.ToRepoID,
-			pr.BranchFrom,
-			pr.BranchTo,
-			pr.Title,
-			pr.Message,
-			pr.Label,
-			pr.IsClosed,
-			pr.IsAccepted,
-			pr.CreatedAt,
-			pr.FromRepoName,
-			pr.ToRepoName,
-			pr.FromAuthorLogin,
-			pr.ToAuthorLogin,
+			&pr.ID,
+			&pr.AuthorId,
+			&pr.FromRepoID,
+			&pr.ToRepoID,
+			&pr.BranchFrom,
+			&pr.BranchTo,
+			&pr.Title,
+			&pr.Message,
+			&pr.Label,
+			&pr.IsClosed,
+			&pr.IsAccepted,
+			&pr.CreatedAt,
+			&pr.FromRepoName,
+			&pr.ToRepoName,
+			&pr.FromAuthorLogin,
+			&pr.ToAuthorLogin,
 		)
 		if err != nil {
 			return nil, errors.WithStack(err)
