@@ -25,11 +25,13 @@ func NewPullRequestRepository(db *sqlx.DB) RepoPullReq {
 	}
 }
 
-func scanPullReq(rows *sql.Rows) (pullRequests models.PullReqSet, err error) {
+func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
+	var pullRequests models.PullReqSet
+
 	for rows.Next() {
 		var pr models.PullRequest
 
-		err = rows.Scan(
+		err := rows.Scan(
 			&pr.ID,
 			&pr.AuthorId,
 			&pr.FromRepoID,
@@ -123,7 +125,7 @@ func (repo RepoPullReq) GetAllMROut(repoID int64, limit int64, offset int64) (pu
 				       upvto.login
 				FROM merge_requests_view AS mrv 
 					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
-					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvfrom.id
+					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvto.id
 				WHERE mrv.from_repository_id = $1 LIMIT $2
 				OFFSET $3`,
 		repoID, limit, offset,
@@ -164,7 +166,7 @@ func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pul
 				       upvto.login
 				FROM merge_requests_view AS mrv 
 					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
-					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvfrom.id
+					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvto.id
 				WHERE mrv.to_repository_id = $1 LIMIT $2
 				OFFSET $3`,
 		repoID, limit, offset,
@@ -229,7 +231,7 @@ func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int
 				       upvto.login
 				FROM merge_requests_view AS mrv 
 					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
-					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvfrom.id
+					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvto.id
 				WHERE mrv.author_id = $1 AND mrv.is_closed = FALSE LIMIT $2
 				OFFSET $3`,
 		userID, limit, offset,
