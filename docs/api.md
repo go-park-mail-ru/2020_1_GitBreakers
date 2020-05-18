@@ -685,6 +685,7 @@ branch указываем название веток текстовое
 Запрос: `/api/v1/func/repo/{repoID}/pullrequests/in?limit=2&offset=0` типа `GET`
 Запрос: `/api/v1/func/repo/{repoID}/pullrequests/out?limit=2&offset=0` типа `GET`   
 limit offset лимит и смещение  
+title from_repo to_repo bracch_to branch_from обязательны  
 Ответ:  
 ```json
 [
