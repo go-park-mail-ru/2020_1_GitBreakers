@@ -19,6 +19,7 @@ type Repository struct {
 	IsPublic             bool                 `json:"is_public" valid:"-"`
 	Stars                int64                `json:"stars" valid:"-"`
 	Forks                int64                `json:"forks" valid:"-"`
+	MergeRequestsOpen    int64                `json:"merge_requests_open" valid:"-"`
 	AuthorLogin          string               `json:"author_login,omitempty" valid:"-"`
 	ParentRepositoryInfo ParentRepositoryInfo `json:"parent_repository_info,omitempty" valid:"-"`
 }
