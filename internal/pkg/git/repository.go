@@ -16,6 +16,9 @@ type GitRepoI interface {
 	// In other case returns NoAccess
 	GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error)
 
+	IsRepoExistsByOwnerId(ownerId int64, repoName string) (bool, error)
+	IsRepoExistsByOwnerLogin(ownerLogin string, repoName string) (bool, error)
+
 	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)
 	GetAnyReposByUserLogin(userLogin string, offset, limit int64) ([]git.Repository, error)
 	GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error)
