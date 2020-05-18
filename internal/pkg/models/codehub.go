@@ -38,7 +38,16 @@ type News struct {
 	AuthorImage string    `json:"author_image" db:"user_avatar_path"`
 }
 type PullRequest struct {
-	ID int64
+	ID         int64     `json:"id" db:"id"`
+	AuthorId   int64     `json:"author_id" db:"author_id"`
+	FromRepoID int64     `json:"from_repo_id" db:"from_repository_id"`
+	ToRepoID   int64     `json:"to_repo_id" db:"to_repository_id"`
+	Title      string    `json:"title" db:"title"`
+	Message    string    `json:"message" db:"message"`
+	Label      string    `json:"label" db:"label"`
+	IsClosed   string    `json:"is_closed" db:"is_closed"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	IsAccepted bool      `json:"is_accepted" db:"is_accepted"`
 }
 type PullReqSet []PullRequest
 
