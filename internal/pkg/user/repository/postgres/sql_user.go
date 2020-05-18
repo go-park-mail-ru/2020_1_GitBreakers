@@ -27,7 +27,7 @@ func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, defHost string) U
 }
 func (repo UserRepo) GetUserByIDWithPass(ID int64) (models.User, error) {
 	User := models.User{}
-	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", ID)
+	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path,created_at  FROM users WHERE id = $1", ID)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -49,7 +49,7 @@ func (repo UserRepo) GetUserByIDWithoutPass(ID int64) (models.User, error) {
 
 func (repo UserRepo) GetUserByLoginWithPass(login string) (models.User, error) {
 	User := models.User{}
-	err := repo.db.Get(&User, "SELECT id, login, email, password,name, avatar_path FROM users WHERE login = $1", login)
+	err := repo.db.Get(&User, "SELECT id, login, email, password,name, avatar_path,created_at FROM users WHERE login = $1", login)
 	switch {
 	case err == sql.ErrNoRows:
 		return User, entityerrors.DoesNotExist()

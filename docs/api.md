@@ -66,11 +66,12 @@ required email, login(>3 симв), password(>5 симв)
 1. 200 ok
 ```json
 {
-    "id": "int",
-    "login": "string",
-    "email": "string",
-    "name": "string",
-    "image": "string"
+    "id": 75,
+    "name": "kek",
+    "login": "kek2101",
+    "image": "/static/image/avatar/default.png",
+    "email": "alexloh500@mail.ru",
+    "created_at": "2020-01-01T00:00:00Z"
 }
 ```
 | Ключ          | Значение                 |
@@ -107,7 +108,7 @@ required email, login(>3 симв), password(>5 симв)
     "id": "int",
     "name": "string",
     "login": "string",
-    "image": "http://localhost:8080/static/image/avatar/default.jpg",
+    "image": "/static/image/avatar/default.jpg",
     "email": "string"
 }
 ```
@@ -164,48 +165,54 @@ Required: name(alphanumeric),
 Ответ:
 1. 200 ok  
 ```json
-   [{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-},
+[
     {
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-}]
+        "id": 67,
+        "owner_id": 75,
+        "name": "pes",
+        "description": "",
+        "is_fork": true,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {
+            "id": 37,
+            "owner_id": 51,
+            "name": "horse",
+            "author_login": "cheburek111"
+        }
+    }
+]
 ```
 ### 3.4 Получить список репозиториев юзера его логину
 Запрос: `/api/v1/user/repo/{username}` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
-   [{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-},
-{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-}]
+[
+    {
+        "id": 67,
+        "owner_id": 75,
+        "name": "pes",
+        "description": "",
+        "is_fork": true,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {
+            "id": 37,
+            "owner_id": 51,
+            "name": "horse",
+            "author_login": "cheburek111"
+        }
+    }
+]
 ```
 2. 404 не найден такой юзер  
 ## 4. Ветки и коммиты  
@@ -216,34 +223,18 @@ Required: name(alphanumeric),
 ```json
 [
     {
-        "name": "xp/git-lfs",
-        "commit": {
-            "commit_hash": "23c70a09237681d7a0d908220a1a1af44ee74229",
-            "commit_author_name": "ᴜɴᴋɴᴡᴏɴ",
-            "commit_author_email": "u@gogs.io",
-            "commit_author_when": "2020-03-30T00:09:37+08:00",
-            "committer_name": "ᴜɴᴋɴᴡᴏɴ",
-            "committer_email": "u@gogs.io",
-            "committer_when": "2020-03-30T00:09:37+08:00",
-            "tree_hash": "c79a6098241e27d82de8f3a916dfa3d6ce0d9b7d",
-            "commit_parents": [
-                "5164d782afd860a5642c9bf71fea5f1723151ea6"
-            ]
-        }
-    },
-    {
         "name": "master",
         "commit": {
-            "commit_hash": "07818d5fa5aef7dd7dca1d556f59c7a146a9b00c",
-            "commit_author_name": "ᴜɴᴋɴᴡᴏɴ",
-            "commit_author_email": "u@gogs.io",
-            "commit_author_when": "2020-04-05T06:36:08+08:00",
-            "committer_name": "GitHub",
-            "committer_email": "noreply@github.com",
-            "committer_when": "2020-04-05T06:36:08+08:00",
-            "tree_hash": "14c89609a04f269123413f676a8cbe68c197de07",
+            "commit_hash": "89944a4f685579117fb8a36649cdd4b99b3d56e6",
+            "commit_author_name": "Deiklov",
+            "commit_author_email": "romanov408g@mail.ru",
+            "commit_author_when": "2020-04-27T17:58:11+03:00",
+            "committer_name": "Deiklov",
+            "committer_email": "romanov408g@mail.ru",
+            "committer_when": "2020-04-27T17:58:11+03:00",
+            "tree_hash": "9e60190702cadececd04cd8faf82aa8659e57ada",
             "commit_parents": [
-                "bae1d6ccd81cd427382a2456e7c3646bdac9cf46"
+                "1bc2f16b52e5cbbb3b64e1f050fc25009e9a4404"
             ]
         }
     }
