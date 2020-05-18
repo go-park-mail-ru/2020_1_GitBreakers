@@ -7,6 +7,7 @@ import (
 	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/issues"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/merge"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/news"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/search"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/stars"
@@ -229,6 +230,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repoCodeHubStar := stars.NewStarRepository(db)
 	repoCodeHubNews := news.NewRepoNews(db)
 	repoCodeHubSearch := search.NewSearchRepository(db)
+	repoMerge := merge.NewPullRequestRepository(db)
 
 	codeHubUseCase := usecaseCodeHub.UCCodeHub{
 		RepoIssue:  &repoCodeHubIssue,
@@ -237,6 +239,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		GitRepo:    repogit,
 		UserRepo:   userRepos,
 		SearchRepo: repoCodeHubSearch,
+		RepoMerge:  repoMerge,
 	}
 
 	codeHubDelivery := http4.HttpCodehub{

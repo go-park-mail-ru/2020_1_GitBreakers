@@ -460,7 +460,7 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	userID := res.(int64)
+
 }
 
 func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
@@ -470,7 +470,7 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	userID := res.(int64)
+
 }
 func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
@@ -479,7 +479,7 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	userID := res.(int64)
+
 }
 func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
@@ -488,7 +488,7 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	userID := res.(int64)
+
 }
 func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value("UserID")
@@ -497,5 +497,4 @@ func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	userID := res.(int64)
 }
