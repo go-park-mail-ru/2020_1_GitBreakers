@@ -898,12 +898,23 @@ func (repo Repository) GetRepoHead(userLogin, repoName string) (defaultBranch gi
 }
 
 func (repo Repository) Fork(forkRepoName string, userID, repoBaseID int64) (err error) {
+	var newForkRepoPath string
+
 	tx, err := repo.db.Begin()
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	defer func() {
-		err = finishTransaction(tx, err)
+		if err = finishTransaction(tx, err); err != nil {
+			if newForkRepoPath != "" {
+				if _, existsErr := os.Stat(newForkRepoPath); !os.IsNotExist(existsErr) {
+					if removeErr := os.RemoveAll(newForkRepoPath); removeErr != nil {
+						err = errors.WithMessage(err, removeErr.Error())
+					}
+				}
+			}
+		}
 	}()
 
 	forkFromRepo, err := getByIdQ(tx, repoBaseID)
@@ -920,19 +931,10 @@ func (repo Repository) Fork(forkRepoName string, userID, repoBaseID int64) (err 
 		return entityerrors.AlreadyExist()
 	}
 
-	newForkRepoPath, err := repo.createRepoPath(tx, userID, forkRepoName)
+	newForkRepoPath, err = repo.createRepoPath(tx, userID, forkRepoName)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err != nil {
-			if _, existsErr := os.Stat(newForkRepoPath); !os.IsNotExist(existsErr) {
-				if removeErr := os.RemoveAll(newForkRepoPath); removeErr != nil {
-					err = errors.WithMessage(err, removeErr.Error())
-				}
-			}
-		}
-	}()
 
 	newForkedRepo := git.Repository{
 		OwnerID:     userID,
