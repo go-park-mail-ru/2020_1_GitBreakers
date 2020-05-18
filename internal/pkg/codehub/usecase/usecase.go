@@ -152,21 +152,21 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (
 	}
 }
 func (UC *UCCodeHub) CreatePL(request models.PullRequest) error {
-	return UC.RepoMerge.CreatePullReq(request)
+	return UC.RepoMerge.CreateMR(request)
 }
 func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository) (models.PullReqSet, error) {
 	//todo чекнуть что id нормальный передается
-	return UC.RepoMerge.GetAllPullReqIn(repo.ID)
+	return UC.RepoMerge.GetAllMRIn(repo.ID, 100, 0)
 }
 func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository) (models.PullReqSet, error) {
-	return UC.RepoMerge.GetAllPullReqOut(repo.ID)
+	return UC.RepoMerge.GetAllMROut(repo.ID, 100, 0)
 }
 func (UC *UCCodeHub) ApprovePL(plID int64) error {
 	return UC.RepoMerge.ApproveMerge(plID)
 }
 func (UC *UCCodeHub) ClosePL(plID int64) error {
-	return UC.RepoMerge.RejectPullReq(plID)
+	return UC.RepoMerge.RejectMR(plID)
 }
 func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
-	return UC.RepoMerge.GetOpenedPullReqForUser(userID, 100, 0)
+	return UC.RepoMerge.GetOpenedMRForUser(userID, 100, 0)
 }
