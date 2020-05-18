@@ -1,22 +1,36 @@
 package merge
 
-import "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+import (
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	"github.com/jmoiron/sqlx"
+)
 
 type RepoPullReq struct {
+	DB *sqlx.DB
 }
 
-func (repo RepoPullReq) CreatePullReq(authorID int64, hash1 string, fromID int64, hash2 string, toID int64) error {
+func NewPullRequestRepository(db *sqlx.DB) RepoPullReq {
+	return RepoPullReq{
+		DB: db,
+	}
+}
+
+func (repo RepoPullReq) CreatePullReq(request models.PullRequest) error {
 	return nil
 }
 
-func (repo RepoPullReq) GetAllPullReq(repoID int64) (models.PullReqSet, error) {
+func (repo RepoPullReq) GetAllPullReqOut(repoID int64) (models.PullReqSet, error) {
 	return models.PullReqSet{}, nil
 }
 
-func (repo RepoPullReq) ApproveMerge(pullReqID int64, userID int64) error {
+func (repo RepoPullReq) GetAllPullReqIn(repoID int64) (models.PullReqSet, error) {
+	return models.PullReqSet{}, nil
+}
+
+func (repo RepoPullReq) ApproveMerge(pullReqID int64) error {
 	return nil
 }
 
-func (repo RepoPullReq) GetOnePullReq(pullReqID int64, userID int64) error {
-	return nil
+func (repo RepoPullReq) GetOpenedPullReqForUser(userID int64) (models.PullReqSet, error) {
+	return models.PullReqSet{}, nil
 }
