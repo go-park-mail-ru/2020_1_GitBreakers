@@ -533,6 +533,42 @@ func (repo Repository) CheckReadAccess(currentUserId *int64, userLogin, repoName
 	return haveAccess, nil
 }
 
+func (repo Repository) CheckReadAccessById(currentUserId *int64, repoId int64) (bool, error) {
+	var isExist bool
+	err := repo.db.QueryRow(`
+			SELECT EXISTS(
+			    SELECT 1 FROM git_repositories WHERE id = $1
+			)`,
+		repoId,
+	).Scan(
+		&isExist,
+	)
+	if err != nil {
+		return false, err
+	}
+	if !isExist {
+		return false, entityerrors.DoesNotExist()
+	}
+
+	var haveAccess bool
+	err = repo.db.QueryRow(`
+		SELECT EXISTS(
+				SELECT 1
+				FROM users_git_repositories_view AS ugrv
+				WHERE ugrv.repository_id = $1
+		    		AND (ugrv.git_repository_is_public = TRUE 
+		    		         OR ugrv.user_id = $2 AND ugrv.role <> $3)
+		    )`,
+		repoId, currentUserId, perm.NoAccess(),
+	).Scan(
+		&haveAccess,
+	)
+	if err != nil {
+		return false, err
+	}
+	return haveAccess, nil
+}
+
 func (repo Repository) GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error) {
 	var permissionRole string
 	err := repo.db.QueryRow(`

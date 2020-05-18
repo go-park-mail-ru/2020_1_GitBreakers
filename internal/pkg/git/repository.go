@@ -12,6 +12,7 @@ type GitRepoI interface {
 	//DeleteByID(id int) error // TODO
 	//DeleteByName(userId int, repoName string) error // TODO
 	CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error)
+	CheckReadAccessById(currentUserId *int64, repoId int64) (bool, error)
 	// GetPermission returns permission: for public repo - write and higher, for private - read and higher
 	// In other case returns NoAccess
 	GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error)
