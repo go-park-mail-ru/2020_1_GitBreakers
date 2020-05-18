@@ -663,7 +663,7 @@ new_name новое имя которое будет отображатся
 5. 409 уже форкали или форкаем свой же репак  
 ## 10. PullRequest  
 ### 10.1 Создание PullRequest
-Запрос: `/api/v1//func/repo/pullrequests` типа `POST`  
+Запрос: `/api/v1/func/repo/pullrequests` типа `POST`  
 branch указываем название веток текстовое  
 ```json
 {
