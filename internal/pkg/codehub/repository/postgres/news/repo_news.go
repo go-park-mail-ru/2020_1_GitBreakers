@@ -28,7 +28,10 @@ func (R *RepoNews) GetNews(repoID int64, limit int64, offset int64) (models.News
 	       				created_at,
 	       				user_login,
 	       				user_avatar_path
-				FROM news_users_view WHERE repository_id=$1 LIMIT $2 OFFSET $3`,
+				FROM news_users_view 
+				WHERE repository_id=$1
+				ORDER BY created_at DESC
+				LIMIT $2 OFFSET $3`,
 		repoID, limit, offset)
 	if err != nil {
 		return nil, errors.WithStack(err)
