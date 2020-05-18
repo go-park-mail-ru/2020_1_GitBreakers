@@ -43,7 +43,7 @@ type PullRequest struct {
 	AuthorId   int64     `json:"author_id" db:"author_id"`
 	FromRepoID int64     `json:"from_repo_id" db:"from_repository_id"`
 	ToRepoID   int64     `json:"to_repo_id" db:"to_repository_id"`
-	Title      string    `json:"title" db:"title"`
+	Title      string    `json:"title" db:"title" valid:"stringlength(1|512)"`
 	Message    string    `json:"message" db:"message"`
 	Label      string    `json:"label" db:"label"`
 	IsClosed   bool      `json:"is_closed" db:"is_closed"`

@@ -469,8 +469,14 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plModel.AuthorId = userID
+	isCorrect, err := govalidator.ValidateStruct(plModel)
+	if !isCorrect || err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	err := GD.CodeHubUC.CreatePL(plModel)
+	err = GD.CodeHubUC.CreatePL(plModel)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -550,6 +556,12 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	plModel := models.PullRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
