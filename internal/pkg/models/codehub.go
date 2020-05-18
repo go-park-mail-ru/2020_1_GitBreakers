@@ -48,6 +48,8 @@ type PullRequest struct {
 	IsClosed   bool      `json:"is_closed" db:"is_closed"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	IsAccepted bool      `json:"is_accepted" db:"is_accepted"`
+	BranchFrom string    `json:"branch_from" db:"branch_from"`
+	BranchTo   string    `json:"branch_to" db:"branch_to"`
 }
 type PullReqSet []PullRequest
 
