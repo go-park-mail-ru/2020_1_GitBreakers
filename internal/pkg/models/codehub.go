@@ -45,7 +45,7 @@ type PullRequest struct {
 	Title      string    `json:"title" db:"title"`
 	Message    string    `json:"message" db:"message"`
 	Label      string    `json:"label" db:"label"`
-	IsClosed   string    `json:"is_closed" db:"is_closed"`
+	IsClosed   bool      `json:"is_closed" db:"is_closed"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	IsAccepted bool      `json:"is_accepted" db:"is_accepted"`
 }
