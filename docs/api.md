@@ -713,8 +713,7 @@ limit offset лимит и смещение
 Ответ:  
 ```json
 {
-  "mr_id": 20, 
-  "repo_id": 50
+  "mr_id": 20 
 }
 ```
 1. 200 ok  
@@ -726,8 +725,7 @@ limit offset лимит и смещение
 Ответ:  
 ```json
 {
-  "mr_id":20, 
-  "repo_id": 50
+  "mr_id":20
 }
 ```
 1. 200 ok  
