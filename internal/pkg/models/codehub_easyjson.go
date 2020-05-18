@@ -221,6 +221,10 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			out.BranchFrom = string(in.String())
 		case "branch_to":
 			out.BranchTo = string(in.String())
+		case "to_repo_name":
+			out.ToRepoName = string(in.String())
+		case "to_author_name":
+			out.ToAuthorName = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -294,6 +298,16 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		const prefix string = ",\"branch_to\":"
 		out.RawString(prefix)
 		out.String(string(in.BranchTo))
+	}
+	{
+		const prefix string = ",\"to_repo_name\":"
+		out.RawString(prefix)
+		out.String(string(in.ToRepoName))
+	}
+	{
+		const prefix string = ",\"to_author_name\":"
+		out.RawString(prefix)
+		out.String(string(in.ToAuthorName))
 	}
 	out.RawByte('}')
 }
