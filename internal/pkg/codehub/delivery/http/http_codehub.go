@@ -454,15 +454,39 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
-
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
 }
 
 func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
-
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
 }
 func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
-
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
 }
 func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
-
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
 }

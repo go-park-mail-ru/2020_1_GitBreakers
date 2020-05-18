@@ -4,6 +4,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
@@ -16,6 +17,7 @@ type UCCodeHub struct {
 	GitRepo    git.GitRepoI
 	UserRepo   user.RepoUser
 	SearchRepo codehub.RepoSearchI
+	RepoMerge  codehub.RepoMergeI
 }
 
 func (UC *UCCodeHub) ModifyStar(star models.Star) error {
@@ -148,4 +150,23 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (
 	default:
 		return nil, entityerrors.Invalid()
 	}
+}
+func (UC *UCCodeHub) CreatePL(request models.PullRequest) error {
+	return UC.RepoMerge.CreatePullReq(request)
+}
+func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository) (models.PullReqSet, error) {
+	//todo чекнуть что id нормальный передается
+	return UC.RepoMerge.GetAllPullReqIn(repo.ID)
+}
+func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository) (models.PullReqSet, error) {
+	return UC.RepoMerge.GetAllPullReqOut(repo.ID)
+}
+func (UC *UCCodeHub) ApprovePL(plID int64) error {
+	return UC.RepoMerge.ApproveMerge(plID)
+}
+func (UC *UCCodeHub) ClosePL(plID int64) error {
+	return UC.RepoMerge.RejectPullReq(plID)
+}
+func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
+	return UC.RepoMerge.GetOpenedPullReqForUser(userID)
 }
