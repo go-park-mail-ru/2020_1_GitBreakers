@@ -223,12 +223,12 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			out.BranchTo = string(in.String())
 		case "to_repo_name":
 			out.ToRepoName = string(in.String())
-		case "to_author_name":
-			out.ToAuthorName = string(in.String())
+		case "to_author_login":
+			out.ToAuthorLogin = string(in.String())
 		case "from_repo_name":
 			out.FromRepoName = string(in.String())
-		case "from_author_name":
-			out.FromAuthorName = string(in.String())
+		case "from_author_login":
+			out.FromAuthorLogin = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -309,9 +309,9 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		out.String(string(in.ToRepoName))
 	}
 	{
-		const prefix string = ",\"to_author_name\":"
+		const prefix string = ",\"to_author_login\":"
 		out.RawString(prefix)
-		out.String(string(in.ToAuthorName))
+		out.String(string(in.ToAuthorLogin))
 	}
 	{
 		const prefix string = ",\"from_repo_name\":"
@@ -319,9 +319,9 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		out.String(string(in.FromRepoName))
 	}
 	{
-		const prefix string = ",\"from_author_name\":"
+		const prefix string = ",\"from_author_login\":"
 		out.RawString(prefix)
-		out.String(string(in.FromAuthorName))
+		out.String(string(in.FromAuthorLogin))
 	}
 	out.RawByte('}')
 }

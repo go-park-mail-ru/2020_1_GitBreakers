@@ -39,22 +39,22 @@ type News struct {
 }
 
 type PullRequest struct {
-	ID             int64     `json:"id" db:"id"`
-	AuthorId       int64     `json:"author_id" db:"author_id"`
-	FromRepoID     int64     `json:"from_repo_id" db:"from_repository_id"`
-	ToRepoID       int64     `json:"to_repo_id" db:"to_repository_id"`
-	Title          string    `json:"title" db:"title" valid:"stringlength(1|512)"`
-	Message        string    `json:"message" db:"message"`
-	Label          string    `json:"label" db:"label"`
-	IsClosed       bool      `json:"is_closed" db:"is_closed"`
-	CreatedAt      time.Time `json:"created_at" db:"created_at"`
-	IsAccepted     bool      `json:"is_accepted" db:"is_accepted"`
-	BranchFrom     string    `json:"branch_from" db:"from_repository_branch"`
-	BranchTo       string    `json:"branch_to" db:"to_repository_branch"`
-	ToRepoName     string    `json:"to_repo_name" db:""`
-	ToAuthorName   string    `json:"to_author_name" db:""`
-	FromRepoName   string    `json:"from_repo_name" db:""`
-	FromAuthorName string    `json:"from_author_name" db:""`
+	ID              int64     `json:"id" db:"id"`
+	AuthorId        int64     `json:"author_id" db:"author_id"`
+	FromRepoID      int64     `json:"from_repo_id" db:"from_repository_id"`
+	ToRepoID        int64     `json:"to_repo_id" db:"to_repository_id"`
+	Title           string    `json:"title" db:"title" valid:"stringlength(1|512)"`
+	Message         string    `json:"message" db:"message"`
+	Label           string    `json:"label" db:"label"`
+	IsClosed        bool      `json:"is_closed" db:"is_closed"`
+	CreatedAt       time.Time `json:"created_at" db:"created_at"`
+	IsAccepted      bool      `json:"is_accepted" db:"is_accepted"`
+	BranchFrom      string    `json:"branch_from" db:"from_repository_branch"`
+	BranchTo        string    `json:"branch_to" db:"to_repository_branch"`
+	ToRepoName      string    `json:"to_repo_name" db:""`
+	ToAuthorLogin   string    `json:"to_author_login" db:""`
+	FromRepoName    string    `json:"from_repo_name" db:""`
+	FromAuthorLogin string    `json:"from_author_login" db:""`
 }
 
 //easyjson:json

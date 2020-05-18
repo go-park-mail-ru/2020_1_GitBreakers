@@ -1,10 +1,12 @@
 package merge
 
 import (
+	"database/sql"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -21,6 +23,37 @@ func NewPullRequestRepository(db *sqlx.DB) RepoPullReq {
 	return RepoPullReq{
 		db: db,
 	}
+}
+
+func scanPullReq(rows *sql.Rows) (pullRequests models.PullReqSet, err error) {
+	for rows.Next() {
+		var pr models.PullRequest
+
+		err = rows.Scan(
+			pr.ID,
+			pr.AuthorId,
+			pr.FromRepoID,
+			pr.ToRepoID,
+			pr.BranchFrom,
+			pr.BranchTo,
+			pr.Title,
+			pr.Message,
+			pr.Label,
+			pr.IsClosed,
+			pr.IsAccepted,
+			pr.CreatedAt,
+			pr.FromRepoName,
+			pr.ToRepoName,
+			pr.FromAuthorLogin,
+			pr.ToAuthorLogin,
+		)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		pullRequests = append(pullRequests, pr)
+	}
+	return pullRequests, nil
 }
 
 func (repo RepoPullReq) CreateMR(request models.PullRequest) error {
@@ -64,25 +97,172 @@ func (repo RepoPullReq) CreateMR(request models.PullRequest) error {
 		request.Message,
 		request.Label,
 	)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
 }
 
-func (repo RepoPullReq) GetAllMROut(repoID int64, limit int64, offset int64) (models.PullReqSet, error) {
-	return models.PullReqSet{}, nil
+func (repo RepoPullReq) GetAllMROut(repoID int64, limit int64, offset int64) (pullRequests models.PullReqSet, err error) {
+	rows, err := repo.db.Query(`
+				SELECT mrv.id,
+					   mrv.author_id,
+					   mrv.from_repository_id,
+					   mrv.to_repository_id,
+					   mrv.from_repository_branch,
+					   mrv.to_repository_branch,
+					   mrv.title,
+					   mrv.message,
+					   mrv.label,
+					   mrv.is_closed,
+					   mrv.is_accepted,
+					   mrv.created_at,
+				       mrv.git_repository_from_name,
+				       mrv.git_repository_to_name,
+				       upvfrom.login,
+				       upvto.login
+				FROM merge_requests_view AS mrv 
+					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
+					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvfrom.id
+				WHERE mrv.from_repository_id = $1 LIMIT $2
+				OFFSET $3`,
+		repoID, limit, offset,
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = errors.WithMessage(err, closeErr.Error())
+		}
+	}()
+
+	if pullRequests, err = scanPullReq(rows); err != nil {
+		return nil, err
+	}
+
+	return pullRequests, nil
 }
 
-func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (models.PullReqSet, error) {
-	return models.PullReqSet{}, nil
+func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pullRequests models.PullReqSet, err error) {
+	rows, err := repo.db.Query(`
+				SELECT mrv.id,
+					   mrv.author_id,
+					   mrv.from_repository_id,
+					   mrv.to_repository_id,
+					   mrv.from_repository_branch,
+					   mrv.to_repository_branch,
+					   mrv.title,
+					   mrv.message,
+					   mrv.label,
+					   mrv.is_closed,
+					   mrv.is_accepted,
+					   mrv.created_at,
+				       mrv.git_repository_from_name,
+				       mrv.git_repository_to_name,
+				       upvfrom.login,
+				       upvto.login
+				FROM merge_requests_view AS mrv 
+					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
+					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvfrom.id
+				WHERE mrv.to_repository_id = $1 LIMIT $2
+				OFFSET $3`,
+		repoID, limit, offset,
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = errors.WithMessage(err, closeErr.Error())
+		}
+	}()
+
+	if pullRequests, err = scanPullReq(rows); err != nil {
+		return nil, err
+	}
+
+	return pullRequests, nil
 }
 
 func (repo RepoPullReq) ApproveMerge(pullReqID int64) error {
+	err := repo.db.QueryRow(`
+			UPDATE merge_requests
+			SET is_closed   = TRUE,
+				is_accepted = TRUE
+			WHERE id = $1
+			RETURNING id`, pullReqID).Scan(&pullReqID)
+	switch {
+	case err == sql.ErrNoRows:
+		return entityerrors.DoesNotExist()
+	case err != nil:
+		return errors.WithStack(err)
+	}
+
 	return nil
 }
 
-func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int64) (models.PullReqSet, error) {
-	return models.PullReqSet{}, nil
+func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int64) (pullRequests models.PullReqSet, err error) {
+	var isUserExist bool
+	if err := repo.db.QueryRow(checkAuthorExistSQL, userID).Scan(&isUserExist); err != nil {
+		return nil, err
+	} else if !isUserExist {
+		return nil, entityerrors.DoesNotExist()
+	}
+
+	rows, err := repo.db.Query(`
+				SELECT mrv.id,
+					   mrv.author_id,
+					   mrv.from_repository_id,
+					   mrv.to_repository_id,
+					   mrv.from_repository_branch,
+					   mrv.to_repository_branch,
+					   mrv.title,
+					   mrv.message,
+					   mrv.label,
+					   mrv.is_closed,
+					   mrv.is_accepted,
+					   mrv.created_at,
+				       mrv.git_repository_from_name,
+				       mrv.git_repository_to_name,
+				       upvfrom.login,
+				       upvto.login
+				FROM merge_requests_view AS mrv 
+					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
+					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvfrom.id
+				WHERE mrv.author_id = $1 AND mrv.is_closed = FALSE LIMIT $2
+				OFFSET $3`,
+		userID, limit, offset,
+	)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = errors.WithMessage(err, closeErr.Error())
+		}
+	}()
+
+	if pullRequests, err = scanPullReq(rows); err != nil {
+		return nil, err
+	}
+
+	return pullRequests, nil
 }
 
 func (repo RepoPullReq) RejectMR(mrID int64) error {
+	err := repo.db.QueryRow(`
+			UPDATE merge_requests
+			SET is_closed   = TRUE,
+				is_accepted = FALSE
+			WHERE id = $1
+			RETURNING id`, mrID).Scan(&mrID)
+	switch {
+	case err == sql.ErrNoRows:
+		return entityerrors.DoesNotExist()
+	case err != nil:
+		return errors.WithStack(err)
+	}
+
 	return nil
 }
