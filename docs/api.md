@@ -704,6 +704,33 @@ limit offset лимит и смещение
 ]
 ```
 1. 200 ok  
-2. 400 невалидный json или сами данные
-3. 401 unauthorized 
+2. 400 невалидный json или сами данные  
+3. 401 unauthorized  
 4. 403 лезем в приватный репак   
+### 10.3 Принять PullRequest
+Запрос: `/api/v1/func/repo/pullrequests` типа `PUT`  
+
+Ответ:  
+```json
+{
+  "mr_id": 20, 
+  "repo_id": 50
+}
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные(id не существуют)  
+3. 401 unauthorized  
+4. 403 лезем в чужой реквест  
+### 10.4 Закрыть PullRequest
+Запрос: `/api/v1/func/repo/pullrequests` типа `DELETE`  
+Ответ:  
+```json
+{
+  "mr_id":20, 
+  "repo_id": 50
+}
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные(id не существуют)  
+3. 401 unauthorized  
+4. 403 лезем в какой-то чужой реквест     
