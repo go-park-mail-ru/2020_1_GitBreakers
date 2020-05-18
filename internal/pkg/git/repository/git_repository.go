@@ -553,6 +553,14 @@ func (repo Repository) GetPermission(currentUserId *int64, userLogin, repoName s
 	return perm.Permission(permissionRole), nil
 }
 
+func (repo Repository) IsRepoExistsByOwnerId(ownerId int64, repoName string) (bool, error) {
+	return isRepoExistsInDbByOwnerId(repo.db, ownerId, repoName)
+}
+
+func (repo Repository) IsRepoExistsByOwnerLogin(ownerLogin string, repoName string) (bool, error) {
+	return isRepoExistsInDbByOwnerLogin(repo.db, ownerLogin, repoName)
+}
+
 func (repo Repository) GetBranchesByName(userLogin, repoName string) ([]git.Branch, error) {
 	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
 	switch {
