@@ -20,7 +20,7 @@ type UCCodeHubI interface {
 	CreatePL(request models.PullRequest) error
 	GetPLIn(repo gitmodels.Repository) (models.PullReqSet, error)
 	GetPLOut(repo gitmodels.Repository) (models.PullReqSet, error)
-	ApprovePL(plID int64) error
-	ClosePL(plID int64) error
+	ApprovePL(plID int64, userID int64) error
+	ClosePL(plID int64, userID int64) error
 	GetAllMRUser(userID int64) (models.PullReqSet, error)
 }

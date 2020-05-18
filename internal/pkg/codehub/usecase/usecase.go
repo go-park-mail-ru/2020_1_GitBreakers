@@ -161,12 +161,18 @@ func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository) (models.PullReqSet, erro
 func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository) (models.PullReqSet, error) {
 	return UC.RepoMerge.GetAllMROut(repo.ID, 100, 0)
 }
-func (UC *UCCodeHub) ApprovePL(plID int64) error {
+func (UC *UCCodeHub) ApprovePL(plID int64, userID int64) error {
+	//todo check read access
 	return UC.RepoMerge.ApproveMerge(plID)
 }
-func (UC *UCCodeHub) ClosePL(plID int64) error {
+func (UC *UCCodeHub) ClosePL(plID int64, userID int64) error {
+	//todo check read access
 	return UC.RepoMerge.RejectMR(plID)
 }
 func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
-	return UC.RepoMerge.GetOpenedMRForUser(userID, 100, 0)
+	MRList, err := UC.RepoMerge.GetOpenedMRForUser(userID, 100, 0)
+	if err != nil {
+		return models.PullReqSet{}, err
+	}
+	return MRList, err
 }

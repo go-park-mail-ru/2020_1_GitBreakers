@@ -558,10 +558,28 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	userID := res.(int64)
 	plModel := models.PullRequest{}
 	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	plModel.AuthorId = userID
+	err := GD.CodeHubUC.ApprovePL(plModel.ID, userID)
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -573,6 +591,30 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	userID := res.(int64)
+	plModel := models.PullRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	plModel.AuthorId = userID
+	err := GD.CodeHubUC.ClosePL(plModel.ID, userID)
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 }
 func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) {
@@ -580,6 +622,19 @@ func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) 
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+	pllist, err := GD.CodeHubUC.GetAllMRUser(userID)
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(pllist, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
