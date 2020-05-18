@@ -731,4 +731,28 @@ limit offset лимит и смещение
 1. 200 ok  
 2. 400 невалидный json или сами данные(id не существуют)  
 3. 401 unauthorized  
-4. 403 лезем в какой-то чужой реквест     
+4. 403 лезем в какой-то чужой реквест 
+### 10.5 Все PullRequest юзера
+Запрос: `/api/v1/user/pullrequests?limit=1&offset=0` типа `GET`  
+Ответ:  
+```json
+[
+    {
+      "id": "kekemdaa",
+      "author_id": 20,
+      "from_repo_id": 440,
+      "to_repo_id": 550,
+      "branch_from": "dev",
+      "branch_to": "master",
+      "title": "pl number one",
+      "message": "kekeke mdaa",
+      "label": "warn",
+      "is_closed": false,
+      "is_accepted": true,
+      "created_at":  "2020-05-17T22:18:18.711999+03:00"
+    }
+]
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные(id не существуют)  
+3. 401 unauthorized  

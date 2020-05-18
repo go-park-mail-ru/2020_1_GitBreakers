@@ -7,7 +7,7 @@ type RepoMergeI interface {
 	GetAllPullReqOut(repoID int64) (models.PullReqSet, error)
 	GetAllPullReqIn(repoID int64) (models.PullReqSet, error)
 	ApproveMerge(pullReqID int64) error
-	GetOpenedPullReqForUser(userID int64) (models.PullReqSet, error)
+	GetOpenedPullReqForUser(userID int64, limit int64, offset int64) (models.PullReqSet, error)
 	RejectPullReq(mrID int64) error
 	// GetOnePullReq(pullReqID int64) (models.PullRequest, error)
 }

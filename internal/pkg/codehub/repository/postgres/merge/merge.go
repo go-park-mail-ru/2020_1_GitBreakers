@@ -31,7 +31,7 @@ func (repo RepoPullReq) ApproveMerge(pullReqID int64) error {
 	return nil
 }
 
-func (repo RepoPullReq) GetOpenedPullReqForUser(userID int64) (models.PullReqSet, error) {
+func (repo RepoPullReq) GetOpenedPullReqForUser(userID int64, limit int64, offset int64) (models.PullReqSet, error) {
 	return models.PullReqSet{}, nil
 }
 

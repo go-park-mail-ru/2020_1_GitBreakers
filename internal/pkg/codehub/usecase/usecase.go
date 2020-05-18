@@ -168,5 +168,5 @@ func (UC *UCCodeHub) ClosePL(plID int64) error {
 	return UC.RepoMerge.RejectPullReq(plID)
 }
 func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
-	return UC.RepoMerge.GetOpenedPullReqForUser(userID)
+	return UC.RepoMerge.GetOpenedPullReqForUser(userID, 100, 0)
 }

@@ -490,3 +490,12 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := res.(int64)
 }
+func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value("UserID")
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+}
