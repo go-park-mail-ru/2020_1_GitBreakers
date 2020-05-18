@@ -662,24 +662,48 @@ new_name новое имя которое будет отображатся
 4. 403 форкаем приватный репак    
 5. 409 уже форкали или форкаем свой же репак  
 ## 10. PullRequest  
-### 10.1 Создание pullRequest
-Запрос: `/api/v1/func/repo/fork` типа `POST`  
-Указать либо id от чего форкаемся(from_repo_id), либо связку логин+название репы  
-new_name новое имя которое будет отображатся   
-при указании и id и логин+название репы приоритет будет у id  
+### 10.1 Создание PullRequest
+Запрос: `/api/v1//func/repo/pullrequests` типа `POST`  
+branch указываем название веток текстовое  
 ```json
 {
-  "title": "string",
-  "author_id": "int",
-  "from_repo_id": "int",
-  "to_repo_id": "int",
-  "branch_from": "int",
-  "branch_to": "int",
+  "title": "kekemdaa",
+  "author_id": 20,
+  "from_repo_id": 440,
+  "to_repo_id": 550,
+  "branch_from": "string",
+  "branch_to": "string"
 }
 ```
 Ответ:  
-1. 200 ok  
+1. 201 created  
 2. 400 невалидный json или сами данные
 3. 401 unauthorized  
 4. 403 форкаем приватный репак    
 5. 409 уже форкали или форкаем свой же репак 
+### 10.2 Получение списка всех PullRequest в наш репо
+Запрос: `/api/v1/func/repo/{repoID}/pullrequests?limit=2&offset=0` типа `GET`  
+limit offset лимит и смещение  
+Ответ:  
+```json
+[
+    {
+      "id": "kekemdaa",
+      "author_id": 20,
+      "from_repo_id": 440,
+      "to_repo_id": 550,
+      "branch_from": "dev",
+      "branch_to": "master",
+      "title": "pl number one",
+      "message": "kekeke mdaa",
+      "label": "warn",
+      "is_closed": false,
+      "is_accepted": true,
+      "created_at":  "2020-05-17T22:18:18.711999+03:00"
+    }
+]
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные
+3. 401 unauthorized 
+4. 403 лезем в приватный репак   
