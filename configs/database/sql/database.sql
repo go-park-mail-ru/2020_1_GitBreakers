@@ -109,16 +109,18 @@ CREATE TABLE IF NOT EXISTS news
 
 CREATE TABLE IF NOT EXISTS merge_requests
 (
-    id                 BIGSERIAL PRIMARY KEY UNIQUE                       NOT NULL,
-    author_id          BIGSERIAL                                          NOT NULL,
-    from_repository_id BIGINT                                             NOT NULL,
-    to_repository_id   BIGINT,
-    title              VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
-    message            VARCHAR(2048)                                      NOT NULL,
-    label              VARCHAR(64)              DEFAULT ''                NOT NULL,
-    is_closed          BOOLEAN                  DEFAULT FALSE             NOT NULL,
-    is_accepted        BOOLEAN                  DEFAULT FALSE             NOT NULL,
-    created_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    id                     BIGSERIAL PRIMARY KEY UNIQUE                       NOT NULL,
+    author_id              BIGSERIAL                                          NOT NULL,
+    from_repository_id     BIGINT                                             NOT NULL,
+    to_repository_id       BIGINT,
+    from_repository_branch VARCHAR(256)                                       NOT NULL CHECK (from_repository_branch <> ''),
+    to_repository_branch   VARCHAR(256)                                       NOT NULL CHECK (to_repository_branch <> ''),
+    title                  VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
+    message                VARCHAR(2048)                                      NOT NULL,
+    label                  VARCHAR(64)              DEFAULT ''                NOT NULL,
+    is_closed              BOOLEAN                  DEFAULT FALSE             NOT NULL,
+    is_accepted            BOOLEAN                  DEFAULT FALSE             NOT NULL,
+    created_at             TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (author_id) REFERENCES users (id)
         ON DELETE CASCADE
@@ -298,6 +300,8 @@ SELECT mr.id,
        mr.author_id,
        mr.from_repository_id,
        mr.to_repository_id,
+       mr.from_repository_branch,
+       mr.to_repository_branch,
        mr.title,
        mr.message,
        mr.label,
