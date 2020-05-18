@@ -154,21 +154,33 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (
 func (UC *UCCodeHub) CreatePL(request models.PullRequest) error {
 	return UC.RepoMerge.CreateMR(request)
 }
-func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository) (models.PullReqSet, error) {
-	//todo чекнуть что id нормальный передается
-	return UC.RepoMerge.GetAllMRIn(repo.ID, 100, 0)
+func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error) {
+	_, err := UC.GitRepo.GetByID(repo.ID)
+	if err != nil {
+		return models.PullReqSet{}, err
+	}
+	return UC.RepoMerge.GetAllMRIn(repo.ID, limit, offset)
 }
-func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository) (models.PullReqSet, error) {
-	return UC.RepoMerge.GetAllMROut(repo.ID, 100, 0)
+func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error) {
+	return UC.RepoMerge.GetAllMROut(repo.ID, limit, offset)
 }
-func (UC *UCCodeHub) ApprovePL(plID int64, userID int64) error {
-	//todo check read access
-	return UC.RepoMerge.ApproveMerge(plID)
+
+func (UC *UCCodeHub) ApprovePL(pl models.PullRequest, userID int64) error {
+	isCorrect, err := UC.GitRepo.CheckReadAccessById(&userID, pl.ToRepoID)
+	if isCorrect && err == nil {
+		return UC.RepoMerge.ApproveMerge(pl.ID)
+	}
+	return entityerrors.AccessDenied()
 }
-func (UC *UCCodeHub) ClosePL(plID int64, userID int64) error {
-	//todo check read access
-	return UC.RepoMerge.RejectMR(plID)
+
+func (UC *UCCodeHub) ClosePL(pl models.PullRequest, userID int64) error {
+	isCorrect, err := UC.GitRepo.CheckReadAccessById(&userID, pl.ToRepoID)
+	if isCorrect && err == nil {
+		return UC.RepoMerge.RejectMR(pl.ID)
+	}
+	return entityerrors.AccessDenied()
 }
+
 func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
 	MRList, err := UC.RepoMerge.GetOpenedMRForUser(userID, 100, 0)
 	if err != nil {

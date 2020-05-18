@@ -514,12 +514,22 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 	direction := mux.Vars(r)["direction"]
 	repoModel := gitmodels.Repository{ID: int64(repoID)}
 
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
 	PLlist := models.PullReqSet{}
 	switch direction {
 	case "in":
-		PLlist, err = GD.CodeHubUC.GetPLIn(repoModel)
+		PLlist, err = GD.CodeHubUC.GetPLIn(repoModel, int64(limit), int64(offset))
 	case "out":
-		PLlist, err = GD.CodeHubUC.GetPLOut(repoModel)
+		PLlist, err = GD.CodeHubUC.GetPLOut(repoModel, int64(limit), int64(offset))
 	default:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -566,7 +576,7 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plModel.AuthorId = userID
-	err := GD.CodeHubUC.ApprovePL(plModel.ID, userID)
+	err := GD.CodeHubUC.ApprovePL(plModel, userID)
 
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
@@ -592,6 +602,7 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := res.(int64)
+
 	plModel := models.PullRequest{}
 	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -599,8 +610,8 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plModel.AuthorId = userID
-	err := GD.CodeHubUC.ClosePL(plModel.ID, userID)
 
+	err := GD.CodeHubUC.ClosePL(plModel, userID)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)

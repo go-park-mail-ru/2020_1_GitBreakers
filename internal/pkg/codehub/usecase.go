@@ -18,9 +18,9 @@ type UCCodeHubI interface {
 	Search(query, params string, limit, offset, userID int64) (interface{}, error)
 
 	CreatePL(request models.PullRequest) error
-	GetPLIn(repo gitmodels.Repository) (models.PullReqSet, error)
-	GetPLOut(repo gitmodels.Repository) (models.PullReqSet, error)
-	ApprovePL(plID int64, userID int64) error
-	ClosePL(plID int64, userID int64) error
+	GetPLIn(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error)
+	GetPLOut(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error)
+	ApprovePL(pl models.PullRequest, userID int64) error
+	ClosePL(pl models.PullRequest, userID int64) error
 	GetAllMRUser(userID int64) (models.PullReqSet, error)
 }
