@@ -97,6 +97,11 @@ func StartNew() {
 
 	CsrfRouter := handlersRouter.PathPrefix("").Subrouter()
 
+	// handlers
+
+	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
+	csrfHandlers := csrf.NewHandlers(csrf.DefaultTokenHeaderName)
+
 	// middleware
 
 	c := cors.New(cors.Options{
@@ -123,11 +128,12 @@ func StartNew() {
 	csrfMiddleware := middleware.CreateCSRFMiddleware(
 		[]byte(conf.CSRF_SECRET_KEY),
 		conf.ALLOWED_ORIGINS,
+		middleware.DefaultCSRFCookieName,
+		csrfHandlers.TokenHeaderName,
 		false,
 		gorCSRF.SameSiteNoneMode,
 		conf.COOKIE_EXPIRE_HOURS*3600,
 	)
-	userSetHandler, m, repoHandler, CHubHandler := initNewHandler(db, customLogger, conf)
 
 	// set middleware
 
@@ -150,7 +156,7 @@ func StartNew() {
 
 	metricsRouter.Handle("", promhttp.Handler()).Methods(http.MethodGet)
 
-	CsrfRouter.HandleFunc("/csrftoken", csrf.GetNewCsrfTokenHandler).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/csrftoken", csrfHandlers.GetNewCsrfTokenHandler).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
 	handlersRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)

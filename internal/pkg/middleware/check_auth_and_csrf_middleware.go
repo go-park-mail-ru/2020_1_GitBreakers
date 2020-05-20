@@ -7,12 +7,15 @@ import (
 )
 
 func CreateCheckAuthAndCSRFMiddleware(secret []byte, trustedOrigins []string,
+	cookieName, requestHeaderName string,
 	secure bool, site csrf.SameSiteMode, maxAge int64, logger logger.Logger) func(http.Handler) http.Handler {
 
 	checkAuthMiddleware := CreateCheckAuthMiddleware(logger)
 	csrfMiddleware := CreateCSRFMiddleware(
 		secret,
 		trustedOrigins,
+		cookieName,
+		requestHeaderName,
 		secure,
 		site,
 		maxAge,
