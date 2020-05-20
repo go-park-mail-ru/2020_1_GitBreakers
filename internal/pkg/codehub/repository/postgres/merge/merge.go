@@ -61,6 +61,10 @@ func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
 func (repo RepoPullReq) CreateMR(request models.PullRequest) error {
 	var isExist bool
 
+	if request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
+		return entityerrors.Invalid()
+	}
+
 	if err := repo.db.QueryRow(checkRepoExistSQL, request.FromRepoID).Scan(&isExist); err != nil {
 		return err
 	} else if !isExist {
