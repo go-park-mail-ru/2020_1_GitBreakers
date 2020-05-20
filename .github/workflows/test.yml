@@ -4,8 +4,8 @@ on:
       - master
       - easy_dev
       - gitrepo
-  pull_request:
-    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
 jobs:
 #  tests:
 #    runs-on: ubuntu-latest
