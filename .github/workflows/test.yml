@@ -85,9 +85,9 @@ jobs:
         port: 22
         script: |
           cd /home/ubuntu/CodeHub
-          echo ${GITHUB_REF##*/}
+          echo ${CURR_BRANCH}
           git checkout ${CURR_BRANCH}
-          git pull origin ${CURR_BRANCH}
+          git pull origin easy_dev
           /bin/bash run.sh
 #          лул
 
