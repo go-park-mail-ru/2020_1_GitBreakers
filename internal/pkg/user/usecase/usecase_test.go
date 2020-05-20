@@ -333,7 +333,7 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 	t.Run("UploadAvatar ok", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				UploadAvatar(someName, binaryImage.Bytes()).
+				UploadAvatar(gomock.AssignableToTypeOf(someName), binaryImage.Bytes()).
 				Return(nil).
 				Times(1),
 			m.EXPECT().
@@ -341,7 +341,7 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 				Return(someUser, nil).
 				Times(1),
 			m.EXPECT().
-				UpdateAvatarPath(someUser, someName).
+				UpdateAvatarPath(someUser, gomock.AssignableToTypeOf(someName)).
 				Return(nil).
 				Times(1),
 		)
@@ -370,7 +370,7 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 	t.Run("UploadAvatar err in uploadAvatar", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				UploadAvatar(someName, binaryImage.Bytes()).
+				UploadAvatar(gomock.AssignableToTypeOf(someName), binaryImage.Bytes()).
 				Return(errors.New("some error")).
 				Times(1),
 		)
@@ -384,7 +384,7 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 	t.Run("UploadAvatar err in getByID", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				UploadAvatar(someName, binaryImage.Bytes()).
+				UploadAvatar(gomock.AssignableToTypeOf(someName), binaryImage.Bytes()).
 				Return(nil).
 				Times(1),
 			m.EXPECT().
@@ -401,7 +401,7 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 	t.Run("UploadAvatar err in updatePath", func(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
-				UploadAvatar(someName, binaryImage.Bytes()).
+				UploadAvatar(gomock.AssignableToTypeOf(someName), binaryImage.Bytes()).
 				Return(nil).
 				Times(1),
 			m.EXPECT().
@@ -409,7 +409,7 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 				Return(someUser, nil).
 				Times(1),
 			m.EXPECT().
-				UpdateAvatarPath(someUser, someName).
+				UpdateAvatarPath(someUser, gomock.AssignableToTypeOf(someName)).
 				Return(errors.New("some error")).
 				Times(1),
 		)

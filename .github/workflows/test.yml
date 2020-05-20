@@ -25,8 +25,6 @@ jobs:
 #      - name: Checkout code
 #        uses: actions/checkout@v2
 
-#      - name: Test
-#        run: go test ./internal/pkg/session/repository/redis/
 #
 #      - name: Build server
 #        run: go build -o server ./cmd/server/main.go
@@ -42,36 +40,16 @@ jobs:
 #
 #      - name: Build gitserver
 #        run: go build -o gitserver ./cmd/gitserver/main.go
-
-#      - name: Upload build server
-#          uses: actions/upload-artifact@v1
-#          with:
-#            name: server
-#            path: ./server
-#
-#      - name: Upload build user
-#          uses: actions/upload-artifact@v1
-#          with:
-#            name: user
-#            path: ./user
-#
-#      - name: Upload build auth
-#          uses: actions/upload-artifact@v1
-#          with:
-#            name: auth
-#            path: ./auth
-#
-#      - name: Upload build news
-#          uses: actions/upload-artifact@v1
-#          with:
-#            name: news
-#            path: ./news
-#
-#      - name: Upload build gitserver
-#          uses: actions/upload-artifact@v1
-#          with:
-#            name: gitserver
-#            path: ./gitserver
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          version: v1.26
 
   deploy:
     runs-on: ubuntu-latest

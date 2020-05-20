@@ -88,16 +88,11 @@ func (repo UserRepo) Create(newUser models.User) error {
 
 //id юзера не меняется, достаточно скинуть в него новые данные
 func (repo UserRepo) Update(usrUpd models.User) error {
-	result, err := repo.db.Exec(
+	_, err := repo.db.Exec(
 		"UPDATE users SET  email = $2,name=$3,avatar_path=$4,password=$5 WHERE id = $1",
 		usrUpd.ID, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
 	if err != nil {
 		return errors.Wrap(err, "error with update data")
-	}
-	updLines, err := result.RowsAffected()
-	if updLines <= 0 {
-		//немного странный возврат ошибки
-		return entityerrors.Invalid()
 	}
 	return nil
 }

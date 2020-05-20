@@ -28,7 +28,7 @@ func (s NewsServerOwn) Get(ctx context.Context, in *NewsReq) (*NewsResp, error) 
 
 		temp.ID = v.ID
 		temp.AuthorID = v.AuthorID
-		temp.Date, err = ptypes.TimestampProto(v.Date)
+		temp.Date, _ = ptypes.TimestampProto(v.Date)
 		temp.RepoID = v.RepoID
 		temp.Message = v.Mess
 		temp.AuthorLogin = v.AuthorLogin

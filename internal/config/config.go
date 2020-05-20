@@ -68,14 +68,14 @@ func getEnvAsInt(name string, defaultVal int64) int64 {
 }
 
 // вернет переменную окружения bool
-func getEnvAsBool(name string, defaultVal bool) bool {
-	valStr := getEnv(name, "")
-	if val, err := strconv.ParseBool(valStr); err == nil {
-		return val
-	}
-
-	return defaultVal
-}
+//func getEnvAsBool(name string, defaultVal bool) bool {
+//	valStr := getEnv(name, "")
+//	if val, err := strconv.ParseBool(valStr); err == nil {
+//		return val
+//	}
+//
+//	return defaultVal
+//}
 
 //вернет slice
 func getEnvAsSlice(name string, defaultVal []string, sep string) []string {
