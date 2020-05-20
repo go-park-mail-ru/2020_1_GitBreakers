@@ -194,6 +194,26 @@ func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
 	return gitRepo, nil
 }
 
+func deleteByIdQ(exec execer, id int64) (err error) {
+	_, err = exec.Exec(`
+			DELETE FROM git_repository_user_stars WHERE repository_id = $1`,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = exec.Exec(`
+			DELETE FROM git_repositories WHERE id = $1`,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func createNewRepoSQLEntity(queryer queryer, newRepo git.Repository) (newRepoId int64, err error) {
 	err = queryer.QueryRow(
 		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork, parent_id) 
@@ -320,6 +340,52 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	}
 
 	return newRepoId, nil
+}
+
+func (repo Repository) DeleteByOwnerID(ownerID int64, repoName string) (err error) {
+	var newForkRepoPath string
+
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = finishTransaction(tx, err)
+		if err == nil {
+			if removeErr := os.RemoveAll(newForkRepoPath); removeErr != nil {
+				err = removeErr
+			}
+		}
+	}()
+
+	var repoID int64
+	var userLogin string
+
+	err = tx.QueryRow(`
+			SELECT id,
+			       user_login 
+			FROM git_repository_user_view 
+			WHERE owner_id = $1 AND name = $2`,
+		ownerID,
+		repoName,
+	).Scan(
+		&repoID,
+		&userLogin,
+	)
+	switch {
+	case err == sql.ErrNoRows:
+		return entityerrors.DoesNotExist()
+	case err != nil:
+		return err
+	}
+
+	newForkRepoPath = repo.convertToRepoPath(userLogin, repoName)
+
+	if err = deleteByIdQ(tx, repoID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string, offset, limit int64) ([]git.Repository, error) {

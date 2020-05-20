@@ -35,6 +35,12 @@ func (GU *GitUseCase) GetRepo(userName string, repoName string, requestUserID *i
 
 	return GU.Repo.GetByName(userName, repoName)
 }
+
+func (GU *GitUseCase) DeleteByOwnerID(ownerID int64, repoName string) error {
+	// may be nil, DoesNotExist or another error
+	return GU.Repo.DeleteByOwnerID(ownerID, repoName)
+}
+
 func (GU *GitUseCase) GetRepoList(userName string, requestUserID *int64) (gitmodels.RepositorySet, error) {
 	rawRepoList, err := GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
 	if err != nil {

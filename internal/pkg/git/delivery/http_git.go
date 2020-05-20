@@ -73,7 +73,7 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		GD.Logger.HttpInfo(r.Context(), "repo does not exsist", http.StatusNotFound)
+		GD.Logger.HttpInfo(r.Context(), "repo does not exist", http.StatusNotFound)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
@@ -89,6 +89,68 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	GD.Logger.HttpInfo(r.Context(), "repo received", http.StatusOK)
+}
+
+func (GD *GitDelivery) DeleteRepo(w http.ResponseWriter, r *http.Request) {
+	userIDFromContext := r.Context().Value("UserID")
+	userIDPtr := GD.idToIntPointer(userIDFromContext)
+	if userIDPtr == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized repository deletion",
+			http.StatusUnauthorized)
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	ownerID := *userIDPtr
+
+	var repoForDelete gitmodels.Repository
+	if err := easyjson.UnmarshalFromReader(r.Body, &repoForDelete); err != nil {
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("user with id=%d send bad request", ownerID),
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	repoName := repoForDelete.Name
+	if repoName == "" {
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("user with id=%d send bad request", ownerID),
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	err := GD.UC.DeleteByOwnerID(ownerID, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf(
+				"user with id=%d try delete repo=%s, which not exists",
+				ownerID,
+				repoName,
+			),
+			http.StatusNotFound,
+		)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+	}
+
+	GD.Logger.HttpInfo(
+		r.Context(),
+		fmt.Sprintf(
+			"user with id=%d deleted repo=%s",
+			ownerID,
+			repoName,
+		),
+		http.StatusOK,
+	)
 }
 
 //

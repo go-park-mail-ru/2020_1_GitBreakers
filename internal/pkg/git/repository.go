@@ -9,8 +9,8 @@ type GitRepoI interface {
 	GetByID(id int64) (git.Repository, error)
 	GetByName(userLogin, repoName string) (git.Repository, error)
 	Create(repos git.Repository) (id int64, err error)
-	//DeleteByID(id int) error // TODO
-	//DeleteByName(userId int, repoName string) error // TODO
+	DeleteByOwnerID(ownerID int64, repoName string) error
+
 	CheckReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error)
 	CheckReadAccessById(currentUserId *int64, repoId int64) (bool, error)
 	// GetPermission returns permission: for public repo - write and higher, for private - read and higher

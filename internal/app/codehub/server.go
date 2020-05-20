@@ -163,6 +163,7 @@ func StartNew() {
 	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/user/repo", repoHandler.DeleteRepo).Methods(http.MethodDelete)
 
 	handlersRouter.HandleFunc("/user/pullrequests", CHubHandler.GetAllPLFromUser).Methods(http.MethodGet)
 
