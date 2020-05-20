@@ -7,19 +7,19 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.14.x
+#  build:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Install Go
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: 1.14.x
+#
+#      - name: Checkout code
+#        uses: actions/checkout@v2
 
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Test
-        run: go test ./internal/pkg/session/repository/redis/
+#      - name: Test
+#        run: go test ./internal/pkg/session/repository/redis/
 #
 #      - name: Build server
 #        run: go build -o server ./cmd/server/main.go
@@ -85,7 +85,7 @@ jobs:
         port: 22
         script: |
           cd /home/ubuntu/CodeHub
-          echo ${CURR_BRANCH}
+          echo `${CURR_BRANCH}`
           git checkout ${CURR_BRANCH}
           git pull origin easy_dev
           /bin/bash run.sh
