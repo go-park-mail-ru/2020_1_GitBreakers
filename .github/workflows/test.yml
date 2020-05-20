@@ -7,6 +7,13 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: tests
+        run: go test -coverpkg=./internal/... ./internal/... -coverprofile cover.out && go tool cover -func cover.out | grep total
 #  build:
 #    runs-on: ubuntu-latest
 #    steps:
@@ -77,12 +84,11 @@ jobs:
     - name: Update prod
       uses: appleboy/ssh-action@master
       env:
-        CURR_BRANCH: ${{ GITHUB_REF }}
+        CURR_BRANCH: ${{ github.ref }}
       with:
         host: 89.208.198.186
         username: ubuntu
         key: ${{ secrets.PRIVATE_KEY }}
-        port: 22
         script_stop: true
         envs: CURR_BRANCH
         script: |
