@@ -59,6 +59,5 @@ jobs:
           git checkout ${CURR_BRANCH##*/}
           git pull origin ${CURR_BRANCH##*/}
           ./run.sh
-#          лул
 
 
