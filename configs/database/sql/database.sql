@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     id             BIGSERIAL PRIMARY KEY                              NOT NULL UNIQUE,
     login          VARCHAR(128)                                       NOT NULL UNIQUE CHECK ( login <> '' ),
-    email          VARCHAR(128)                                       NOT NULL UNIQUE CHECK ( email <> '' ),
+    email          VARCHAR(256)                                       NOT NULL UNIQUE CHECK ( email <> '' ),
     password       VARCHAR(256)                                       NOT NULL CHECK ( password <> '' ),
     name           VARCHAR(256)                                       NOT NULL DEFAULT '',
     avatar_path    VARCHAR(1024)                                      NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS users_git_repositories
 (
     user_id       BIGINT                                             NOT NULL,
     repository_id BIGINT                                             NOT NULL,
-    role          VARCHAR(64)                                        NOT NULL,
+    role          VARCHAR(128)                                       NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (repository_id) REFERENCES git_repositories (id)
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS issues
     repository_id BIGINT                                             NOT NULL,
     title         VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
     message       VARCHAR(2048)                                      NOT NULL,
-    label         VARCHAR(64)              DEFAULT ''                NOT NULL,
+    label         VARCHAR(256)             DEFAULT ''                NOT NULL,
     is_closed     BOOLEAN                  DEFAULT FALSE             NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS news
     author_id     BIGINT,
     repository_id BIGINT                                             NOT NULL,
     message       VARCHAR(2048)                                      NOT NULL CHECK ( message <> '' ),
-    label         VARCHAR(64)              DEFAULT ''                NOT NULL,
+    label         VARCHAR(256)             DEFAULT ''                NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (author_id) REFERENCES users (id)
@@ -117,7 +117,9 @@ CREATE TABLE IF NOT EXISTS merge_requests
     to_repository_branch   VARCHAR(256)                                       NOT NULL CHECK (to_repository_branch <> ''),
     title                  VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
     message                VARCHAR(2048)                                      NOT NULL,
-    label                  VARCHAR(64)              DEFAULT ''                NOT NULL,
+    label                  VARCHAR(256)             DEFAULT ''                NOT NULL,
+    status                 VARCHAR(128)             DEFAULT ''                NOT NULL,
+    diff                   BYTEA                    DEFAULT ''                NOT NULL,
     is_closed              BOOLEAN                  DEFAULT FALSE             NOT NULL,
     is_accepted            BOOLEAN                  DEFAULT FALSE             NOT NULL,
     created_at             TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -305,6 +307,8 @@ SELECT mr.id,
        mr.title,
        mr.message,
        mr.label,
+       mr.status,
+       mr.diff,
        mr.is_closed,
        mr.is_accepted,
        mr.created_at,
