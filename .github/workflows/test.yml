@@ -79,7 +79,8 @@ jobs:
         port: 22
         script: |
           cd /home/ubuntu/CodeHub
-          git pull origin ${GITHUB_REF##*/}
+          git pull origin easy_dev
           /bin/bash run.sh
+#          лул
 
 
