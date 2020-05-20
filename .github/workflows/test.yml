@@ -70,11 +70,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Extract branch name
-      shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-
     - name: Update prod
       uses: appleboy/ssh-action@master
       with:
@@ -84,6 +79,7 @@ jobs:
         port: 22
         script: |
           cd /home/ubuntu/CodeHub
+          echo ${GITHUB_REF##*/}
           git checkout ${GITHUB_REF##*/}
           git pull origin ${GITHUB_REF##*/}
           /bin/bash run.sh
