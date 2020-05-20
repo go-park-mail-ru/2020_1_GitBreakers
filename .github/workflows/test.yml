@@ -36,50 +36,49 @@ jobs:
       - name: Build gitserver
         run: go build -o gitserver ./cmd/gitserver/main.go
 
-      - name: Upload build server
-          uses: actions/upload-artifact@v1
-          with:
-            name: server
-            path: ./server
-
-      - name: Upload build user
-          uses: actions/upload-artifact@v1
-          with:
-            name: user
-            path: ./user
-
-      - name: Upload build auth
-          uses: actions/upload-artifact@v1
-          with:
-            name: auth
-            path: ./auth
-
-      - name: Upload build news
-          uses: actions/upload-artifact@v1
-          with:
-            name: news
-            path: ./news
-
-      - name: Upload build gitserver
-          uses: actions/upload-artifact@v1
-          with:
-            name: gitserver
-            path: ./gitserver
+#      - name: Upload build server
+#          uses: actions/upload-artifact@v1
+#          with:
+#            name: server
+#            path: ./server
+#
+#      - name: Upload build user
+#          uses: actions/upload-artifact@v1
+#          with:
+#            name: user
+#            path: ./user
+#
+#      - name: Upload build auth
+#          uses: actions/upload-artifact@v1
+#          with:
+#            name: auth
+#            path: ./auth
+#
+#      - name: Upload build news
+#          uses: actions/upload-artifact@v1
+#          with:
+#            name: news
+#            path: ./news
+#
+#      - name: Upload build gitserver
+#          uses: actions/upload-artifact@v1
+#          with:
+#            name: gitserver
+#            path: ./gitserver
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
   steps:
-  - name: Download bin server
-    uses: actions/download-artifact@v1
-    with:
-      name: server
   - name: Transfer bin file to prod
-    uses: appleboy/scp-action@v0.0.10
+    uses: appleboy/ssh-action@master
     with:
       host: 89.208.198.186
       username: ubuntu
       key: ${{ secrets.PRIVATE_KEY }}
-      script: /bin/bash /home/ubuntu/CodeHub/run.sh
-#      only reload
+      script: |
+        cd /home/ubuntu/CodeHub
+        git pull origin ${GITHUB_REF##*/}
+        /bin/bash run.sh
+
 
