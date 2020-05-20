@@ -89,9 +89,9 @@ jobs:
         envs: CURR_BRANCH
         script: |
           cd /home/ubuntu/CodeHub
-          echo `${CURR_BRANCH}`
-          git checkout `${CURR_BRANCH}`
-          git pull origin `${CURR_BRANCH}`
+          echo ${CURR_BRANCH##*/}
+          git checkout ${CURR_BRANCH##*/}
+          git pull origin `${CURR_BRANCH##*/}`
           /bin/bash run.sh
 #          лул
 
