@@ -1,10 +1,9 @@
-name: golangci-lint
 on:
   push:
     branches:
       - master
       - easy_dev
-      - git_repo
+      - gitrepo
   pull_request:
     - master
 jobs:
