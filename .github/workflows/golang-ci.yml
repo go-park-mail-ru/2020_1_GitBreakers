@@ -1,11 +1,11 @@
+name: linter
+
 on:
   push:
-    branches:
-      - master
-      - easy_dev
-      - gitrepo
+    branches: [ master, easy_dev, gitrepo ]
   pull_request:
-    - master
+    branches: [ master ]
+
 jobs:
   golangci:
     name: lint
