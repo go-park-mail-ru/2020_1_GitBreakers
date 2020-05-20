@@ -1,5 +1,11 @@
-on: [push, pull_request]
-name: Test
+on:
+  push:
+    branches:
+      - master
+      - easy_dev
+      - gitrepo
+  pull_request:
+    branches: [ master ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,10 +35,51 @@ jobs:
 
       - name: Build gitserver
         run: go build -o gitserver ./cmd/gitserver/main.go
+
+      - name: Upload build server
+          uses: actions/upload-artifact@v1
+          with:
+            name: server
+            path: ./server
+
+      - name: Upload build user
+          uses: actions/upload-artifact@v1
+          with:
+            name: user
+            path: ./user
+
+      - name: Upload build auth
+          uses: actions/upload-artifact@v1
+          with:
+            name: auth
+            path: ./auth
+
+      - name: Upload build news
+          uses: actions/upload-artifact@v1
+          with:
+            name: news
+            path: ./news
+
+      - name: Upload build gitserver
+          uses: actions/upload-artifact@v1
+          with:
+            name: gitserver
+            path: ./gitserver
+
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.14.x
+    needs: build
+  steps:
+  - name: Download bin server
+    uses: actions/download-artifact@v1
+    with:
+      name: server
+  - name: Transfer bin file to prod
+    uses: appleboy/scp-action@v0.0.10
+    with:
+      host: 89.208.198.186
+      username: ubuntu
+      key: ${{ secrets.PRIVATE_KEY }}
+      script: /bin/bash /home/ubuntu/CodeHub/run.sh
+#      only reload
+
