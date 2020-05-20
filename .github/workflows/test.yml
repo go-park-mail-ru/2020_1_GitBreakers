@@ -77,7 +77,7 @@ jobs:
     - name: Update prod
       uses: appleboy/ssh-action@master
       env:
-        CURR_BRANCH: ${BRANCH_NAME}
+        CURR_BRANCH: ${{ GITHUB_REF }}
       with:
         host: 89.208.198.186
         username: ubuntu
@@ -87,7 +87,7 @@ jobs:
           cd /home/ubuntu/CodeHub
           echo `${CURR_BRANCH}`
           git checkout ${CURR_BRANCH}
-          git pull origin easy_dev
+          git pull origin ${CURR_BRANCH}
           /bin/bash run.sh
 #          лул
 
