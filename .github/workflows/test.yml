@@ -77,7 +77,7 @@ jobs:
     - name: Update prod
       uses: appleboy/ssh-action@master
       env:
-        CURR_BRANCH: ${BRANCH_NAME}
+        CURR_BRANCH: easy_dev
       with:
         host: 89.208.198.186
         username: ubuntu
