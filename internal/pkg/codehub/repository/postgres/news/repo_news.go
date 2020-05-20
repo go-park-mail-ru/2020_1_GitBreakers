@@ -40,7 +40,7 @@ func (R *RepoNews) GetNews(repoID int64, limit int64, offset int64) (models.News
 	for rows.Next() {
 		var newsModel models.News
 
-		err := rows.Scan(
+		err = rows.Scan(
 			&newsModel.ID,
 			&newsModel.AuthorID,
 			&newsModel.RepoID,
