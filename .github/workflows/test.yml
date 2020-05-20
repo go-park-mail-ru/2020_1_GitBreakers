@@ -20,21 +20,21 @@ jobs:
 
       - name: Test
         run: go test ./internal/pkg/session/repository/redis/
-
-      - name: Build server
-        run: go build -o server ./cmd/server/main.go
-
-      - name: Build user
-        run: go build -o user ./cmd/user/main.go
-
-      - name: Build auth
-        run: go build -o auth ./cmd/auth/main.go
-
-      - name: Build news
-        run: go build -o news ./cmd/news/main.go
-
-      - name: Build gitserver
-        run: go build -o gitserver ./cmd/gitserver/main.go
+#
+#      - name: Build server
+#        run: go build -o server ./cmd/server/main.go
+#
+#      - name: Build user
+#        run: go build -o user ./cmd/user/main.go
+#
+#      - name: Build auth
+#        run: go build -o auth ./cmd/auth/main.go
+#
+#      - name: Build news
+#        run: go build -o news ./cmd/news/main.go
+#
+#      - name: Build gitserver
+#        run: go build -o gitserver ./cmd/gitserver/main.go
 
 #      - name: Upload build server
 #          uses: actions/upload-artifact@v1
