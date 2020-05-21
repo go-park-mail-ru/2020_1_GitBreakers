@@ -110,30 +110,30 @@ func isRepoExistsInDbByOwnerLogin(queryer SQLInterfaces.Querier, ownerLogin stri
 	return isRepoExists, nil
 }
 
-func getParentInfoById(queryer SQLInterfaces.Querier, parentID *int64) (parentInfo git.ParentRepositoryInfo, err error) {
-	if parentID == nil {
-		return
-	}
-
-	err = queryer.QueryRow(`
-			SELECT 	id,
-					owner_id,
-			       	name,
-					user_login
-			FROM git_repository_user_view WHERE id = $1`,
-		parentID,
-	).Scan(
-		&parentInfo.ID,
-		&parentInfo.OwnerID,
-		&parentInfo.Name,
-		&parentInfo.AuthorLogin,
-	)
-	if err != nil {
-		return git.ParentRepositoryInfo{}, errors.WithStack(err)
-	}
-
-	return parentInfo, nil
-}
+//func getParentInfoById(queryer SQLInterfaces.Querier, parentID *int64) (parentInfo git.ParentRepositoryInfo, err error) {
+//	if parentID == nil {
+//		return
+//	}
+//
+//	err = queryer.QueryRow(`
+//			SELECT 	id,
+//					owner_id,
+//			       	name,
+//					user_login
+//			FROM git_repository_user_view WHERE id = $1`,
+//		parentID,
+//	).Scan(
+//		&parentInfo.ID,
+//		&parentInfo.OwnerID,
+//		&parentInfo.Name,
+//		&parentInfo.AuthorLogin,
+//	)
+//	if err != nil {
+//		return git.ParentRepositoryInfo{}, errors.WithStack(err)
+//	}
+//
+//	return parentInfo, nil
+//}
 
 func getByIdQ(queryer SQLInterfaces.Querier, id int64) (git.Repository, error) {
 	var gitRepo git.Repository

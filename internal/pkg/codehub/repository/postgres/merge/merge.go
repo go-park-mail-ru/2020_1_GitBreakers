@@ -3,7 +3,6 @@ package merge
 import (
 	"database/sql"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	SQLInterfaces "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/sql"
@@ -18,7 +17,7 @@ const (
 
 type RepoPullReq struct {
 	db         *sqlx.DB
-	gitRepo    git.GitRepoI
+	//gitRepo    git.GitRepoI
 	pullReqDir string
 }
 

@@ -14,9 +14,5 @@ run:
 linters:
     disable-all: false
     disable:
-      - ineffassign
-      - staticcheck
-      - deadcode
-      - structcheck
-      - unused
+
 
