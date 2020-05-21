@@ -9,4 +9,5 @@
 - [Беспалова Ульяна](https://github.com/UlianaBespalova)
 - [Романов Андрей](https://github.com/Deiklov)
 
-Ментор - [Гаджиев Кирилл](https://github.com/kirBMSTU)
+Ментор - [Гаджиев Кирилл](https://github.com/kirBMSTU)  
+![.github/workflows/deploy.yml](https://github.com/go-park-mail-ru/2020_1_GitBreakers/workflows/.github/workflows/deploy.yml/badge.svg)
