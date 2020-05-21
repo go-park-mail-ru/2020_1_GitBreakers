@@ -146,7 +146,7 @@ Required: name(alphanumeric),
 ### 3.2 Получить репозиторий по имени юзера и названию
 Запрос: `/api/v1/repo/{username}/{reponame}` типа `GET`  
 Ответ:
-1. 200 ok  
+1. 200 ok  (поле parent_repository_info может быть пустым, если is_fork = false)
 ```json
 {
     "id": "int",
@@ -155,7 +155,13 @@ Required: name(alphanumeric),
     "description": "string",
     "is_public": "bool",
     "is_fork": "bool",
-    "created_at": "date"
+    "created_at": "date",
+    "parent_repository_info": {
+        "id": "int",
+        "owner_id": "int",
+        "name": "string",
+        "author_login": "string"
+    }
 }
 ```
 2. 403 нет прав на просмотр(приватный)  
@@ -184,6 +190,20 @@ Required: name(alphanumeric),
             "name": "horse",
             "author_login": "cheburek111"
         }
+    },
+    {
+        "id": 68,
+        "owner_id": 75,
+        "name": "pess",
+        "description": "",
+        "is_fork": false,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {}
     }
 ]
 ```
