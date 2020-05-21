@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - master
+      - easy_dev
+      - gitrepo
+  pull_request:
+    branches: [ master ]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: tests
+        run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > cover2 && go tool cover -func cover2 | grep total
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+    - name: Update prod
+      uses: appleboy/ssh-action@master
+      env:
+        CURR_BRANCH: ${{ github.ref }}
+      with:
+        host: 89.208.198.186
+        username: ubuntu
+        key: ${{ secrets.PRIVATE_KEY }}
+        script_stop: true
+        envs: CURR_BRANCH
+        script: |
+          cd /home/ubuntu/CodeHub
+          git checkout ${CURR_BRANCH##*/}
+          git pull origin ${CURR_BRANCH##*/}
+          ./run.sh &
+
+
