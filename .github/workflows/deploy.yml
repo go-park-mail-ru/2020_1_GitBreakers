@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - master
-      - dev
   pull_request:
     branches: [ master ]
 jobs:
@@ -32,6 +31,6 @@ jobs:
           cd /home/ubuntu/CodeHub
           git checkout ${CURR_BRANCH##*/}
           git pull origin ${CURR_BRANCH##*/}
-          ./run.sh &
+          ./scripts/run.sh &
 
 
