@@ -31,6 +31,7 @@ jobs:
           envs: CURR_BRANCH
           script: |
             cd /home/ubuntu/CodeHub
+            git fetch
             git checkout ${CURR_BRANCH##*/}
             git pull origin ${CURR_BRANCH##*/}
             bash scripts/run.sh
