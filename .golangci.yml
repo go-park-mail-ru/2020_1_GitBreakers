@@ -12,7 +12,4 @@ run:
   tests: false
 
 linters:
-    disable-all: false
-    disable:
-
-
+  disable-all: false

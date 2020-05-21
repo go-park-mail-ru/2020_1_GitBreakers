@@ -3,11 +3,11 @@ package middleware
 import (
 	"context"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"net/http"
 )
 
 const (
-	UserIdContextValue    = "UserID"
 	SessionIdContextValue = "session_id"
 )
 
@@ -29,7 +29,7 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		ctx = context.WithValue(ctx, UserIdContextValue, sessModel.UserID)
+		ctx = context.WithValue(ctx, models.UserIDKey, sessModel.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

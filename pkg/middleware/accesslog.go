@@ -8,8 +8,11 @@ import (
 	"math/big"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
+
+type contextKey string
 
 func CreateAccessLogMiddleware(requestIDKey int, log logger.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -20,10 +23,9 @@ func CreateAccessLogMiddleware(requestIDKey int, log logger.Logger) func(next ht
 			log.StartRequest(*r, requestID)
 			start := time.Now()
 			ctx := r.Context()
-
-			reqIDkey := requestIDKey //for linter
+			reqIDey := contextKey(strconv.Itoa(requestIDKey))
 			ctx = context.WithValue(ctx,
-				reqIDkey,
+				reqIDey,
 				requestID,
 			)
 			next.ServeHTTP(w, r.WithContext(ctx))

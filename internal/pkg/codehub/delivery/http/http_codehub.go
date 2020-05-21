@@ -23,7 +23,7 @@ type HttpCodehub struct {
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -143,7 +143,7 @@ func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -196,7 +196,7 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -262,7 +262,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -302,7 +302,7 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -344,7 +344,7 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpLogInfo(r.Context(), "issues closed success")
 }
 func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -401,7 +401,7 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -455,7 +455,7 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -499,7 +499,7 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -562,7 +562,7 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -595,7 +595,7 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 
 }
 func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -629,7 +629,7 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 
 }
 func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)

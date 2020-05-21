@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
@@ -23,7 +24,7 @@ type GitDelivery struct {
 
 //создать репак(id,name,description,private,owner)
 func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -63,7 +64,7 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 //данные репока(модельку скинуть(id,name,private,owner)
 func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
-	userID := r.Context().Value("UserID")
+	userID := r.Context().Value(models.UserIDKey)
 
 	Repo, err := GD.UC.GetRepo(userName, repoName, GD.idToIntPointer(userID))
 
@@ -92,7 +93,7 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *GitDelivery) DeleteRepo(w http.ResponseWriter, r *http.Request) {
-	userIDFromContext := r.Context().Value("UserID")
+	userIDFromContext := r.Context().Value(models.UserIDKey)
 	userIDPtr := GD.idToIntPointer(userIDFromContext)
 	if userIDPtr == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized repository deletion",
@@ -156,7 +157,7 @@ func (GD *GitDelivery) DeleteRepo(w http.ResponseWriter, r *http.Request) {
 //
 ////все репозитории юзера
 func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
-	userIDFromContext := r.Context().Value("UserID")
+	userIDFromContext := r.Context().Value(models.UserIDKey)
 	userIDPtr := GD.idToIntPointer(userIDFromContext)
 
 	userName := mux.Vars(r)["username"]
@@ -200,7 +201,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
 
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	branches, err := GD.UC.GetBranchList(GD.idToIntPointer(res), userName, repoName)
 
 	switch {
@@ -229,7 +230,7 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 
 //cписок коммитов для ветки
 func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("UserID")
+	userID := r.Context().Value(models.UserIDKey)
 	//сжирает два параметра
 	vars := mux.Vars(r)
 	commitParams := &gitmodels.CommitRequest{
@@ -275,7 +276,7 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
-	userIDpointer := GD.idToIntPointer(r.Context().Value("UserID"))
+	userIDpointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
 
 	vars := mux.Vars(r)
 	showParams := gitmodels.FilesCommitRequest{
@@ -331,7 +332,7 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Request) {
-	userIDpointer := GD.idToIntPointer(r.Context().Value("UserID"))
+	userIDpointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
 
 	vars := mux.Vars(r)
 	userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
@@ -363,7 +364,7 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 }
 
 func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
-	userIDPointer := GD.idToIntPointer(r.Context().Value("UserID"))
+	userIDPointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
 
 	vars := mux.Vars(r)
 
@@ -415,7 +416,7 @@ func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)

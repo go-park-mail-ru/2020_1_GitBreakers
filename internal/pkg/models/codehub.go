@@ -57,6 +57,11 @@ type PullRequest struct {
 	FromRepoName    string    `json:"from_repo_name" db:"" valid:"-"`
 	FromAuthorLogin string    `json:"from_author_login" db:"" valid:"-"`
 }
+type ContextKey string
+
+var (
+	UserIDKey = ContextKey("UserID")
+)
 
 //easyjson:json
 type PullReqSet []PullRequest
