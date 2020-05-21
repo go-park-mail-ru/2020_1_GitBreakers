@@ -32,8 +32,8 @@ jobs:
           script: |
             cd /home/ubuntu/CodeHub
             git fetch
-            git checkout ${CURR_BRANCH##*/}
-            git pull origin ${CURR_BRANCH##*/}
+            git checkout dev
+            git pull origin dev
             bash scripts/run.sh
 
 
