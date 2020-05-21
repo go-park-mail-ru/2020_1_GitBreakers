@@ -33,6 +33,6 @@ jobs:
           cd /home/ubuntu/CodeHub
           git checkout ${CURR_BRANCH##*/}
           git pull origin ${CURR_BRANCH##*/}
-          ./scripts/run.sh &
+          nohup ./scripts/run.sh
 
 
