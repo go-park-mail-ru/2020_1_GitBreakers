@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	UserIdContextValue    = contextKey("UserID")
 	SessionIdContextValue = "session_id"
 )
 
@@ -29,7 +28,7 @@ func (Mdware *Middleware) AuthMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		ctx = context.WithValue(ctx, UserIdContextValue, sessModel.UserID)
+		ctx = context.WithValue(ctx, "UserID", sessModel.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

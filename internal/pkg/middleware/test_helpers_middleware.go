@@ -12,17 +12,11 @@ const (
 	min = 20
 )
 
-type contextKey string
-
-const (
-	contextUserID = contextKey("UserID")
-)
-
 func AuthMiddlewareMock(next http.HandlerFunc, isAuthorized bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if isAuthorized {
-			ctx = context.WithValue(ctx, contextUserID, int64(rand.Intn(max-min)+min))
+			ctx = context.WithValue(ctx, "UserID", int64(rand.Intn(max-min)+min))
 		}
 		next(w, r.WithContext(ctx))
 	}
