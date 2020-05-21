@@ -175,7 +175,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userName = userModel.Name
+		userName = userModel.Login
 	}
 
 	repo, err := GD.UC.GetRepoList(userName, userIDPtr)

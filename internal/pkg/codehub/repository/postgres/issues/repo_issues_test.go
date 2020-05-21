@@ -195,6 +195,8 @@ func (s *issueTestSuite) TestGetIssuesListPositive() {
 			"label",
 			"is_closed",
 			"created_at",
+			"user_login",
+			"user_avatar_path",
 		},
 	)
 
@@ -208,6 +210,8 @@ func (s *issueTestSuite) TestGetIssuesListPositive() {
 			issue.Label,
 			issue.IsClosed,
 			issue.CreatedAt,
+			issue.AuthorLogin,
+			issue.AuthorImage,
 		)
 	}
 
