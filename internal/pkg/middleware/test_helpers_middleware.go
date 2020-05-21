@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/gorilla/mux"
 	"math/rand"
 	"net/http"
@@ -16,7 +17,7 @@ func AuthMiddlewareMock(next http.HandlerFunc, isAuthorized bool) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if isAuthorized {
-			ctx = context.WithValue(ctx, "UserID", int64(rand.Intn(max-min)+min))
+			ctx = context.WithValue(ctx, models.UserIDKey, int64(rand.Intn(max-min)+min))
 		}
 		next(w, r.WithContext(ctx))
 	}
