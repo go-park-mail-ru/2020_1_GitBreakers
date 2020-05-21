@@ -253,7 +253,7 @@ func finishTransaction(tx *sql.Tx, err error) error {
 }
 
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
-	repoPath := path.Join(repo.reposDir, userLogin, repoName + gitRepositoryNameSuffix)
+	repoPath := path.Join(repo.reposDir, userLogin, repoName+gitRepositoryNameSuffix)
 	return path.Clean(repoPath)
 }
 

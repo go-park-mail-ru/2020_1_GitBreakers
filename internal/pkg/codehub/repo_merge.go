@@ -18,6 +18,7 @@ type MergeRequestStatus string
 const (
 	StatusOK          = "ok"
 	StatusError       = "error"
+	StatusMerged      = "merged"
 	StatusConflict    = "conflict"
 	StatusNeedsUpdate = "needs_update"
 )
