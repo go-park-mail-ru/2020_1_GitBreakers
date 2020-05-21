@@ -28,6 +28,9 @@ func (UC *UCUser) Create(user models.User) error {
 		return entityerrors.AlreadyExist()
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 	//конвертим в строку
 	user.Password = string(hashedPassword[:])
 	if err := UC.RepUser.Create(user); err != nil {
