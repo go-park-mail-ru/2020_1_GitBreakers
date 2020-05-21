@@ -18,6 +18,7 @@ type Config struct {
 	LOGFILE                  string
 	HOST_TO_SAVE             string
 	GIT_USER_REPOS_DIR       string
+	GIT_USER_PULLRQ_DIR      string
 	GIT_SERVER_ENDPOINT      string
 	NEWS_SERVER_ENDPOINT     string
 	CSRF_SECRET_KEY          string
@@ -40,6 +41,7 @@ func New() *Config {
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://code-hub.space"}, ","),
 		GIT_USER_REPOS_DIR:       getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),
+		GIT_USER_PULLRQ_DIR:      getEnv("GIT_USER_PULLRQ_DIR", "codehub_pullrequests"),
 		CSRF_SECRET_KEY:          getEnv("CSRF_SECRET_KEY", ""),
 		COOKIE_EXPIRE_HOURS:      getEnvAsInt("COOKIE_EXPIRE_HOURS", 72),
 		GIT_SERVER_ENDPOINT:      getEnv("GIT_SERVER_ENDPOINT", "127.0.0.1:5000"),

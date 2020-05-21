@@ -103,6 +103,7 @@ func CreateGitReceivePackMiddleware(delivery GitServerDelivery) func(http.Handle
 			if needNextHandler {
 				next.ServeHTTP(w, r)
 			}
+
 		})
 	}
 }
@@ -169,7 +170,15 @@ func gitReceivePackHandler(w http.ResponseWriter, r *http.Request, delivery GitS
 		return false, nil
 	}
 
+	if err := updateMrStatuses(repoInfo, delivery); err != nil {
+		return false, err
+	}
+
 	return needNextHandle, nil
+}
+
+func updateMrStatuses(repoInfo repoBasicInfo, delivery GitServerDelivery) error {
+	return delivery.UseCase.UpdateMergeRequestsStatuses(repoInfo.ownerLogin, repoInfo.repoName)
 }
 
 func getPermissionsForRepo(w http.ResponseWriter, r *http.Request, repoInfo repoBasicInfo,

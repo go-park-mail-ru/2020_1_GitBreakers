@@ -9,5 +9,15 @@ type RepoMergeI interface {
 	ApproveMerge(pullReqID int64) error
 	GetOpenedMRForUser(userID int64, limit int64, offset int64) (models.PullReqSet, error)
 	RejectMR(mrID int64) error
+	UpdateMergeRequestsStatusByRepoId(status MergeRequestStatus, repoID int64) error
 	// GetOnePullReq(pullReqID int64) (models.PullRequest, error)
 }
+
+type MergeRequestStatus string
+
+const (
+	StatusOK          = "ok"
+	StatusError       = "error"
+	StatusConflict    = "conflict"
+	StatusNeedsUpdate = "needs_update"
+)

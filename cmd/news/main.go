@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"path/filepath"
 )
 
 func init() {
@@ -45,7 +46,14 @@ func main() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 	newsRepos := news2.NewRepoNews(db)
-	gitRepos := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+
+	absGitRepoDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_REPOS_DIR))
+	if pathErr != nil {
+		log.Println("bad git directory path:", err)
+		return
+	}
+
+	gitRepos := repository.NewRepository(db, absGitRepoDir)
 	userRepos := postgres.NewUserRepo(db, conf.DEFAULT_USER_AVATAR_NAME, "/static/image/avatar/", conf.HOST_TO_SAVE)
 
 	UCCodeHub := usecase.UCCodeHub{

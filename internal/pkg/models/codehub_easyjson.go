@@ -209,6 +209,8 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 			out.Message = string(in.String())
 		case "label":
 			out.Label = string(in.String())
+		case "status":
+			out.Status = string(in.String())
 		case "is_closed":
 			out.IsClosed = bool(in.Bool())
 		case "created_at":
@@ -277,6 +279,11 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		const prefix string = ",\"label\":"
 		out.RawString(prefix)
 		out.String(string(in.Label))
+	}
+	{
+		const prefix string = ",\"status\":"
+		out.RawString(prefix)
+		out.String(string(in.Status))
 	}
 	{
 		const prefix string = ",\"is_closed\":"
