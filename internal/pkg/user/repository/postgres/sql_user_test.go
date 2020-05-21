@@ -185,17 +185,14 @@ func (s *Suite) TestUpdate() {
 
 	err := s.repo.Update(user)
 	require.Nil(s.T(), err)
-	if err := s.mock.ExpectationsWereMet(); err != nil {
-		s.T().Errorf("there were unfulfilled expectations: %s", err)
-	}
 
 	s.mock.ExpectExec("UPDATE").
 		WithArgs(user.ID, user.Email, user.Name, user.Image, user.Password).
-		WillReturnResult(sqlmock.NewResult(1, 0))
+		WillReturnError(err)
 
 	err = s.repo.Update(user)
 
-	require.Equal(s.T(), err, entityerrors.Invalid())
+	require.Error(s.T(), err)
 
 }
 

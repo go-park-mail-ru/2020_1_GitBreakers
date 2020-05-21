@@ -524,7 +524,7 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 		offset = 0
 	}
 
-	PLlist := models.PullReqSet{}
+	var PLlist models.PullReqSet
 	switch direction {
 	case "in":
 		PLlist, err = GD.CodeHubUC.GetPLIn(repoModel, int64(limit), int64(offset))

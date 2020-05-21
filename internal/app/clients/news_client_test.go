@@ -50,9 +50,18 @@ func TestNewsClient(t *testing.T) {
 	const newsCount int = 7
 	newslist := make([]models.News, newsCount)
 	for i := range newslist {
-		err := faker.FakeData(&newslist[i])
+		err := faker.FakeData(&newslist[i].ID)
 		newslist[i].Date = newslist[i].Date.UTC()
 		require.Nil(t, err)
+		err = faker.FakeData(&newslist[i].AuthorImage)
+		require.Nil(t, err)
+		err = faker.FakeData(&newslist[i].AuthorLogin)
+		require.Nil(t, err)
+		err = faker.FakeData(&newslist[i].Mess)
+		require.Nil(t, err)
+		err = faker.FakeData(&newslist[i].RepoID)
+		require.Nil(t, err)
+
 	}
 
 	client := NewsClient{conn: conn, client: news.NewNewsClient(conn)}
