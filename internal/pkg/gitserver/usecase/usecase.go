@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitModels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
@@ -12,12 +13,14 @@ import (
 
 type UseCase struct {
 	gitRepoRepository git.GitRepoI
+	mergeRepo         codehub.RepoMergeI
 	userClient        clients.UserClient
 }
 
-func NewUseCase(gitRepo git.GitRepoI, client clients.UserClient) UseCase {
+func NewUseCase(gitRepo git.GitRepoI, mergeRepo codehub.RepoMergeI, client clients.UserClient) UseCase {
 	return UseCase{
 		gitRepoRepository: gitRepo,
+		mergeRepo:         mergeRepo,
 		userClient:        client,
 	}
 }
@@ -73,4 +76,13 @@ func (u UseCase) GetGitRepositoryPermission(currentUserId *int64, userLogin, rep
 		return permission, err
 	}
 	return permission, nil
+}
+
+func (u UseCase) UpdateMergeRequestsStatuses(ownerLogin, repoName string) error {
+	repo, err := u.GetGitRepository(ownerLogin, repoName)
+	if err != nil {
+		return err
+	}
+
+	return u.mergeRepo.UpdateMergeRequestsStatusByRepoId(codehub.StatusNeedsUpdate, repo.ID)
 }

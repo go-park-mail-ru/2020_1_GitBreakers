@@ -2,9 +2,11 @@ package merge
 
 import (
 	"database/sql"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	SQLInterfaces "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -15,13 +17,15 @@ const (
 )
 
 type RepoPullReq struct {
-	db      *sqlx.DB
-	gitRepo git.GitRepoI
+	db         *sqlx.DB
+	gitRepo    git.GitRepoI
+	pullReqDir string
 }
 
-func NewPullRequestRepository(db *sqlx.DB) RepoPullReq {
+func NewPullRequestRepository(db *sqlx.DB, pullReqDir string) RepoPullReq {
 	return RepoPullReq{
-		db: db,
+		db:         db,
+		pullReqDir: pullReqDir,
 	}
 }
 
@@ -41,6 +45,7 @@ func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
 			&pr.Title,
 			&pr.Message,
 			&pr.Label,
+			&pr.Status,
 			&pr.IsClosed,
 			&pr.IsAccepted,
 			&pr.CreatedAt,
@@ -56,6 +61,19 @@ func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
 		pullRequests = append(pullRequests, pr)
 	}
 	return pullRequests, nil
+}
+
+func updateMergeRequestsStatusByRepoId(exec SQLInterfaces.Executer,
+	status codehub.MergeRequestStatus, repoID int64) error {
+	_, err := exec.Exec(`
+			UPDATE merge_requests
+			SET status = $1
+			WHERE to_repository_id = $2
+			   OR from_repository_id = $2`,
+		status,
+		repoID,
+	)
+	return err
 }
 
 func (repo RepoPullReq) CreateMR(request models.PullRequest) error {
@@ -120,6 +138,7 @@ func (repo RepoPullReq) GetAllMROut(repoID int64, limit int64, offset int64) (pu
 					   mrv.title,
 					   mrv.message,
 					   mrv.label,
+				       mrv.status,
 					   mrv.is_closed,
 					   mrv.is_accepted,
 					   mrv.created_at,
@@ -161,6 +180,7 @@ func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pul
 					   mrv.title,
 					   mrv.message,
 					   mrv.label,
+				       mrv.status,
 					   mrv.is_closed,
 					   mrv.is_accepted,
 					   mrv.created_at,
@@ -226,6 +246,7 @@ func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int
 					   mrv.title,
 					   mrv.message,
 					   mrv.label,
+				       mrv.status,
 					   mrv.is_closed,
 					   mrv.is_accepted,
 					   mrv.created_at,
@@ -262,7 +283,11 @@ func (repo RepoPullReq) RejectMR(mrID int64) error {
 			SET is_closed   = TRUE,
 				is_accepted = FALSE
 			WHERE id = $1
-			RETURNING id`, mrID).Scan(&mrID)
+			RETURNING id`,
+		mrID,
+	).Scan(
+		&mrID,
+	)
 	switch {
 	case err == sql.ErrNoRows:
 		return entityerrors.DoesNotExist()
@@ -271,4 +296,9 @@ func (repo RepoPullReq) RejectMR(mrID int64) error {
 	}
 
 	return nil
+}
+
+func (repo RepoPullReq) UpdateMergeRequestsStatusByRepoId(status codehub.MergeRequestStatus,
+	repoID int64) error {
+	return updateMergeRequestsStatusByRepoId(repo.db, status, repoID)
 }

@@ -34,6 +34,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -230,14 +231,24 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 
 	userUCase := userUC.UCUser{RepUser: &userRepos}
 
-	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+	absGitRepoDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_REPOS_DIR))
+	if pathErr != nil {
+		log.Fatalln("bad git directory path:", err)
+	}
 
-	gitUseCase := usecase.GitUseCase{Repo: &repogit}
+	absPullsDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_PULLRQ_DIR))
+	if pathErr != nil {
+		log.Fatalln("bad git directory path:", err)
+	}
+
+	repogit := repository.NewRepository(db, absGitRepoDir)
 	repoCodeHubIssue := issues.NewIssueRepository(db)
 	repoCodeHubStar := stars.NewStarRepository(db)
 	repoCodeHubNews := news.NewRepoNews(db)
 	repoCodeHubSearch := search.NewSearchRepository(db)
-	repoMerge := merge.NewPullRequestRepository(db)
+	repoMerge := merge.NewPullRequestRepository(db, absPullsDir)
+
+	gitUseCase := usecase.GitUseCase{Repo: &repogit}
 
 	codeHubUseCase := usecaseCodeHub.UCCodeHub{
 		RepoIssue:  &repoCodeHubIssue,

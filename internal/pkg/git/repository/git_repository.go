@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
+	SQLInterfaces "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -26,20 +28,6 @@ const (
 type Repository struct {
 	db       *sqlx.DB
 	reposDir string
-}
-
-type queryer interface {
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-}
-
-type execer interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-}
-
-type execqueryer interface {
-	execer
-	queryer
 }
 
 func NewRepository(db *sqlx.DB, reposDir string) Repository {
@@ -81,7 +69,7 @@ func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
 	return http.DetectContentType(buffer), nil
 }
 
-func isRepoExistsInDbByOwnerId(queryer queryer, ownerId int64, repoName string) (bool, error) {
+func isRepoExistsInDbByOwnerId(queryer SQLInterfaces.Querier, ownerId int64, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
@@ -99,7 +87,7 @@ func isRepoExistsInDbByOwnerId(queryer queryer, ownerId int64, repoName string) 
 	return isRepoExists, nil
 }
 
-func isRepoExistsInDbByOwnerLogin(queryer queryer, ownerLogin string, repoName string) (bool, error) {
+func isRepoExistsInDbByOwnerLogin(queryer SQLInterfaces.Querier, ownerLogin string, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
@@ -122,7 +110,7 @@ func isRepoExistsInDbByOwnerLogin(queryer queryer, ownerLogin string, repoName s
 	return isRepoExists, nil
 }
 
-func getParentInfoById(queryer queryer, parentID *int64) (parentInfo git.ParentRepositoryInfo, err error) {
+func getParentInfoById(queryer SQLInterfaces.Querier, parentID *int64) (parentInfo git.ParentRepositoryInfo, err error) {
 	if parentID == nil {
 		return
 	}
@@ -147,7 +135,7 @@ func getParentInfoById(queryer queryer, parentID *int64) (parentInfo git.ParentR
 	return parentInfo, nil
 }
 
-func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
+func getByIdQ(queryer SQLInterfaces.Querier, id int64) (git.Repository, error) {
 	var gitRepo git.Repository
 	err := queryer.QueryRow(`
 			SELECT 	id,
@@ -194,7 +182,7 @@ func getByIdQ(queryer queryer, id int64) (git.Repository, error) {
 	return gitRepo, nil
 }
 
-func deleteByIdQ(exec execer, id int64) (err error) {
+func deleteByIdQ(exec SQLInterfaces.Executer, id int64) (err error) {
 	_, err = exec.Exec(`
 			DELETE FROM git_repository_user_stars WHERE repository_id = $1`,
 		id,
@@ -214,7 +202,7 @@ func deleteByIdQ(exec execer, id int64) (err error) {
 	return nil
 }
 
-func createNewRepoSQLEntity(queryer queryer, newRepo git.Repository) (newRepoId int64, err error) {
+func createNewRepoSQLEntity(queryer SQLInterfaces.Querier, newRepo git.Repository) (newRepoId int64, err error) {
 	err = queryer.QueryRow(
 		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork, parent_id) 
 				VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
@@ -235,7 +223,7 @@ func createNewRepoSQLEntity(queryer queryer, newRepo git.Repository) (newRepoId 
 	return newRepoId, nil
 }
 
-func createNewPermissionSQLEntity(exec execer, userID, repoID int64,
+func createNewPermissionSQLEntity(exec SQLInterfaces.Executer, userID, repoID int64,
 	role permission_types.Permission) error {
 
 	_, err := exec.Exec(
@@ -265,10 +253,11 @@ func finishTransaction(tx *sql.Tx, err error) error {
 }
 
 func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
-	return repo.reposDir + "/" + userLogin + "/" + repoName + gitRepositoryNameSuffix
+	repoPath := path.Join(repo.reposDir, userLogin, repoName + gitRepositoryNameSuffix)
+	return path.Clean(repoPath)
 }
 
-func (repo Repository) createRepoPath(queryer queryer, ownerId int64, repoName string) (string, error) {
+func (repo Repository) createRepoPath(queryer SQLInterfaces.Querier, ownerId int64, repoName string) (string, error) {
 	if repoName == "" {
 		return "", entityerrors.Invalid()
 	}
@@ -292,7 +281,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	defer func() {
 		if err != nil && repoPath != "" {
 			if removeErr := os.RemoveAll(repoPath); removeErr != nil {
-				err = errors.Wrapf(err, removeErr.Error())
+				err = errors.WithMessage(err, removeErr.Error())
 			}
 		}
 	}()
@@ -312,7 +301,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 		return 0, errors.Wrap(err, "error in create repository while checking if repository is not exits")
 	}
 	if isRepoExist {
-		return -1, entityerrors.AlreadyExist()
+		return 0, entityerrors.AlreadyExist()
 	}
 
 	// Create new db entity of git_repository

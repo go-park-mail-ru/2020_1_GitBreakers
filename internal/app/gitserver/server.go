@@ -5,7 +5,8 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
-	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
+	mergeRepository "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/merge"
+	gitRepository "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/delivery"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
@@ -20,6 +21,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -49,13 +51,25 @@ func StartNew() {
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Println("failed to close db:", err)
+			customLogger.Println("failed to close db:", err)
 		}
 	}()
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 
-	repogit := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
+	absGitRepoDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_REPOS_DIR))
+	if pathErr != nil {
+		customLogger.Fatalln("bad git directory path:", err)
+		return
+	}
+
+	absPullsDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_PULLRQ_DIR))
+	if pathErr != nil {
+		log.Fatalln("bad git directory path:", err)
+	}
+
+	gitRepos := gitRepository.NewRepository(db, absGitRepoDir)
+	mergeRepos := mergeRepository.NewPullRequestRepository(db, absPullsDir)
 
 	gitkitConfig := gitkit.Config{
 		Dir:        conf.GIT_USER_REPOS_DIR,
@@ -78,15 +92,15 @@ func StartNew() {
 
 	mainRouter := mux.NewRouter()
 
+	mainRouter.Use(panicMiddleware)
+
 	metricsRouter := mainRouter.PathPrefix("/metrics").Subrouter()
 	gitRouter := mainRouter.PathPrefix(routerTemplate).Subrouter()
 
-	metricsRouter.Use(panicMiddleware)
-
-	gitRouter.Use(middleware.PrometheusMetricsMiddleware, accessLogMiddleware, panicMiddleware)
+	gitRouter.Use(middleware.PrometheusMetricsMiddleware, accessLogMiddleware)
 
 	gitServerDelivery := delivery.GitServerDelivery{
-		UseCase: usecase.NewUseCase(repogit, userClient),
+		UseCase: usecase.NewUseCase(gitRepos, mergeRepos, userClient),
 		Logger:  customLogger,
 	}
 
@@ -101,7 +115,7 @@ func StartNew() {
 	gitRouter.Handle("/"+delivery.GitReceivePackService, gitReceivePackHandler).Methods(http.MethodPost)
 
 	customLogger.Printf("starting git server with GIT_SERVER_ENDPOINT=%v\n", conf.GIT_SERVER_ENDPOINT)
-	customLogger.Printf("starting git server with GIT_USER_REPOS_DIR=%v\n", conf.GIT_USER_REPOS_DIR)
+	customLogger.Printf("starting git server with GIT_USER_REPOS_DIR=%v\n", absGitRepoDir)
 
 	if err := http.ListenAndServe(conf.GIT_SERVER_ENDPOINT, mainRouter); err != nil {
 		customLogger.Fatalln("cannot start http git server:", err)
