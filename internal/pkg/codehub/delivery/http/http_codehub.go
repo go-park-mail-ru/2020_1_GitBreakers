@@ -1,10 +1,12 @@
 package http
 
 import (
+	"errors"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
@@ -21,7 +23,7 @@ type HttpCodehub struct {
 }
 
 func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -49,7 +51,7 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 
 	err = GD.CodeHubUC.ModifyStar(newStar)
 	switch {
-	case err == entityerrors.DoesNotExist() || err == entityerrors.AlreadyExist():
+	case errors.Is(err, entityerrors.DoesNotExist()) || errors.Is(err, entityerrors.AlreadyExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusConflict)
 		return
@@ -121,7 +123,7 @@ func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
 	userlist, err := GD.CodeHubUC.GetUserStaredList(int64(repoID), int64(limit), int64(offset))
 
 	switch {
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -141,7 +143,7 @@ func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -155,12 +157,7 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := res.(int64)
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
+	userID := res.(int64)
 	newIssue := models.Issue{}
 
 	if err := easyjson.UnmarshalFromReader(r.Body, &newIssue); err != nil {
@@ -175,15 +172,15 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 	err = GD.CodeHubUC.CreateIssue(newIssue)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.AlreadyExist():
+	case errors.Is(err, entityerrors.AlreadyExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusConflict)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -199,7 +196,7 @@ func (GD *HttpCodehub) NewIssue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -207,11 +204,7 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	userID, ok := res.(int64)
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	userID := res.(int64)
 
 	newIssue := models.Issue{}
 
@@ -224,11 +217,11 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	oldIssue, err := GD.CodeHubUC.GetIssue(newIssue.ID, userID)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -251,11 +244,11 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	err = GD.CodeHubUC.UpdateIssue(oldIssue)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -269,11 +262,11 @@ func (GD *HttpCodehub) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest) //скинули строку, а не число
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest) //скинули строку, а не число
 		return
 	}
 
@@ -285,11 +278,11 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID, 100, 0)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -309,7 +302,7 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -334,11 +327,11 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 	err := GD.CodeHubUC.CloseIssue(oldIssue.ID, userID)
 
 	switch {
-	case err == entityerrors.AccessDenied():
+	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
+	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -351,7 +344,7 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpLogInfo(r.Context(), "issues closed success")
 }
 func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -364,15 +357,32 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), 100, 0)
+
+	query := r.URL.Query()
+
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	offset, err := strconv.Atoi(query.Get("offset"))
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), int64(limit), int64(offset))
 
 	switch {
-	case err == entityerrors.AccessDenied():
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogInfo(r.Context(), "news access denied")
 		w.WriteHeader(http.StatusForbidden)
 		return
-	case err == entityerrors.DoesNotExist():
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogInfo(r.Context(), "news does not exist")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
@@ -388,4 +398,254 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 	}
 
 	GD.Logger.HttpLogInfo(r.Context(), "news got success")
+}
+
+func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+
+	query := r.URL.Query().Get("query")
+	params := mux.Vars(r)["params"]
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset), userID)
+	switch {
+	case errors.Is(err, entityerrors.Invalid()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	repolist, ok := data.(models.RepoSet)
+	if ok {
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(repolist, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	userlist, ok := data.(models.UserSet)
+	if ok {
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(userlist, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	w.WriteHeader(http.StatusBadRequest)
+}
+
+func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+	plModel := models.PullRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	plModel.AuthorId = userID
+	isCorrect, err := govalidator.ValidateStruct(plModel)
+	if !isCorrect || err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = GD.CodeHubUC.CreatePL(plModel)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case errors.Is(err, entityerrors.AlreadyExist()) || errors.Is(err, entityerrors.Conflict()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	direction := mux.Vars(r)["direction"]
+	repoModel := gitmodels.Repository{ID: int64(repoID)}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	var PLlist models.PullReqSet
+	switch direction {
+	case "in":
+		PLlist, err = GD.CodeHubUC.GetPLIn(repoModel, int64(limit), int64(offset))
+	case "out":
+		PLlist, err = GD.CodeHubUC.GetPLOut(repoModel, int64(limit), int64(offset))
+	default:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case errors.Is(err, entityerrors.AlreadyExist()) || errors.Is(err, entityerrors.Conflict()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(PLlist, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+	plModel := models.PullRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	plModel.AuthorId = userID
+	err := GD.CodeHubUC.ApprovePL(plModel, userID)
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+}
+func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+
+	plModel := models.PullRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	plModel.AuthorId = userID
+
+	err := GD.CodeHubUC.ClosePL(plModel, userID)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+}
+func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+	pllist, err := GD.CodeHubUC.GetAllMRUser(userID)
+	if err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(pllist, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

@@ -8,8 +8,12 @@ import (
 )
 
 type SessionHttp struct {
-	ExpireTime time.Duration
-	Client     interfaces.SessClientI
+	CookieName       string
+	CookieExpireTime time.Duration
+	CookieSecure     bool
+	CookieSiteMode   http.SameSite
+	CookiePath       string
+	Client           interfaces.SessClientI
 }
 
 func (UC *SessionHttp) Create(userID int64) (http.Cookie, error) {
@@ -18,13 +22,13 @@ func (UC *SessionHttp) Create(userID int64) (http.Cookie, error) {
 		return http.Cookie{}, err
 	}
 	return http.Cookie{
-		Name:     "session_id",
+		Name:     UC.CookieName,
 		Value:    cretedSess,
 		HttpOnly: true,
-		Expires:  time.Now().Add(UC.ExpireTime),
-		Path:     "/",
-		SameSite: http.SameSiteNoneMode,
-		Secure:   false,
+		Expires:  time.Now().Add(UC.CookieExpireTime),
+		Path:     UC.CookiePath,
+		SameSite: UC.CookieSiteMode,
+		Secure:   UC.CookieSecure,
 	}, nil
 }
 

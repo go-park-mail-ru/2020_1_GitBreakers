@@ -1,8 +1,10 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
@@ -12,7 +14,6 @@ import (
 	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"net/http"
-	"strconv"
 )
 
 type GitDelivery struct {
@@ -23,7 +24,7 @@ type GitDelivery struct {
 
 //создать репак(id,name,description,private,owner)
 func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -63,7 +64,7 @@ func (GD *GitDelivery) CreateRepo(w http.ResponseWriter, r *http.Request) {
 //данные репока(модельку скинуть(id,name,private,owner)
 func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
-	userID := r.Context().Value("UserID")
+	userID := r.Context().Value(models.UserIDKey)
 
 	Repo, err := GD.UC.GetRepo(userName, repoName, GD.idToIntPointer(userID))
 
@@ -73,7 +74,7 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		GD.Logger.HttpInfo(r.Context(), "repo does not exsist", http.StatusNotFound)
+		GD.Logger.HttpInfo(r.Context(), "repo does not exist", http.StatusNotFound)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	case err != nil:
@@ -91,26 +92,97 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 	GD.Logger.HttpInfo(r.Context(), "repo received", http.StatusOK)
 }
 
+func (GD *GitDelivery) DeleteRepo(w http.ResponseWriter, r *http.Request) {
+	userIDFromContext := r.Context().Value(models.UserIDKey)
+	userIDPtr := GD.idToIntPointer(userIDFromContext)
+	if userIDPtr == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized repository deletion",
+			http.StatusUnauthorized)
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	ownerID := *userIDPtr
+
+	var repoForDelete gitmodels.Repository
+	if err := easyjson.UnmarshalFromReader(r.Body, &repoForDelete); err != nil {
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("user with id=%d send bad request", ownerID),
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	repoName := repoForDelete.Name
+	if repoName == "" {
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("user with id=%d send bad request", ownerID),
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	err := GD.UC.DeleteByOwnerID(ownerID, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf(
+				"user with id=%d try delete repo=%s, which not exists",
+				ownerID,
+				repoName,
+			),
+			http.StatusNotFound,
+		)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+	}
+
+	GD.Logger.HttpInfo(
+		r.Context(),
+		fmt.Sprintf(
+			"user with id=%d deleted repo=%s",
+			ownerID,
+			repoName,
+		),
+		http.StatusOK,
+	)
+}
+
 //
 ////все репозитории юзера
 func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("UserID")
-	userRealID := *GD.idToIntPointer(userID)
+	userIDFromContext := r.Context().Value(models.UserIDKey)
+	userIDPtr := GD.idToIntPointer(userIDFromContext)
+
 	userName := mux.Vars(r)["username"]
+
 	if userName == "" {
-		userModel, err := GD.UserUC.GetByID(userRealID)
-		if err != nil {
-			GD.Logger.HttpInfo(r.Context(), "user doesn't exsist", http.StatusNotFound)
+		if userIDPtr == nil {
+			GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+
+		userModel, err := GD.UserUC.GetByID(*userIDPtr)
+		if err != nil {
+			GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		userName = userModel.Login
 	}
 
-	repo, err := GD.UC.GetRepoList(userName, &userRealID)
+	repo, err := GD.UC.GetRepoList(userName, userIDPtr)
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
-		GD.Logger.HttpInfo(r.Context(), "access denied for user "+strconv.Itoa(int(userRealID)), http.StatusForbidden)
+		GD.Logger.HttpInfo(r.Context(), fmt.Sprintf("access denied for user=%s", userName), http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -129,7 +201,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
 
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	branches, err := GD.UC.GetBranchList(GD.idToIntPointer(res), userName, repoName)
 
 	switch {
@@ -158,7 +230,7 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 
 //cписок коммитов для ветки
 func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("UserID")
+	userID := r.Context().Value(models.UserIDKey)
 	//сжирает два параметра
 	vars := mux.Vars(r)
 	commitParams := &gitmodels.CommitRequest{
@@ -204,7 +276,7 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
-	userIDpointer := GD.idToIntPointer(r.Context().Value("UserID"))
+	userIDpointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
 
 	vars := mux.Vars(r)
 	showParams := gitmodels.FilesCommitRequest{
@@ -260,7 +332,7 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Request) {
-	userIDpointer := GD.idToIntPointer(r.Context().Value("UserID"))
+	userIDpointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
 
 	vars := mux.Vars(r)
 	userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
@@ -289,6 +361,106 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 	}
 
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
+}
+
+func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
+	userIDPointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
+
+	vars := mux.Vars(r)
+
+	userName := vars["username"]
+	repoName := vars["reponame"]
+
+	res, err := GD.UC.GetRepoHead(userName, repoName, userIDPointer)
+	switch {
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("access denied to repository=%s/%s", userName, repoName),
+			http.StatusForbidden,
+		)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf("not found repository=%s/%s", userName, repoName),
+			http.StatusNotFound,
+		)
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+
+	case errors.Is(err, entityerrors.ContentEmpty()):
+		w.WriteHeader(http.StatusNoContent)
+
+	case err != nil:
+		GD.Logger.HttpLogError(
+			r.Context(),
+			"git/delivery/http_git",
+			"GetRepoHead",
+			err,
+		)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+	default:
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		} else {
+			GD.Logger.HttpInfo(
+				r.Context(),
+				fmt.Sprintf("successfully returned HEAD=%s for repository=%s/%s",
+					res.Name, userName, repoName),
+				http.StatusOK,
+			)
+		}
+	}
+}
+func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(models.UserIDKey)
+	if res == nil {
+		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	userID := res.(int64)
+	forkData := gitmodels.RepoFork{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &forkData); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	valid, err := govalidator.ValidateStruct(forkData)
+	if !valid || err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if forkData.FromRepoID <= 0 {
+		forkData.FromRepoID = -1
+	}
+
+	err = GD.UC.Fork(forkData.FromRepoID, forkData.FromAuthorName, forkData.FromRepoName, forkData.NewName, userID)
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusForbidden)
+		return
+	case errors.Is(err, entityerrors.AlreadyExist()) || errors.Is(err, entityerrors.Conflict()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (GD *GitDelivery) idToIntPointer(id interface{}) *int64 {

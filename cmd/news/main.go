@@ -4,7 +4,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
 	news "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/grpc"
-	dbCodehub "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres"
+	news2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/news"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/usecase"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/repository/postgres"
@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"path/filepath"
 )
 
 func init() {
@@ -44,9 +45,16 @@ func main() {
 	}()
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
-	newsRepos := dbCodehub.NewRepoNews(db)
-	gitRepos := repository.NewRepository(db, conf.GIT_USER_REPOS_DIR)
-	userRepos := postgres.NewUserRepo(db, "default.jpg", "/static/image/avatar/", conf.HOST_TO_SAVE)
+	newsRepos := news2.NewRepoNews(db)
+
+	absGitRepoDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_REPOS_DIR))
+	if pathErr != nil {
+		log.Println("bad git directory path:", err)
+		return
+	}
+
+	gitRepos := repository.NewRepository(db, absGitRepoDir)
+	userRepos := postgres.NewUserRepo(db, conf.DEFAULT_USER_AVATAR_NAME, "/static/image/avatar/", conf.HOST_TO_SAVE)
 
 	UCCodeHub := usecase.UCCodeHub{
 		RepoNews: &newsRepos,

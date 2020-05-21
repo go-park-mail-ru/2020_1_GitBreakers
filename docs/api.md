@@ -13,7 +13,7 @@
 ## 1. Авторизация
 ### 1.1 Логин
 
-Запрос: `/session` типа `POST`
+Запрос: `/api/v1/session` типа `POST`
 required: login: string(>3 симв), password:string(>5 симв)  
 
 Тело запроса:
@@ -32,7 +32,7 @@ required: login: string(>3 симв), password:string(>5 симв)
 
 ### 1.2 Регистрация
 
-Запрос: `/user/profile` типа `POST`
+Запрос: `/api/v1/user/profile` типа `POST`
 
 Тело запроса:  
 required email, login(>3 симв), password(>5 симв)  
@@ -51,7 +51,7 @@ required email, login(>3 симв), password(>5 симв)
 
 ### 1.3 Логаут
 
-Запрос: `/session` типа `DELETE`
+Запрос: `/api/v1/session` типа `DELETE`
 
 Ответ:  
 1. 200 OK+уберет куки session_id
@@ -60,17 +60,18 @@ required email, login(>3 симв), password(>5 симв)
 ## 2. Профиль
 ### 2.1 Получение информации профиля
 
-Запрос: `/user/profile` типа `GET`
+Запрос: `/api/v1/user/profile` типа `GET`
 
 Ответ:
 1. 200 ok
 ```json
 {
-    "id": "int",
-    "login": "string",
-    "email": "string",
-    "name": "string",
-    "image": "string"
+    "id": 75,
+    "name": "kek",
+    "login": "kek2101",
+    "image": "/static/image/avatar/default.png",
+    "email": "alexloh500@mail.ru",
+    "created_at": "2020-01-01T00:00:00Z"
 }
 ```
 | Ключ          | Значение                 |
@@ -78,7 +79,7 @@ required email, login(>3 симв), password(>5 симв)
 | `login`       | Логин                    |
 | `email`       | Адрес электронной почты  |
 | `name`        | Имя+Фамилия              |
-| `avatar`      | Ссылка на аватарку (url) |
+| `image`       | Ссылка на аватарку (url) |
 2. 401 unauthorized  
 3. 404 юзера не существует  
 ### 2.2 Обновить данные юзера
@@ -98,7 +99,7 @@ required email, login(>3 симв), password(>5 симв)
 3. 400 json невалидный  
 4. 409 уже есть юзер с такими данными  
 ### 2.3 Получить инфу по логину
-Запрос: `/user/profile/{login}` типа `GET`  
+Запрос: `/api/v1/user/profile/{login}` типа `GET`  
 
 Ответ:  
 1. 200 ok
@@ -107,14 +108,14 @@ required email, login(>3 симв), password(>5 симв)
     "id": "int",
     "name": "string",
     "login": "string",
-    "image": "http://localhost:8080/static/image/avatar/default.jpg",
+    "image": "/static/image/avatar/default.jpg",
     "email": "string"
 }
 ```
 2. 404 не найден такой юзер  
 ### 2.4 Загрузить аватарку
 
-Запрос: `/user/avatar` типа `PUT`  
+Запрос: `/api/v1/user/avatar` типа `PUT`  
 Запрос: Картинка(6MB max size), имя поля **avatar**  
 ```html
 <form enctype="multipart/form-data">
@@ -127,7 +128,7 @@ required email, login(>3 симв), password(>5 симв)
 2. 401 не авторизован  
 ## 3. Репозиторий
 ### 3.1 Создать новый репозиторий
-Запрос: `/user/repo` типа `POST`  
+Запрос: `/api/v1/user/repo` типа `POST`  
 Required: name(alphanumeric), 
 ```json
 {
@@ -143,9 +144,9 @@ Required: name(alphanumeric),
 3. 401 unauthorized
 4. 409 есть репак с таким названием  
 ### 3.2 Получить репозиторий по имени юзера и названию
-Запрос: `/repo/{username}/{reponame}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}` типа `GET`  
 Ответ:
-1. 200 ok  
+1. 200 ok  (поле parent_repository_info может быть пустым, если is_fork = false)
 ```json
 {
     "id": "int",
@@ -154,96 +155,120 @@ Required: name(alphanumeric),
     "description": "string",
     "is_public": "bool",
     "is_fork": "bool",
-    "created_at": "date"
+    "created_at": "date",
+    "parent_repository_info": {
+        "id": "int",
+        "owner_id": "int",
+        "name": "string",
+        "author_login": "string"
+    }
 }
 ```
 2. 403 нет прав на просмотр(приватный)  
 3. 404 не найден репозиторий с таким username+reponame  
 ### 3.3 Получить список своих репозиториев
-Запрос: `/user/repo` типа `GET`  
+Запрос: `/api/v1/user/repo` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
-   [{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-},
+[
     {
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-}]
+        "id": 67,
+        "owner_id": 75,
+        "name": "pes",
+        "description": "",
+        "is_fork": true,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {
+            "id": 37,
+            "owner_id": 51,
+            "name": "horse",
+            "author_login": "cheburek111"
+        }
+    },
+    {
+        "id": 68,
+        "owner_id": 75,
+        "name": "pess",
+        "description": "",
+        "is_fork": false,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {}
+    }
+]
 ```
 ### 3.4 Получить список репозиториев юзера его логину
-Запрос: `/user/repo/{username}` типа `GET`  
+Запрос: `/api/v1/user/repo/{username}` типа `GET`  
 Ответ:
 1. 200 ok  
 ```json
-   [{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-},
-{
-    "id": "int",
-    "owner_id": "int",
-    "name": "string",
-    "description": "string",
-    "is_public": "bool",
-    "is_fork": "bool",
-    "created_at": "date"
-}]
+[
+    {
+        "id": 67,
+        "owner_id": 75,
+        "name": "pes",
+        "description": "",
+        "is_fork": true,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {
+            "id": 37,
+            "owner_id": 51,
+            "name": "horse",
+            "author_login": "cheburek111"
+        }
+    }
+]
 ```
-2. 404 не найден такой юзер  
+2. 404 не найден такой юзер
+  
+### 3.5 Удалить репозиторий
+Запрос: `/api/v1/user/repo` типа `DELETE`  
+```json
+{
+    "name": "string"
+}
+```
+Ответ:
+1. 200 - репозиторий успешно удалён
+2. 400 - некорректные данные
+3. 401 - пользователь не авторизован
+4. 404 - не найден целевой репозиторий
+ 
 ## 4. Ветки и коммиты  
 ### 4.1 Получить список веток по логину и названию репозитория  
-Запрос: `/repo/{username}/{reponame}/branches` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/branches` типа `GET`  
 Ответ:  
 1. 200 ok  
 ```json
 [
     {
-        "name": "xp/git-lfs",
-        "commit": {
-            "commit_hash": "23c70a09237681d7a0d908220a1a1af44ee74229",
-            "commit_author_name": "ᴜɴᴋɴᴡᴏɴ",
-            "commit_author_email": "u@gogs.io",
-            "commit_author_when": "2020-03-30T00:09:37+08:00",
-            "committer_name": "ᴜɴᴋɴᴡᴏɴ",
-            "committer_email": "u@gogs.io",
-            "committer_when": "2020-03-30T00:09:37+08:00",
-            "tree_hash": "c79a6098241e27d82de8f3a916dfa3d6ce0d9b7d",
-            "commit_parents": [
-                "5164d782afd860a5642c9bf71fea5f1723151ea6"
-            ]
-        }
-    },
-    {
         "name": "master",
         "commit": {
-            "commit_hash": "07818d5fa5aef7dd7dca1d556f59c7a146a9b00c",
-            "commit_author_name": "ᴜɴᴋɴᴡᴏɴ",
-            "commit_author_email": "u@gogs.io",
-            "commit_author_when": "2020-04-05T06:36:08+08:00",
-            "committer_name": "GitHub",
-            "committer_email": "noreply@github.com",
-            "committer_when": "2020-04-05T06:36:08+08:00",
-            "tree_hash": "14c89609a04f269123413f676a8cbe68c197de07",
+            "commit_hash": "89944a4f685579117fb8a36649cdd4b99b3d56e6",
+            "commit_author_name": "Deiklov",
+            "commit_author_email": "romanov408g@mail.ru",
+            "commit_author_when": "2020-04-27T17:58:11+03:00",
+            "committer_name": "Deiklov",
+            "committer_email": "romanov408g@mail.ru",
+            "committer_when": "2020-04-27T17:58:11+03:00",
+            "tree_hash": "9e60190702cadececd04cd8faf82aa8659e57ada",
             "commit_parents": [
-                "bae1d6ccd81cd427382a2456e7c3646bdac9cf46"
+                "1bc2f16b52e5cbbb3b64e1f050fc25009e9a4404"
             ]
         }
     }
@@ -252,10 +277,10 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория)  
 ### 4.2 Получить список коммитов 
-Запрос: `/repo/{username}/{reponame}/commits/hash/{hash}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/commits/hash/{hash}` типа `GET`  
 {commithash} - **хеш коммита** или последний коммит ветки(передается при получении списка веток)
 Образец:  
-`89.208.198.186:8080/repo/logggers/hefherser/commits/hash/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
+`89.208.198.186:8080/api/v1/repo/logggers/hefherser/commits/hash/23c70a09237681d7a0d908220a1a1af44ee74229?offset=2&limit=5`
 Ответ:  
 1. 200 ok
 ```json
@@ -289,10 +314,10 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория или коммита)  
 ### 4.3 Получить список коммитов ветки (аналог 4.2)
-Запрос: `/repo/{username}/{reponame}/commits/branch/{branchname}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/commits/branch/{branchname}` типа `GET`  
 {branchname} - обычное название ветки (master, dev,prod ...)  
 Образец:  
-`89.208.198.186:8080/localhost:8080/repo/lox5000/testname/commits/branch/master`  
+`89.208.198.186:8080/api/v1/localhost:8080/repo/lox5000/testname/commits/branch/master`  
 Ответ:  
 1. 200 ok
 ```json
@@ -328,13 +353,13 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера или репозитория или ветки)  
 ### 4.4 Получить список файлов по коммиту 
-Запрос: `/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`
+Запрос: `/api/v1/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`
 с параметрами:
 - `path` - путь до папки с файлами, например `./`, или `files/`.
 Если параметр пустой, то считается, что  `path=./` 
    
 Образец:  
-`89.208.198.186:8080/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`
+`89.208.198.186:8080/api/v1/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/s6/crond`
 Ответ:  
 1. 200 ok
 ```json
@@ -362,9 +387,9 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)  
 3. 404 (нет такого юзера, репозитория, файла или коммита)   
 ### 4.5 Просмотр одного файла  
-Запрос: `/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`  
+Запрос: `/api/v1/repo/{username}/{reponame}/files/{hashcommits}` типа `GET`  
 Образец:  
-`89.208.198.186:8080/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/main.go`
+`89.208.198.186:8080/api/v1/repo/logggers/hefherser/files/07818d5fa5aef7dd7dca1d556f59c7a146a9b00c?path=docker/main.go`
 Ответ:  
 1. 200 ok  
 ```json
@@ -384,10 +409,39 @@ Required: name(alphanumeric),
 - is_binary всегда false, иначе ошибка (нельзя 
     посмотреть бинарный файл)
 2. 403 (нет прав на просмотр)  
-3. 404 (нет такого юзера, репозитория, файла или коммита)   
+3. 404 (нет такого юзера, репозитория, файла или коммита)
+
+### 4.6 Получение HEAD репозитория (его состояния по умолчанию)
+Запрос: `/api/v1/repo/{username}/{reponame}/head` типа `GET`  
+Образец: `89.208.198.186:8080/api/v1/repo/logggers/hefherser/head`
+Ответ:  
+1. 200 ok
+    ```json
+    {
+        "name": "master",
+        "commit": {
+            "commit_hash": "1e16727dfaf12c018cb4c069762d9ab9d62c0814",
+            "commit_author_name": "UlianaBespalova",
+            "commit_author_email": "43138516+UlianaBespalova@users.noreply.github.com",
+            "commit_author_when": "2020-04-27T20:06:36+03:00",
+            "committer_name": "GitHub",
+            "committer_email": "noreply@github.com",
+            "committer_when": "2020-04-27T20:06:36+03:00",
+            "tree_hash": "88b5bc91f0d49751be59e28ee5e5e4204ab12733",
+            "commit_parents": [
+                "4a7bc0859ace4e7c479d3739756d81f0c9cb7bc8"
+            ]
+        }
+    }
+    ```
+2. 204 no content - репозиторий существует, 
+    но не имеет состояния по умолчанию (ветки master)
+3. 403 - нет прав доступа на просмотр
+4. 404 - запрашиваемый репозиторий не существует 
+   
 ## 5. Issues  
 ### 5.1 Создать issues  
-Запрос: `/func/repo/{repoID}/issues` типа `POST`  
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `POST`  
 Required: author_id, repo_id,title(>0 symbol),message(>0symbol)    
 Тело: 
 ```json
@@ -407,7 +461,7 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
 4. 403 (нет прав на создание в этом репозитории)  
 5. 404 (нет такого юзера или репозитория)  
 ### 5.2 Получить список issues  
-Запрос: `/func/repo/{repoID}/issues` типа `GET` 
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `GET` 
 Ответ:  
 1.200 ok
 ```json
@@ -419,7 +473,9 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
   "message": "kekekfafafasfasfasfasfasfas",
   "label": "resolved",
   "is_closed": true,
-  "created_at": "2020-04-22T17:34:07.529Z"
+  "created_at": "2020-04-22T17:34:07.529Z",
+  "author_login": "nickeskov",
+  "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 },
 {
   "id": 45,
@@ -429,14 +485,16 @@ Required: author_id, repo_id,title(>0 symbol),message(>0symbol)
   "message": "kekek",
   "label": "resolved",
   "is_closed": true,
-  "created_at": "2020-04-22T17:34:07.529Z"
+  "created_at": "2020-04-22T17:34:07.529Z",
+  "author_login": "nickeskov",
+  "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 }]
 ``` 
  2. 400 указана строка на месте repo_id  
  3. 403 (нет прав на просмтор в этом репозитории)  
  4. 404 (нет такого юзера или репозитория) 
 ### 5.3 Обновить issues  
-Запрос: `/func/repo/{repoID}/issues` типа `POST`  
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `POST`  
 Можно обновить: message,title,label  
 Required: id
 Тело: 
@@ -455,7 +513,7 @@ Required: id
 4. 403 (нет прав на апдейт)  
 5. 404 (нет такого вопроса или репозитория)  
 ### 5.4 Закрыть issues  
-Запрос: `/func/repo/{repoID}/issues` типа `DELETE`   
+Запрос: `/api/v1/func/repo/{repoID}/issues` типа `DELETE`   
 Тело: 
 ```json
 {
@@ -470,7 +528,7 @@ Required: id
 5. 404 (нет такого вопроса или репозитория)  
 ## 6. Stars 
 ### 6.1 Добавить/удалить звезду  
-Запрос: `/func/repo/{repoID}/stars` типа `PUT`  
+Запрос: `/api/v1/func/repo/{repoID}/stars` типа `PUT`  
 Описание: true добавит звезду/false уберет  
 Тело: 
 ```json
@@ -484,17 +542,18 @@ Required: id
 3. 401 (не авторизован)
 4. 409 double vote    
 ### 6.2 Список избранных репозиториев  
-Запрос: `/func/repo/{login}/stars?limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/repo/{login}/stars?limit=100&offset=2` типа `GET`  
 Тело: 
 ```json
-   [{
+[{
     "id": "int",
     "owner_id": "int",
     "name": "string",
     "description": "string",
     "is_public": "bool",
     "is_fork": "bool",
-    "created_at": "date"
+    "created_at": "date",
+    "author_login": "string"
 },
 {
     "id": "int",
@@ -503,14 +562,15 @@ Required: id
     "description": "string",
     "is_public": "bool",
     "is_fork": "bool",
-    "created_at": "date"
+    "created_at": "date",
+    "author_login": "string"
 }]
 ``` 
 Ответ:  
 1. 200 ок  
 2. 404 нет юзера с таким логином  
 ### 6.3 Список юзеров которые лайкнули репозиторий  
-Запрос: `/func/repo/{repoID}/stars/users?limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/repo/{repoID}/stars/users?limit=100&offset=2` типа `GET`  
 Тело: 
 ```json
 [{
@@ -535,7 +595,7 @@ Required: id
 4. 404 нет такого repoID  
 ## 7. News  
 ### 7.1 Список новостей   
-Запрос: `/func/repo/{repoID}/news?limit=100&offset=2` типа `GET`  
+Запрос: `/api/v1/func/repo/{repoID}/news?limit=100&offset=2` типа `GET`  
 limit и offset опциональные параметры  
 Тело: 
 ```json
@@ -544,14 +604,20 @@ limit и offset опциональные параметры
     "author_id": 5,
     "repo_id": 654433,
     "message": "dwrwrwsfdfrfe",
-    "date": "2020-04-26T19:02:10.073Z"
+    "label": "",
+    "date": "2020-04-26T19:02:10.073Z",
+    "author_login": "nickeskov",
+    "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 },
 {
     "id": 5,
     "author_id": 5,
     "repo_id": 654433,
     "message": "dwrwrwrfsffe",
-    "date": "2020-04-26T19:02:10.073Z"
+    "label": "",
+    "date": "2020-04-26T19:02:10.073Z",
+    "author_login": "nickeskov",
+    "author_image": "http://localhost:8080/static/image/avatar/default.jpg"
 }]
 ``` 
 Ответ:  
@@ -560,3 +626,171 @@ limit и offset опциональные параметры
 3. 401 неавторизован  
 4. 403 нет доступа на просмотр новостей в данной репке  
 5. 404 нет репки с таким repoid    
+## 8. Search  
+### 8.1 Поиск юзеров среди всей базы   
+Запрос: `/api/v1/func/search/{params}?query=keksik&limit=100&offset=2` типа `GET`  
+limit и offset опциональные параметры  
+query это левая часть ника, по которой идет поиск  
+params=**allusers**  
+Тело: 
+Ответ:  
+```json
+[
+    {
+        "id": 4,
+        "owner_id": 1,
+        "name": "loshok",
+        "description": "",
+        "is_fork": false,
+        "created_at": "2020-05-17T22:23:25.185682+03:00",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "author_login": "keksik500",
+        "parent_repository_info": {}
+    }
+]
+```
+```json
+[
+    {
+        "id": 1,
+        "name": "sddd",
+        "login": "keksik500",
+        "image": "/static/image/avatar/default.jpg",
+        "email": "keksik@mail.ru",
+        "created_at": "2020-05-17T22:18:18.711999+03:00"
+    }
+]
+```
+1. 200 ок   
+2. 400 невалдиные get параметры  
+3. 401 неавторизован  
+### 8.2 Поиск репозиториев среди всей базы   
+Аналогично 8.1  
+params=**allrepo**     
+### 8.3 Поиск среди своих репозиториев   
+Аналогично 8.1  
+params=**myrepo**     
+### 8.4 Поиск среди избранных репозиториев(на которые юзер повесил звезду)     
+Аналогично 8.1  
+params=**starredrepo**   
+## 9. Fork  
+### 9.1 Ответвление репозитория к себе
+Запрос: `/api/v1/func/repo/fork` типа `POST`  
+Указать либо id от чего форкаемся(from_repo_id), либо связку логин+название репы  
+new_name новое имя которое будет отображатся   
+при указании и id и логин+название репы приоритет будет у id  
+```json
+{
+  "from_repo_id": 45,
+  "from_author_name": "pesntv",
+  "from_repo_name": "muhtar",
+  "new_name": "muhtar2"
+}
+```
+Ответ:  
+1. 200 ok  
+2. 400 невалидный json или сами данные
+3. 401 unauthorized  
+4. 403 форкаем приватный репак    
+5. 409 уже форкали или форкаем свой же репак  
+## 10. PullRequest  
+### 10.1 Создание PullRequest
+Запрос: `/api/v1/func/repo/pullrequests` типа `POST`  
+branch указываем название веток текстовое  
+```json
+{
+  "title": "kekemdaa",
+  "author_id": 20,
+  "from_repo_id": 440,
+  "to_repo_id": 550,
+  "branch_from": "string",
+  "branch_to": "string",
+  "message": "kekeka"
+}
+```
+Ответ:  
+1. 201 created  
+2. 400 невалидный json или сами данные
+3. 401 unauthorized  
+4. 403 приватный репак  
+### 10.2 Получение списка всех PullRequest в наш репо или из нашего репока
+Запрос: `/api/v1/func/repo/{repoID}/pullrequests/in?limit=2&offset=0` типа `GET`
+Запрос: `/api/v1/func/repo/{repoID}/pullrequests/out?limit=2&offset=0` типа `GET`   
+limit offset лимит и смещение  
+title from_repo to_repo bracch_to branch_from обязательны  
+Ответ:  
+```json
+[
+    {
+      "id": "kekemdaa",
+      "author_id": 20,
+      "from_repo_id": 440,
+      "to_repo_id": 550,
+      "branch_from": "dev",
+      "branch_to": "master",
+      "title": "pl number one",
+      "message": "kekeke mdaa",
+      "label": "warn",
+      "is_closed": false,
+      "is_accepted": true,
+      "created_at":  "2020-05-17T22:18:18.711999+03:00"
+    }
+]
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные  
+3. 401 unauthorized  
+4. 403 лезем в приватный репак   
+### 10.3 Принять PullRequest
+Запрос: `/api/v1/func/repo/pullrequests` типа `PUT`  
+
+Ответ:  
+```json
+{
+  "id": 20, 
+  "to_repo_id": 30
+}
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные(id не существуют)  
+3. 401 unauthorized  
+4. 403 лезем в чужой реквест  
+### 10.4 Закрыть PullRequest
+Запрос: `/api/v1/func/repo/pullrequests` типа `DELETE`  
+Ответ:  
+```json
+{
+  "id":20,
+  "to_repo_id": 30
+}
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные(id не существуют)  
+3. 401 unauthorized  
+4. 403 лезем в какой-то чужой реквест 
+### 10.5 Все PullRequest юзера
+Запрос: `/api/v1/user/pullrequests?limit=1&offset=0` типа `GET`  
+Ответ:  
+```json
+[
+    {
+      "id": "kekemdaa",
+      "author_id": 20,
+      "from_repo_id": 440,
+      "to_repo_id": 550,
+      "branch_from": "dev",
+      "branch_to": "master",
+      "title": "pl number one",
+      "message": "kekeke mdaa",
+      "label": "warn",
+      "is_closed": false,
+      "is_accepted": true,
+      "created_at":  "2020-05-17T22:18:18.711999+03:00"
+    }
+]
+```
+1. 200 ok  
+2. 400 невалидный json или сами данные(id не существуют)  
+3. 401 unauthorized  

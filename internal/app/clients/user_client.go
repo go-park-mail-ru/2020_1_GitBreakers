@@ -115,8 +115,8 @@ func (c *UserClient) CheckPass(login string, pass string) (bool, error) {
 	//в случае неуспешного запроса(ошибка клиента или сервера)
 	return false, err
 }
-func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) error {
-	const ChunkSize int64 = 1 << 16 //64kb
+func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) (err error) {
+	const ChunkSize int = 1 << 16 //64kb
 	if int64(len(fileData)) != fileSize {
 		return errors.New("can not assign real fileLen and received len")
 	}
@@ -124,11 +124,19 @@ func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if _, closeErr := stream.CloseAndRecv(); closeErr != nil {
+			if err != nil {
+				err = errors.WithMessage(err, closeErr.Error())
+			} else {
+				err = closeErr
+			}
+		}
+	}()
 	//открываем поток и туда кидаем частями, удобно для передачи жирных картинок
 	buf := make([]byte, ChunkSize)
-	var i int64 = 0
-	for i = 0; i < fileSize; i += ChunkSize {
-		if i+ChunkSize < fileSize {
+	for i := 0; i < int(fileSize); i += ChunkSize {
+		if i+ChunkSize < int(fileSize) {
 			copy(buf, fileData[i:i+ChunkSize])
 		} else {
 			err = stream.Send(&usergrpc.UserAvatarModel{
@@ -136,6 +144,9 @@ func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte
 				FileName: fileName,
 				Chunk:    fileData[i:],
 			})
+			if err != nil {
+				return
+			}
 			break
 		}
 
@@ -144,7 +155,9 @@ func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte
 			FileName: fileName,
 			Chunk:    buf,
 		})
+		if err != nil {
+			return err
+		}
 	}
-	_, err = stream.CloseAndRecv()
-	return err
+	return nil
 }

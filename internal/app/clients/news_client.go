@@ -43,13 +43,20 @@ func (c *NewsClient) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 	if err != nil {
 		return nil, err
 	}
-	newsList := make([]models.News, len(newsResp.News))
-	for i, v := range newsResp.News {
-		newsList[i].ID = v.ID
-		newsList[i].AuthorID = v.AuthorID
-		newsList[i].Date, err = ptypes.Timestamp(v.Date)
-		newsList[i].Mess = v.Message
-		newsList[i].RepoID = v.RepoID
+	newsList := make(models.NewsSet, 0)
+	for _, v := range newsResp.News {
+		var newsModel models.News
+
+		newsModel.ID = v.ID
+		newsModel.AuthorID = v.AuthorID
+		newsModel.Date, err = ptypes.Timestamp(v.Date)
+		newsModel.Mess = v.Message
+		newsModel.RepoID = v.RepoID
+		newsModel.AuthorLogin = v.AuthorLogin
+		newsModel.AuthorImage = v.AuthorImage
+
+		newsList = append(newsList, newsModel)
 	}
+
 	return newsList, err
 }

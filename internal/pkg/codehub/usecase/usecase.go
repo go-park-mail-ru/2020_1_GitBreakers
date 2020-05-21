@@ -4,17 +4,20 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
+	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 )
 
 type UCCodeHub struct {
-	RepoIssue codehub.RepoIssueI
-	RepoStar  codehub.RepoStarI
-	RepoNews  codehub.RepoNewsI
-	GitRepo   git.GitRepoI
-	UserRepo  user.RepoUser
+	RepoIssue  codehub.RepoIssueI
+	RepoStar   codehub.RepoStarI
+	RepoNews   codehub.RepoNewsI
+	GitRepo    git.GitRepoI
+	UserRepo   user.RepoUser
+	SearchRepo codehub.RepoSearchI
+	RepoMerge  codehub.RepoMergeI
 }
 
 func (UC *UCCodeHub) ModifyStar(star models.Star) error {
@@ -129,4 +132,59 @@ func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) 
 		return UserSet, err
 	}
 	return models.UserSet{}, err
+}
+func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (interface{}, error) {
+	switch params {
+	case "allusers":
+		return UC.SearchRepo.GetFromUsers(query, limit, offset)
+
+	case "allrepo":
+		return UC.SearchRepo.GetFromAllRepos(query, limit, offset)
+
+	case "myrepo":
+		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset, userID)
+
+	case "starredrepo":
+		return UC.SearchRepo.GetFromStarredRepos(query, limit, offset, userID)
+
+	default:
+		return nil, entityerrors.Invalid()
+	}
+}
+func (UC *UCCodeHub) CreatePL(request models.PullRequest) error {
+	return UC.RepoMerge.CreateMR(request)
+}
+func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error) {
+	_, err := UC.GitRepo.GetByID(repo.ID)
+	if err != nil {
+		return models.PullReqSet{}, err
+	}
+	return UC.RepoMerge.GetAllMRIn(repo.ID, limit, offset)
+}
+func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error) {
+	return UC.RepoMerge.GetAllMROut(repo.ID, limit, offset)
+}
+
+func (UC *UCCodeHub) ApprovePL(pl models.PullRequest, userID int64) error {
+	isCorrect, err := UC.GitRepo.CheckReadAccessById(&userID, pl.ToRepoID)
+	if isCorrect && err == nil {
+		return UC.RepoMerge.ApproveMerge(pl.ID)
+	}
+	return entityerrors.AccessDenied()
+}
+
+func (UC *UCCodeHub) ClosePL(pl models.PullRequest, userID int64) error {
+	isCorrect, err := UC.GitRepo.CheckReadAccessById(&userID, pl.ToRepoID)
+	if isCorrect && err == nil {
+		return UC.RepoMerge.RejectMR(pl.ID)
+	}
+	return entityerrors.AccessDenied()
+}
+
+func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
+	MRList, err := UC.RepoMerge.GetOpenedMRForUser(userID, 100, 0)
+	if err != nil {
+		return models.PullReqSet{}, err
+	}
+	return MRList, err
 }

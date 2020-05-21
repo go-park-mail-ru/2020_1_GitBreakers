@@ -1,4 +1,4 @@
-package postgres
+package stars
 
 import (
 	"database/sql"
@@ -26,7 +26,7 @@ func (repo *StarRepository) IsExistStar(userID int64, repoID int64) (bool, error
                SELECT *
                FROM git_repository_user_stars
                WHERE repository_id = $1
-                 AND user_id = $2
+                 AND author_id = $2
            )`, repoID, userID).Scan(&isExist)
 
 	if err != nil {
@@ -48,7 +48,7 @@ func (repo *StarRepository) AddStar(userID int64, repoID int64) error {
 	}
 
 	_, err = repo.DB.Exec(
-		"INSERT INTO git_repository_user_stars (repository_id, user_id) VALUES ($1, $2)",
+		"INSERT INTO git_repository_user_stars (repository_id, author_id) VALUES ($1, $2)",
 		repoID, userID)
 	if err != nil {
 		return errors.Wrapf(err, "error occurs in StarRepository in AddStar function "+
@@ -62,7 +62,9 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 	var isDeleted bool
 
 	err := repo.DB.QueryRow(
-		"DELETE FROM git_repository_user_stars WHERE repository_id = $1 AND user_id = $2 RETURNING TRUE",
+		`DELETE FROM git_repository_user_stars
+				WHERE repository_id = $1 AND author_id = $2
+				RETURNING TRUE AS result`,
 		repoID, userID).Scan(&isDeleted)
 
 	switch {
@@ -78,17 +80,18 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 
 func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset int64) (gitRepos []gitmodels.Repository, err error) {
 	rows, err := repo.DB.Query(
-		`	SELECT gr.id,
-					   gr.owner_id,
-					   gr.name,
-					   gr.description,
-					   gr.is_fork,
-					   gr.created_at,
-					   gr.is_public,
-	   					gr.stars
+		`	SELECT 	gruv.id,
+					   	gruv.owner_id,
+					   	gruv.name,
+					   	gruv.description,
+					   	gruv.is_fork,
+					   	gruv.created_at,
+					   	gruv.is_public,
+	   					gruv.stars,
+	       				gruv.user_login
 				FROM git_repository_user_stars AS grus
-						 JOIN git_repositories AS gr ON grus.repository_id = gr.id
-				WHERE grus.user_id = $1 LIMIT $2 OFFSET $3`,
+						JOIN git_repository_user_view AS gruv ON gruv.id = grus.repository_id
+				WHERE grus.author_id = $1 LIMIT $2 OFFSET $3`,
 		userID, limit, offset)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error occurs in StarRepository in GetStarredRepos function "+
@@ -111,11 +114,15 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 			&gitRepo.IsFork,
 			&gitRepo.CreatedAt,
 			&gitRepo.IsPublic,
-			&gitRepo.Stars)
+			&gitRepo.Stars,
+			&gitRepo.AuthorLogin,
+		)
+
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in StarRepository in GetStarredRepos function "+
 				"while scanning repositories with starUserId=%v", userID)
 		}
+
 		gitRepos = append(gitRepos, gitRepo)
 	}
 
@@ -123,14 +130,14 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 }
 func (repo *StarRepository) GetUserStaredList(repoID int64, limit int64, offset int64) (users []models.User, err error) {
 	rows, err := repo.DB.Query(`
-				SELECT u.id,
-					   u.login,
-					   u.email,
-					   u.name,
-					   u.avatar_path,
-					   u.created_at
+				SELECT 	upv.id,
+					   	upv.login,
+					   	upv.email,
+					   	upv.name,
+					   	upv.avatar_path,
+					   	upv.created_at
 				FROM git_repository_user_stars AS grus
-						 JOIN users AS u ON grus.user_id = u.id
+						 JOIN user_profile_view AS upv ON grus.author_id = upv.id
 				WHERE grus.repository_id = $1
 				LIMIT $2 OFFSET $3`,
 		repoID, limit, offset)

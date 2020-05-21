@@ -1,13 +1,18 @@
 package usecase
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 type UCUser struct {
@@ -23,6 +28,9 @@ func (UC *UCUser) Create(user models.User) error {
 		return entityerrors.AlreadyExist()
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 	//конвертим в строку
 	user.Password = string(hashedPassword[:])
 	if err := UC.RepUser.Create(user); err != nil {
@@ -43,7 +51,7 @@ func (UC *UCUser) Update(userID int64, newUserData models.User) error {
 	if err != nil {
 		return errors.Wrap(err, "error in repo layer")
 	}
-	if govalidator.IsByteLength(newUserData.Name, 5, 128) {
+	if govalidator.IsByteLength(newUserData.Name, 0, 128) {
 		oldUserData.Name = newUserData.Name
 	}
 	if govalidator.IsEmail(newUserData.Email) {
@@ -78,10 +86,19 @@ func (UC *UCUser) CheckPass(login string, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(login, pass)
 }
 func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) error {
-
-	if err := checkFileContentType(fileData); err != nil {
+	imgExtension, err := checkFileContentType(fileData)
+	if err != nil {
 		return err
 	}
+
+	rand.Seed(time.Now().UnixNano())
+	fileNameRandHash := md5.Sum([]byte(fmt.Sprintf("%s%d", fileName, rand.Int63())))
+
+	fileName = fmt.Sprintf(
+		"%s.%s",
+		hex.EncodeToString(fileNameRandHash[:]),
+		imgExtension,
+	)
 
 	if err := UC.RepUser.UploadAvatar(fileName, fileData); err != nil {
 		return errors.Wrap(err, "err in repo UploadAvatar")
@@ -98,20 +115,26 @@ func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) e
 	return nil
 }
 
-func checkFileContentType(fileContent []byte) error {
-
+func checkFileContentType(fileContent []byte) (string, error) {
 	contentType := http.DetectContentType(fileContent)
 
-	for _, r := range allowedContentType {
-		if contentType == r {
-			return nil
-		}
+	extension, ok := allowedContentType[contentType]
+	if !ok {
+		return "", errors.WithMessage(entityerrors.Invalid(),
+			"this content type is not allowed")
 	}
-	return errors.New("this content type is not allowed")
+
+	return extension, nil
 }
 
-var allowedContentType = []string{
-	"image/png",
-	"image/jpeg",
-	"image/jpg",
+var allowedContentType = map[string]string{
+	"image/bmp":                "bmp",
+	"image/gif":                "gif",
+	"image/png":                "png",
+	"image/jpeg":               "jpeg",
+	"image/jpg":                "jpg",
+	"image/svg+xml":            "svg",
+	"image/webp":               "webp",
+	"image/tiff":               "tiff",
+	"image/vnd.microsoft.icon": "ico",
 }

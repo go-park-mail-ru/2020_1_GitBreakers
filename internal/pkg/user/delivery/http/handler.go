@@ -23,7 +23,7 @@ type UserHttp struct {
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
-	if res := r.Context().Value("UserID"); res != nil {
+	if res := r.Context().Value(models.UserIDKey); res != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
 		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusNotAcceptable)
 		return
@@ -78,7 +78,7 @@ func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -107,7 +107,7 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
-	if res := r.Context().Value("UserID"); res != nil {
+	if res := r.Context().Value(models.UserIDKey); res != nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusNotAcceptable)
 		w.WriteHeader(http.StatusNotAcceptable)
 		return
@@ -139,8 +139,16 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isUser, err := UsHttp.UClient.CheckPass(User.Login, input.Password)
-	if err != nil || !isUser {
-		UsHttp.Logger.HttpLogWarning(r.Context(), " ", "CheckPass", errors.Cause(err).Error())
+	if err != nil {
+		UsHttp.Logger.HttpLogError(r.Context(), "user/delivery/http", "Login: ",
+			errors.Cause(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if !isUser {
+		UsHttp.Logger.HttpLogWarning(r.Context(), "user/delivery/http", "Login",
+			"bad credentials")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -157,7 +165,7 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
-	if res := r.Context().Value("UserID"); res == nil {
+	if res := r.Context().Value(models.UserIDKey); res == nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "user unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -181,7 +189,7 @@ func (UsHttp *UserHttp) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value("UserID")
+	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "user unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
@@ -212,7 +220,7 @@ func (UsHttp *UserHttp) GetInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
-	if res := r.Context().Value("UserID"); res == nil {
+	if res := r.Context().Value(models.UserIDKey); res == nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "user unauthorized", http.StatusUnauthorized)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -245,7 +253,7 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currUser := r.Context().Value("UserID").(int64)
+	currUser := r.Context().Value(models.UserIDKey).(int64)
 
 	err = UsHttp.UClient.UploadAvatar(currUser, header.Filename, binaryImage.Bytes(), int64(binaryImage.Len()))
 	if err != nil {

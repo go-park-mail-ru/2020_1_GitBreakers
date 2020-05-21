@@ -13,4 +13,5 @@ type UseCase interface {
 	CheckUserPassword(userLogin string, password string) (bool, error)
 	CheckGitRepositoryReadAccess(currentUserId *int64, userLogin, repoName string) (bool, error)
 	GetGitRepositoryPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error)
+	UpdateMergeRequestsStatuses(ownerLogin, repoName string) error
 }

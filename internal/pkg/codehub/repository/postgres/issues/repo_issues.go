@@ -1,4 +1,4 @@
-package postgres
+package issues
 
 import (
 	"database/sql"
@@ -22,7 +22,7 @@ func NewIssueRepository(db *sqlx.DB) IssueRepository {
 
 func (repo *IssueRepository) CreateIssue(issue models.Issue) error {
 	_, err := repo.DB.Exec(`
-		INSERT INTO issues (author_id, repo_id, title, message, label) VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO issues (author_id, repository_id, title, message, label) VALUES ($1, $2, $3, $4, $5)
 		`,
 		issue.AuthorID,
 		issue.RepoID,
@@ -51,7 +51,7 @@ func (repo *IssueRepository) UpdateIssue(issue models.Issue) error {
 	_, err := repo.DB.Exec(`
 			UPDATE issues 
 			SET author_id = $2,
-				repo_id = $3,
+				repository_id = $3,
 				title = $4,
 				message = $5,
 				label = $6
@@ -77,9 +77,11 @@ func (repo *IssueRepository) CloseIssue(issueID int64) error {
 	err := repo.DB.QueryRow(`
 			UPDATE issues 
 			SET is_closed = TRUE
-			WHERE id = $1 AND is_closed = FALSE RETURNING TRUE
-		`,
-		issueID).Scan(&isAffected)
+			WHERE id = $1 AND is_closed = FALSE RETURNING TRUE AS result`,
+		issueID,
+	).Scan(
+		&isAffected,
+	)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -96,14 +98,16 @@ func (repo *IssueRepository) GetIssuesList(repoID int64, limit int64, offset int
 	rows, err := repo.DB.Query(`
 			SELECT 	id,
 				   	author_id,
-				   	repo_id,
+				   	repository_id,
 				   	title,
 				   	message,
 				   	label,
 				   	is_closed,
-				   	created_at
-			FROM issues
-			WHERE repo_id = $1
+				   	created_at,
+			       	user_login,
+			       	user_avatar_path
+			FROM issues_users_view
+			WHERE repository_id = $1
 			LIMIT $2 OFFSET $3`,
 
 		repoID, limit, offset,
@@ -131,6 +135,8 @@ func (repo *IssueRepository) GetIssuesList(repoID int64, limit int64, offset int
 			&issue.Label,
 			&issue.IsClosed,
 			&issue.CreatedAt,
+			&issue.AuthorLogin,
+			&issue.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in IssuesRepository in GetIssuesList "+
@@ -147,14 +153,16 @@ func (repo *IssueRepository) GetOpenedIssuesList(repoID int64, limit int64, offs
 	rows, err := repo.DB.Query(`
 			SELECT 	id,
 				   	author_id,
-				   	repo_id,
+				   	repository_id,
 				   	title,
 				   	message,
 				   	label,
 				   	is_closed,
-				   	created_at
-			FROM issues
-			WHERE repo_id = $1 AND is_closed = FALSE
+				   	created_at,
+			       	user_login,
+			       	user_avatar_path
+			FROM issues_users_view
+			WHERE repository_id = $1 AND is_closed = FALSE
 			LIMIT $2 OFFSET $3`,
 
 		repoID, limit, offset,
@@ -182,6 +190,8 @@ func (repo *IssueRepository) GetOpenedIssuesList(repoID int64, limit int64, offs
 			&issue.Label,
 			&issue.IsClosed,
 			&issue.CreatedAt,
+			&issue.AuthorLogin,
+			&issue.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in IssuesRepository in GetOpenedIssuesList "+
@@ -198,14 +208,16 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 	rows, err := repo.DB.Query(`
 			SELECT 	id,
 				   	author_id,
-				   	repo_id,
+				   	repository_id,
 				   	title,
 				   	message,
 				   	label,
 				   	is_closed,
-				   	created_at
-			FROM issues
-			WHERE repo_id = $1 AND is_closed = TRUE
+				   	created_at,
+			       	user_login,
+			       	user_avatar_path
+			FROM issues_users_view
+			WHERE repository_id = $1 AND is_closed = TRUE
 			LIMIT $2 OFFSET $3`,
 
 		repoID, limit, offset,
@@ -233,6 +245,8 @@ func (repo *IssueRepository) GetClosedIssuesList(repoID int64, limit int64, offs
 			&issue.Label,
 			&issue.IsClosed,
 			&issue.CreatedAt,
+			&issue.AuthorLogin,
+			&issue.AuthorImage,
 		)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error occurs in IssuesRepository in GetClosedIssuesList "+
@@ -250,7 +264,7 @@ func (repo *IssueRepository) CheckEditAccessIssue(userID, issueID int64) (perm.P
 	var issueRepoId int64
 
 	err := repo.DB.QueryRow(
-		`SELECT author_id, repo_id FROM issues WHERE id = $1`,
+		`SELECT author_id, repository_id FROM issues WHERE id = $1`,
 		issueID,
 	).Scan(&issueAuthorId, &issueRepoId)
 
@@ -291,13 +305,15 @@ func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err er
 	err = repo.DB.QueryRow(`
 			SELECT 	id,
 					author_id,
-					repo_id,
+					repository_id,
 					title,
 					message,
 					label,
 					is_closed,
-					created_at
-			FROM issues
+					created_at,
+			       	user_login,
+			       	user_avatar_path
+			FROM issues_users_view
 			WHERE id = $1`, issueID,
 	).Scan(
 		&issue.ID,
@@ -308,6 +324,8 @@ func (repo *IssueRepository) GetIssue(issueID int64) (issue models.Issue, err er
 		&issue.Label,
 		&issue.IsClosed,
 		&issue.CreatedAt,
+		&issue.AuthorLogin,
+		&issue.AuthorImage,
 	)
 
 	switch {

@@ -223,6 +223,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 			Image:    "pudge.png",
 			Email:    "dkfiksikrigb@mail.ru",
 		}
+
 		gomock.InOrder(
 			u.EXPECT().GetByID(gomock.Any()).
 				Return(someUser, nil).
@@ -232,7 +233,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 				Times(1))
 
 		middlewareMock := middleware.AuthMiddlewareMock(gitHandlers.GetRepoList, true)
-		//middlewareMock = middleware.SetMuxVars(middlewareMock, "username", "")
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"username": ""})
 
 		apitest.New("Get repolist user empty").
 			Handler(middlewareMock).

@@ -35,6 +35,12 @@ func (GU *GitUseCase) GetRepo(userName string, repoName string, requestUserID *i
 
 	return GU.Repo.GetByName(userName, repoName)
 }
+
+func (GU *GitUseCase) DeleteByOwnerID(ownerID int64, repoName string) error {
+	// may be nil, DoesNotExist or another error
+	return GU.Repo.DeleteByOwnerID(ownerID, repoName)
+}
+
 func (GU *GitUseCase) GetRepoList(userName string, requestUserID *int64) (gitmodels.RepositorySet, error) {
 	rawRepoList, err := GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
 	if err != nil {
@@ -100,4 +106,42 @@ func (GU *GitUseCase) GetFileByPath(params gitmodels.FilesCommitRequest, request
 	}
 
 	return gitmodels.FileCommitted{}, entityerrors.AccessDenied()
+}
+
+func (GU *GitUseCase) GetRepoHead(userLogin, repoName string, requestUserID *int64) (gitmodels.Branch, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(requestUserID, userLogin, repoName)
+	if err != nil {
+		return gitmodels.Branch{}, err
+	}
+
+	if !isReadyToRead {
+		return gitmodels.Branch{}, entityerrors.AccessDenied()
+	}
+
+	return GU.Repo.GetRepoHead(userLogin, repoName)
+}
+func (GU *GitUseCase) Fork(repoID int64, author, repoName, newName string, currUserID int64) error {
+	repoFromDB := gitmodels.Repository{}
+	if repoID < 0 {
+		var err error
+		repoFromDB, err = GU.Repo.GetByName(author, repoName)
+		if err != nil {
+			return err
+		}
+		//переопределелили id
+		repoID = repoFromDB.ID
+	}
+	isCorrectPerm, err := GU.Repo.CheckReadAccess(&currUserID, repoFromDB.AuthorLogin, repoFromDB.Name)
+
+	if isCorrectPerm && err == nil {
+		err = GU.Repo.Fork(newName, currUserID, repoID)
+	}
+	if err == entityerrors.DoesNotExist() {
+		return err
+	}
+	if !isCorrectPerm {
+		return entityerrors.AccessDenied()
+	}
+
+	return err
 }

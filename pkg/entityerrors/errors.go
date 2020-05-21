@@ -9,6 +9,8 @@ var (
 	ErrAlreadyExist EntityError = errors.New("entity already exist")
 	ErrInvalid      EntityError = errors.New("entity is invalid")
 	ErrAccessDenied EntityError = errors.New("access to entity denied")
+	ErrContentEmpty EntityError = errors.New("entity content empty")
+	ErrConflict     EntityError = errors.New("entity conflicts with other entities")
 )
 
 func DoesNotExist() error {
@@ -25,4 +27,12 @@ func Invalid() error {
 
 func AccessDenied() error {
 	return ErrAccessDenied
+}
+
+func ContentEmpty() error {
+	return ErrContentEmpty
+}
+
+func Conflict() error {
+	return ErrConflict
 }

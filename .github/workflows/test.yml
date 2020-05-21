@@ -1,0 +1,15 @@
+name: test
+on:
+  push:
+    branches:
+      - easy_dev
+      - gitrepo
+      - dev
+      - master
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: tests
+        run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > cover2 && go tool cover -func cover2 | grep total

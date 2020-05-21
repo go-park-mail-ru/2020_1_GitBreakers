@@ -5,13 +5,17 @@ import (
 	"net/http"
 )
 
-const TokenHeaderName = "X-Csrf-Token"
+const DefaultTokenHeaderName = "X-Csrf-Token"
 
-func GetNewCsrfToken(w http.ResponseWriter, r *http.Request) {
-	if r.Context().Value("UserID") == nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	w.Header().Set("Access-Control-Expose-Headers", TokenHeaderName)
-	w.Header().Set(TokenHeaderName, csrf.Token(r))
+type Handlers struct {
+	TokenHeaderName string
+}
+
+func NewHandlers(csrfTokenHeaderName string) Handlers {
+	return Handlers{TokenHeaderName: csrfTokenHeaderName}
+}
+
+func (h Handlers) GetNewCsrfTokenHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Expose-Headers", h.TokenHeaderName)
+	w.Header().Set(h.TokenHeaderName, csrf.Token(r))
 }

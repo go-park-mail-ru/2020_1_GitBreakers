@@ -27,7 +27,7 @@ func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, defHost string) U
 }
 func (repo UserRepo) GetUserByIDWithPass(ID int64) (models.User, error) {
 	User := models.User{}
-	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path  FROM users WHERE id = $1", ID)
+	err := repo.db.Get(&User, "SELECT id, login, email, password,name,avatar_path,created_at  FROM users WHERE id = $1", ID)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -49,7 +49,7 @@ func (repo UserRepo) GetUserByIDWithoutPass(ID int64) (models.User, error) {
 
 func (repo UserRepo) GetUserByLoginWithPass(login string) (models.User, error) {
 	User := models.User{}
-	err := repo.db.Get(&User, "SELECT id, login, email, password,name, avatar_path FROM users WHERE login = $1", login)
+	err := repo.db.Get(&User, "SELECT id, login, email, password,name, avatar_path,created_at FROM users WHERE login = $1", login)
 	switch {
 	case err == sql.ErrNoRows:
 		return User, entityerrors.DoesNotExist()
@@ -77,7 +77,7 @@ func (repo UserRepo) Create(newUser models.User) error {
 	}
 	userQuery := `INSERT INTO users (login, email, password, name, avatar_path) VALUES ($1, $2, $3, $4,$5);`
 	_, err := repo.db.Exec(userQuery, newUser.Login, newUser.Email, newUser.Password,
-		newUser.Name, repo.hostToSave+repo.defaultImagePath+repo.defaultAvatar)
+		newUser.Name, repo.defaultImagePath+repo.defaultAvatar)
 
 	if err != nil {
 		return errors.Wrap(err, "error in user Create ")
@@ -88,16 +88,11 @@ func (repo UserRepo) Create(newUser models.User) error {
 
 //id юзера не меняется, достаточно скинуть в него новые данные
 func (repo UserRepo) Update(usrUpd models.User) error {
-	result, err := repo.db.Exec(
+	_, err := repo.db.Exec(
 		"UPDATE users SET  email = $2,name=$3,avatar_path=$4,password=$5 WHERE id = $1",
 		usrUpd.ID, usrUpd.Email, usrUpd.Name, usrUpd.Image, usrUpd.Password)
 	if err != nil {
 		return errors.Wrap(err, "error with update data")
-	}
-	updLines, err := result.RowsAffected()
-	if updLines <= 0 {
-		//немного странный возврат ошибки
-		return entityerrors.Invalid()
 	}
 	return nil
 }
@@ -119,7 +114,7 @@ func (repo UserRepo) UserCanUpdate(user models.User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if usercount > 1 {
+	if usercount != 1 {
 		return false, nil
 	} else {
 		return true, nil
@@ -174,7 +169,7 @@ func (repo UserRepo) CheckPass(login string, newpass string) (bool, error) {
 }
 
 func (repo UserRepo) UpdateAvatarPath(User models.User, Name string) error {
-	User.Image = repo.hostToSave + repo.defaultImagePath + Name
+	User.Image = repo.defaultImagePath + Name
 	if err := repo.Update(User); err != nil {
 		return errors.Wrap(err, "error in db")
 	}

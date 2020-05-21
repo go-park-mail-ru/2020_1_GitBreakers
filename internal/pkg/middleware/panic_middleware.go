@@ -11,7 +11,12 @@ func CreatePanicMiddleware(logger logger.Logger) func(http.Handler) http.Handler
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if e := recover(); e != nil {
-					http.Error(w, "internal server error", http.StatusInternalServerError)
+					http.Error(
+						w,
+						http.StatusText(http.StatusInternalServerError),
+						http.StatusInternalServerError,
+					)
+
 					if err := e.(error); err != nil {
 						logger.LogError(errors.Cause(err), "panic catched in panic middleware")
 					} else {
@@ -19,6 +24,7 @@ func CreatePanicMiddleware(logger logger.Logger) func(http.Handler) http.Handler
 					}
 				}
 			}()
+
 			next.ServeHTTP(w, r)
 		})
 	}
