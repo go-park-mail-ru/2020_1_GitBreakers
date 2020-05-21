@@ -3,6 +3,8 @@ on:
     branches:
       - easy_dev
       - gitrepo
+      - dev
+      - master
 jobs:
   tests:
     runs-on: ubuntu-latest
