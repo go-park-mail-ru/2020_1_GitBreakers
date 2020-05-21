@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	UserIdContextValue    = "UserID"
+	UserIdContextValue    = contextKey("UserID")
 	SessionIdContextValue = "session_id"
 )
 
