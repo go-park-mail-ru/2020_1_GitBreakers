@@ -58,6 +58,7 @@ func (s *starTestSuite) SetupSuite() {
 			CreatedAt:   time.Time{},
 			IsPublic:    false,
 			Stars:       0,
+			AuthorLogin: "keke",
 		},
 		gitmodels.Repository{
 			ID:          2,
@@ -68,6 +69,7 @@ func (s *starTestSuite) SetupSuite() {
 			CreatedAt:   time.Time{},
 			IsPublic:    false,
 			Stars:       0,
+			AuthorLogin: "tiktak",
 		},
 	}
 
@@ -174,6 +176,7 @@ func (s *starTestSuite) TestGetStarredRepos() {
 			"created_at",
 			"is_public",
 			"stars",
+			"user_login",
 		},
 	)
 
@@ -189,6 +192,7 @@ func (s *starTestSuite) TestGetStarredRepos() {
 		firstRepo.CreatedAt,
 		firstRepo.IsPublic,
 		firstRepo.Stars,
+		firstRepo.AuthorLogin,
 	)
 
 	starredRepositories.AddRow(
@@ -200,6 +204,7 @@ func (s *starTestSuite) TestGetStarredRepos() {
 		secondRepo.CreatedAt,
 		secondRepo.IsPublic,
 		secondRepo.Stars,
+		secondRepo.AuthorLogin,
 	)
 
 	var limit int64 = 3
