@@ -6,21 +6,21 @@ on:
       - dev
       - easy_dev
 jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: tests
-        run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > cover2 && go tool cover -func cover2 | grep total
-  golangci:
-    needs: tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v1
-        with:
-          version: v1.26
+#  tests:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: tests
+#        run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > cover2 && go tool cover -func cover2 | grep total
+#  linter:
+#    needs: tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: golangci-lint
+#        uses: golangci/golangci-lint-action@v1
+#        with:
+#          version: v1.26
   build:
     needs: golangci
     runs-on: ubuntu-latest
@@ -58,10 +58,11 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script_stop: true
           script: |
+            chmod -R 755 /home/ubuntu/CodeHub/bin
             sudo systemctl restart auth.service
             sudo systemctl restart user.service
-            sudo systemctl restart news.service
             sudo systemctl restart gitserver.service
+            sudo systemctl restart news.service
             sudo systemctl restart server.service
 
 
