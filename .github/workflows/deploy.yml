@@ -1,37 +1,67 @@
+name: deploy
 on:
   push:
     branches:
       - master
       - dev
-  pull_request:
-    branches: [ master ]
+      - easy_dev
 jobs:
   tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: tests
         run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > cover2 && go tool cover -func cover2 | grep total
+  golangci:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.26
+  build:
+    needs: golangci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build
+        run: make build
 
+      - name: Upload build result
+        uses: actions/upload-artifact@v1
+        with:
+          name: bin
+          path: ./bin
   deploy:
     runs-on: ubuntu-latest
-    needs: tests
+    needs: build
     steps:
-    - name: Update prod
-      uses: appleboy/ssh-action@master
-      env:
-        CURR_BRANCH: ${{ github.ref }}
-      with:
-        host: 89.208.198.186
-        username: ubuntu
-        key: ${{ secrets.PRIVATE_KEY }}
-        script_stop: true
-        envs: CURR_BRANCH
-        script: |
-          cd /home/ubuntu/CodeHub
-          git checkout ${CURR_BRANCH##*/}
-          git pull origin ${CURR_BRANCH##*/}
-          ./scripts/run.sh &
+      - name: Download bin file
+        uses: actions/download-artifact@v1
+        with:
+          name: bin
+      - name: Transfer bin file to server
+        uses: appleboy/scp-action@v0.0.10
+        with:
+          host: 89.208.198.186
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: "./bin"
+          target: "/home/ubuntu/CodeHub/"
+      - name: Update prod
+        uses: appleboy/ssh-action@master
+        with:
+          host: 89.208.198.186
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            sudo systemctl restart auth.service
+            sudo systemctl restart user.service
+            sudo systemctl restart news.service
+            sudo systemctl restart gitserver.service
+            sudo systemctl restart server.service
 
 
