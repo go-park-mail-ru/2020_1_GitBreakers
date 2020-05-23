@@ -16,7 +16,7 @@ type Config struct {
 	ALLOWED_ORIGINS          []string
 	REDIS_PASS               string
 	LOGFILE                  string
-	HOST_TO_SAVE             string
+	PATH_PREFIX              string
 	GIT_USER_REPOS_DIR       string
 	GIT_USER_PULLRQ_DIR      string
 	GIT_SERVER_ENDPOINT      string
@@ -36,7 +36,7 @@ func New() *Config {
 		MAX_DB_OPEN_CONN:     getEnvAsInt("MAX_DB_OPEN_CONN", 10),
 		MAIN_LISTEN_ENDPOINT: getEnv("MAIN_LISTEN_ENDPOINT", "127.0.0.1:8080"),
 		REDIS_PASS:           getEnv("REDIS_PASS", ""),
-		HOST_TO_SAVE:         getEnv("HOST_TO_SAVE", "http://127.0.0.1:8080"),
+		PATH_PREFIX:          getEnv("PATH_PREFIX", "/home/ubuntu/CodeHub/"),
 		LOGFILE:              getEnv("LOGFILE", "logfile.log"),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://code-hub.space"}, ","),

@@ -309,7 +309,7 @@ func (s *Suite) TestCreate() {
 
 	s.mock.ExpectExec("INSERT").
 		WithArgs(user.Login, user.Email, user.Password,
-			user.Name, s.repo.hostToSave+s.repo.defaultImagePath+s.repo.defaultAvatar).
+			user.Name, s.repo.pathPrefix+s.repo.defaultImagePath+s.repo.defaultAvatar).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := s.repo.Create(user)
@@ -422,7 +422,7 @@ func (s *Suite) TestUpdateAvatarPath() {
 	rows.AddRow(user.ID, user.Login, user.Email, user.Password, user.Name, user.Image)
 
 	s.mock.ExpectExec("UPDATE").
-		WithArgs(user.ID, user.Email, user.Name, s.repo.hostToSave+s.repo.defaultImagePath+user.Image, user.Password).
+		WithArgs(user.ID, user.Email, user.Name, s.repo.pathPrefix+s.repo.defaultImagePath+user.Image, user.Password).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := s.repo.UpdateAvatarPath(user, user.Image)
