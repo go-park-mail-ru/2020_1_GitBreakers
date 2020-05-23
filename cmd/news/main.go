@@ -54,7 +54,7 @@ func main() {
 	}
 
 	gitRepos := repository.NewRepository(db, absGitRepoDir)
-	userRepos := postgres.NewUserRepo(db, conf.DEFAULT_USER_AVATAR_NAME, "/static/image/avatar/", conf.HOST_TO_SAVE)
+	userRepos := postgres.NewUserRepo(db, conf.DEFAULT_USER_AVATAR_NAME, "/static/image/avatar/", conf.PATH_PREFIX)
 
 	UCCodeHub := usecase.UCCodeHub{
 		RepoNews: &newsRepos,

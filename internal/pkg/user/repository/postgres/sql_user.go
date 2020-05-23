@@ -8,21 +8,22 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
+	"path"
 )
 
 type UserRepo struct {
 	db               *sqlx.DB
 	defaultAvatar    string
 	defaultImagePath string
-	hostToSave       string
+	pathPrefix       string
 }
 
-func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, defHost string) UserRepo {
+func NewUserRepo(conn *sqlx.DB, defAva string, defPath string, pathPref string) UserRepo {
 	return UserRepo{
 		db:               conn,
 		defaultAvatar:    defAva,
 		defaultImagePath: defPath,
-		hostToSave:       defHost,
+		pathPrefix:       pathPref,
 	}
 }
 func (repo UserRepo) GetUserByIDWithPass(ID int64) (models.User, error) {
@@ -176,7 +177,8 @@ func (repo UserRepo) UpdateAvatarPath(User models.User, Name string) error {
 	return nil
 }
 func (repo UserRepo) UploadAvatar(Name string, Content []byte) error {
-	if err := ioutil.WriteFile(`.`+repo.defaultImagePath+Name, Content, 0644); err != nil {
+	imagePath := path.Join(repo.pathPrefix, repo.defaultImagePath, Name)
+	if err := ioutil.WriteFile(path.Clean(imagePath), Content, 0644); err != nil {
 		return errors.Wrap(err, " in repo user upload avatar")
 	}
 	return nil

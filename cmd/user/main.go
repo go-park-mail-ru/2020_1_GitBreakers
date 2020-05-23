@@ -43,7 +43,7 @@ func main() {
 
 	db.SetMaxOpenConns(int(conf.MAX_DB_OPEN_CONN)) //10 по дефолту
 	userRepos := postgres.NewUserRepo(db, conf.DEFAULT_USER_AVATAR_NAME,
-		"/static/image/avatar/", conf.HOST_TO_SAVE)
+		"/static/image/avatar/", conf.PATH_PREFIX)
 	userUCase := userUC.UCUser{RepUser: &userRepos}
 
 	usergrpc.NewUserServer(s, &userUCase)
