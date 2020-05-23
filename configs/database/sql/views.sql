@@ -195,4 +195,3 @@ FROM merge_requests mr
          JOIN user_profile_view upv ON mr.author_id = upv.id
          JOIN git_repositories grfrom ON mr.from_repository_id = grfrom.id
          LEFT JOIN git_repositories grto ON mr.to_repository_id = grto.id;
-
