@@ -21,6 +21,7 @@ var someRepo = gitmodels.Repository{
 	IsFork:      false,
 	CreatedAt:   time.Now(),
 	IsPublic:    true,
+	AuthorLogin: "tiktak",
 }
 var someUser = models.User{
 	ID:       12,

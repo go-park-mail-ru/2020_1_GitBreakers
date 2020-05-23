@@ -83,11 +83,7 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(Repo, w); err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	_, _, _ = easyjson.MarshalToHTTPResponseWriter(Repo, w)
 
 	GD.Logger.HttpInfo(r.Context(), "repo received", http.StatusOK)
 }
@@ -187,11 +183,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(repo, w); err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	_, _, _ = easyjson.MarshalToHTTPResponseWriter(repo, w)
 
 	GD.Logger.HttpInfo(r.Context(), "repolist received", http.StatusOK)
 }
@@ -219,11 +211,7 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(branches, w); err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	_, _, _ = easyjson.MarshalToHTTPResponseWriter(branches, w)
 
 	GD.Logger.HttpInfo(r.Context(), "branches received", http.StatusOK)
 }
@@ -266,11 +254,7 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	_, _, _ = easyjson.MarshalToHTTPResponseWriter(res, w)
 
 	GD.Logger.HttpInfo(r.Context(), "commits list received", http.StatusOK)
 }
@@ -322,11 +306,7 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	_, _, _ = easyjson.MarshalToHTTPResponseWriter(res, w)
 
 	GD.Logger.HttpInfo(r.Context(), "files returned", http.StatusOK)
 }
@@ -354,11 +334,7 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	_, _, _ = easyjson.MarshalToHTTPResponseWriter(res, w)
 
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
 }
@@ -403,8 +379,6 @@ func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
-			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		} else {
 			GD.Logger.HttpInfo(
 				r.Context(),
