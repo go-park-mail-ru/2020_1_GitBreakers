@@ -22,5 +22,5 @@ type UCCodeHubI interface {
 	GetPLOut(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error)
 	ApprovePL(pl models.PullRequest, userID int64) error
 	ClosePL(pl models.PullRequest, userID int64) error
-	GetAllMRUser(userID int64) (models.PullReqSet, error)
+	GetAllMRUser(userID, limit, offset int64) (models.PullReqSet, error)
 }

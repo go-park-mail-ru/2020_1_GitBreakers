@@ -98,7 +98,7 @@ required email, login(>3 симв), password(>5 симв)
 2. 401 unauthorized  
 3. 400 json невалидный  
 4. 409 уже есть юзер с такими данными  
-### 2.3 Получить инфу по логину
+### 2.3 Получить информацию о пользователе по логину
 Запрос: `/api/v1/user/profile/{login}` типа `GET`  
 
 Ответ:  
@@ -112,8 +112,26 @@ required email, login(>3 симв), password(>5 симв)
     "email": "string"
 }
 ```
-2. 404 не найден такой юзер  
-### 2.4 Загрузить аватарку
+2. 404 не найден такой юзер
+
+### 2.4 Получить информацию о пользователе по ID
+Запрос: `/api/v1/user/id/{id}/profile` типа `GET`  
+
+Ответ:  
+1. 200 ok
+```json
+{
+    "id": "int",
+    "name": "string",
+    "login": "string",
+    "image": "/static/image/avatar/default.jpg",
+    "email": "string"
+}
+```
+2. 400 - некорректный id (не удалось преобразовать в число)
+3. 404 не найден такой юзер
+
+### 2.5 Загрузить аватарку
 
 Запрос: `/api/v1/user/avatar` типа `PUT`  
 Запрос: Картинка(6MB max size), имя поля **avatar**  
@@ -235,8 +253,38 @@ Required: name(alphanumeric),
 ]
 ```
 2. 404 не найден такой юзер
+
+### 3.5 Получить список репозиториев юзера его ID
+Запрос: `/api/v1/user/id/{id}/repo` типа `GET`  
+Ответ:
+1. 200 ok  
+```json
+[
+    {
+        "id": 67,
+        "owner_id": 75,
+        "name": "pes",
+        "description": "",
+        "is_fork": true,
+        "created_at": "2020-05-17T20:08:50.029927Z",
+        "is_public": true,
+        "stars": 0,
+        "forks": 0,
+        "merge_requests_open": 0,
+        "author_login": "mudila2101",
+        "parent_repository_info": {
+            "id": 37,
+            "owner_id": 51,
+            "name": "horse",
+            "author_login": "cheburek111"
+        }
+    }
+]
+```
+2. 400 - некорректный id (не удалось преобразовать в число)
+3. 404 не найден такой юзер
   
-### 3.5 Удалить репозиторий
+### 3.6 Удалить репозиторий
 Запрос: `/api/v1/user/repo` типа `DELETE`  
 ```json
 {

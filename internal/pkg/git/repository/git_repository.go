@@ -619,6 +619,27 @@ func (repo Repository) GetPermission(currentUserId *int64, userLogin, repoName s
 	return perm.Permission(permissionRole), nil
 }
 
+func (repo Repository) GetPermissionByID(currentUserId *int64, repoID int64) (perm.Permission, error) {
+	var permissionRole string
+	err := repo.db.QueryRow(`
+		SELECT role FROM users_git_repositories
+		WHERE user_id = $1 AND repository_id = $2`,
+		currentUserId,
+		repoID,
+	).Scan(
+		&permissionRole,
+	)
+	switch {
+	case err == sql.ErrNoRows:
+		return perm.NoAccess(), nil
+	case err != nil:
+		return perm.NoAccess(), errors.Wrapf(err, "error in repository for git repositories in GetPermissionByID "+
+			"with currentUserID=%v, repoID=%d", currentUserId, repoID)
+	}
+
+	return perm.Permission(permissionRole), nil
+}
+
 func (repo Repository) IsRepoExistsByOwnerId(ownerId int64, repoName string) (bool, error) {
 	return isRepoExistsInDbByOwnerId(repo.db, ownerId, repoName)
 }

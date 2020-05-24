@@ -198,9 +198,35 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		case "id":
 			out.ID = int64(in.Int64())
 		case "author_id":
-			out.AuthorId = int64(in.Int64())
+			if in.IsNull() {
+				in.Skip()
+				out.AuthorId = nil
+			} else {
+				if out.AuthorId == nil {
+					out.AuthorId = new(int64)
+				}
+				*out.AuthorId = int64(in.Int64())
+			}
+		case "closer_user_id":
+			if in.IsNull() {
+				in.Skip()
+				out.CloserUserId = nil
+			} else {
+				if out.CloserUserId == nil {
+					out.CloserUserId = new(int64)
+				}
+				*out.CloserUserId = int64(in.Int64())
+			}
 		case "from_repo_id":
-			out.FromRepoID = int64(in.Int64())
+			if in.IsNull() {
+				in.Skip()
+				out.FromRepoID = nil
+			} else {
+				if out.FromRepoID == nil {
+					out.FromRepoID = new(int64)
+				}
+				*out.FromRepoID = int64(in.Int64())
+			}
 		case "to_repo_id":
 			out.ToRepoID = int64(in.Int64())
 		case "title":
@@ -224,13 +250,45 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		case "branch_to":
 			out.BranchTo = string(in.String())
 		case "to_repo_name":
-			out.ToRepoName = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.ToRepoName = nil
+			} else {
+				if out.ToRepoName == nil {
+					out.ToRepoName = new(string)
+				}
+				*out.ToRepoName = string(in.String())
+			}
 		case "to_author_login":
-			out.ToAuthorLogin = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.ToAuthorLogin = nil
+			} else {
+				if out.ToAuthorLogin == nil {
+					out.ToAuthorLogin = new(string)
+				}
+				*out.ToAuthorLogin = string(in.String())
+			}
 		case "from_repo_name":
-			out.FromRepoName = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.FromRepoName = nil
+			} else {
+				if out.FromRepoName == nil {
+					out.FromRepoName = new(string)
+				}
+				*out.FromRepoName = string(in.String())
+			}
 		case "from_author_login":
-			out.FromAuthorLogin = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.FromAuthorLogin = nil
+			} else {
+				if out.FromAuthorLogin == nil {
+					out.FromAuthorLogin = new(string)
+				}
+				*out.FromAuthorLogin = string(in.String())
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -253,12 +311,29 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 	{
 		const prefix string = ",\"author_id\":"
 		out.RawString(prefix)
-		out.Int64(int64(in.AuthorId))
+		if in.AuthorId == nil {
+			out.RawString("null")
+		} else {
+			out.Int64(int64(*in.AuthorId))
+		}
+	}
+	{
+		const prefix string = ",\"closer_user_id\":"
+		out.RawString(prefix)
+		if in.CloserUserId == nil {
+			out.RawString("null")
+		} else {
+			out.Int64(int64(*in.CloserUserId))
+		}
 	}
 	{
 		const prefix string = ",\"from_repo_id\":"
 		out.RawString(prefix)
-		out.Int64(int64(in.FromRepoID))
+		if in.FromRepoID == nil {
+			out.RawString("null")
+		} else {
+			out.Int64(int64(*in.FromRepoID))
+		}
 	}
 	{
 		const prefix string = ",\"to_repo_id\":"
@@ -313,22 +388,38 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 	{
 		const prefix string = ",\"to_repo_name\":"
 		out.RawString(prefix)
-		out.String(string(in.ToRepoName))
+		if in.ToRepoName == nil {
+			out.RawString("null")
+		} else {
+			out.String(string(*in.ToRepoName))
+		}
 	}
 	{
 		const prefix string = ",\"to_author_login\":"
 		out.RawString(prefix)
-		out.String(string(in.ToAuthorLogin))
+		if in.ToAuthorLogin == nil {
+			out.RawString("null")
+		} else {
+			out.String(string(*in.ToAuthorLogin))
+		}
 	}
 	{
 		const prefix string = ",\"from_repo_name\":"
 		out.RawString(prefix)
-		out.String(string(in.FromRepoName))
+		if in.FromRepoName == nil {
+			out.RawString("null")
+		} else {
+			out.String(string(*in.FromRepoName))
+		}
 	}
 	{
 		const prefix string = ",\"from_author_login\":"
 		out.RawString(prefix)
-		out.String(string(in.FromAuthorLogin))
+		if in.FromAuthorLogin == nil {
+			out.RawString("null")
+		} else {
+			out.String(string(*in.FromAuthorLogin))
+		}
 	}
 	out.RawByte('}')
 }

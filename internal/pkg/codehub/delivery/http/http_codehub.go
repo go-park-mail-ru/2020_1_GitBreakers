@@ -468,7 +468,7 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	plModel.AuthorId = userID
+	plModel.AuthorId = &userID
 	isCorrect, err := govalidator.ValidateStruct(plModel)
 	if !isCorrect || err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -575,7 +575,7 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	plModel.AuthorId = userID
+	plModel.AuthorId = &userID
 	err := GD.CodeHubUC.ApprovePL(plModel, userID)
 
 	switch {
@@ -609,7 +609,7 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	plModel.AuthorId = userID
+	plModel.AuthorId = &userID
 
 	err := GD.CodeHubUC.ClosePL(plModel, userID)
 	switch {
@@ -636,7 +636,18 @@ func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	userID := res.(int64)
-	pllist, err := GD.CodeHubUC.GetAllMRUser(userID)
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 100
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	pllist, err := GD.CodeHubUC.GetAllMRUser(userID, int64(limit), int64(offset))
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)

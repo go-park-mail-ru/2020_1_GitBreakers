@@ -12,8 +12,8 @@ import (
 )
 
 type Logger interface {
-	//GetRequestIdKey() int
-	//GetRequestIdFromContext(ctx context.Context) string
+	GetRequestIdKey() RequestIDKeyType
+	GetRequestIdFromContext(ctx context.Context) string
 	StartRequest(r http.Request, requestId string)
 	EndRequest(start time.Time, ctx context.Context)
 	HttpInfo(ctx context.Context, msg string, status int)
@@ -24,35 +24,36 @@ type Logger interface {
 	LogError(err error, msg string)
 }
 
-const requestIdKey int = 1
+type RequestIDKeyType interface{}
 
 type SimpleLogger struct {
 	*logrus.Logger
+	requestIDKey RequestIDKeyType
 }
 
-func NewSimpleLogger(writer io.Writer, formatter logrus.Formatter) SimpleLogger {
+func NewSimpleLogger(writer io.Writer, formatter logrus.Formatter, requestIDKey RequestIDKeyType) SimpleLogger {
 	baseLogger := logrus.New()
-	simpleLogger := SimpleLogger{baseLogger}
+	simpleLogger := SimpleLogger{baseLogger, requestIDKey}
 	simpleLogger.SetFormatter(formatter)
 	simpleLogger.SetOutput(writer)
 	return simpleLogger
 }
 
-func NewJsonFormatSimpleLogger(writer io.Writer) SimpleLogger {
+func NewJsonFormatSimpleLogger(writer io.Writer, requestIDKey RequestIDKeyType) SimpleLogger {
 	formatter := new(logrus.JSONFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05"
-	return NewSimpleLogger(writer, formatter)
+	return NewSimpleLogger(writer, formatter, requestIDKey)
 }
 
-func NewTextFormatSimpleLogger(writer io.Writer) SimpleLogger {
+func NewTextFormatSimpleLogger(writer io.Writer, requestIDKey RequestIDKeyType) SimpleLogger {
 	formatter := new(logrus.TextFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05"
 	formatter.FullTimestamp = true
-	return NewSimpleLogger(writer, formatter)
+	return NewSimpleLogger(writer, formatter, requestIDKey)
 }
 
-func (logger SimpleLogger) GetRequestIdKey() int {
-	return requestIdKey
+func (logger SimpleLogger) GetRequestIdKey() RequestIDKeyType {
+	return logger.requestIDKey
 }
 
 func (logger SimpleLogger) GetRequestIdFromContext(ctx context.Context) string {

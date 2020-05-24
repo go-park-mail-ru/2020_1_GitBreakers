@@ -37,7 +37,7 @@ func TestUserHttp_Login(t *testing.T) {
 	s := mock_clients.NewMockUserClientI(ctrl)
 
 	userHandlers.UClient = s
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	userHandlers.Logger = &newlogger
 
 	testInput := models.SignInForm{
@@ -220,7 +220,7 @@ func TestUserHttp_Create(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s
@@ -469,7 +469,7 @@ func TestUserHttp_Update(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s
@@ -596,7 +596,7 @@ func TestUserHttp_Logout(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s
@@ -690,7 +690,7 @@ func TestUserHttp_GetInfo(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s
@@ -802,7 +802,7 @@ func TestUserHttp_UploadAvatar(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s
@@ -865,7 +865,7 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s

@@ -16,6 +16,7 @@ type GitRepoI interface {
 	// GetPermission returns permission: for public repo - write and higher, for private - read and higher
 	// In other case returns NoAccess
 	GetPermission(currentUserId *int64, userLogin, repoName string) (perm.Permission, error)
+	GetPermissionByID(currentUserId *int64, repoID int64) (perm.Permission, error)
 
 	IsRepoExistsByOwnerId(ownerId int64, repoName string) (bool, error)
 	IsRepoExistsByOwnerLogin(ownerLogin string, repoName string) (bool, error)

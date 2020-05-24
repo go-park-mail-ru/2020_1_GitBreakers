@@ -8,6 +8,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
+	"github.com/pkg/errors"
 )
 
 type UCCodeHub struct {
@@ -166,23 +167,42 @@ func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository, limit int64, offset int
 }
 
 func (UC *UCCodeHub) ApprovePL(pl models.PullRequest, userID int64) error {
-	isCorrect, err := UC.GitRepo.CheckReadAccessById(&userID, pl.ToRepoID)
-	if isCorrect && err == nil {
-		return UC.RepoMerge.ApproveMerge(pl.ID)
+	permission, err := UC.GitRepo.GetPermissionByID(&userID, pl.ToRepoID)
+	if err != nil {
+		return errors.WithStack(err)
 	}
+
+	if permission == perm.OwnerAccess() || permission == perm.AdminAccess() {
+		return UC.RepoMerge.ApproveMerge(userID, pl.ID)
+	}
+
 	return entityerrors.AccessDenied()
 }
 
 func (UC *UCCodeHub) ClosePL(pl models.PullRequest, userID int64) error {
-	isCorrect, err := UC.GitRepo.CheckReadAccessById(&userID, pl.ToRepoID)
-	if isCorrect && err == nil {
-		return UC.RepoMerge.RejectMR(pl.ID)
+	var isCorrect bool
+	if pl.AuthorId != nil && *pl.AuthorId == userID {
+		isCorrect = true
+	} else {
+		permission, err := UC.GitRepo.GetPermissionByID(&userID, pl.ToRepoID)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if permission == perm.OwnerAccess() || permission == perm.AdminAccess() {
+			isCorrect = true
+		}
 	}
+
+	if isCorrect {
+		return UC.RepoMerge.RejectMR(userID, pl.ID)
+	}
+
 	return entityerrors.AccessDenied()
 }
 
-func (UC *UCCodeHub) GetAllMRUser(userID int64) (models.PullReqSet, error) {
-	MRList, err := UC.RepoMerge.GetOpenedMRForUser(userID, 100, 0)
+func (UC *UCCodeHub) GetAllMRUser(userID, limit, offset int64) (models.PullReqSet, error) {
+	MRList, err := UC.RepoMerge.GetAllMRForUser(userID, limit, offset)
 	if err != nil {
 		return models.PullReqSet{}, err
 	}
