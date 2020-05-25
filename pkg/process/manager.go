@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
+	"io"
 	"os/exec"
 	"sync"
 	"time"
@@ -70,7 +71,7 @@ func Remove(pid int64) bool {
 }
 
 // Exec starts executing a shell command in given path, it tracks corresponding process and timeout.
-func ExecDir(timeout time.Duration, dir, desc, cmdName string, args ...string) ([]byte, []byte, error) {
+func ExecDir(timeout time.Duration, bufIn io.Reader, dir, desc, cmdName string, args ...string) ([]byte, []byte, error) {
 	if timeout == -1 {
 		timeout = DefaultTimeout
 	}
@@ -82,6 +83,11 @@ func ExecDir(timeout time.Duration, dir, desc, cmdName string, args ...string) (
 	cmd.Dir = dir
 	cmd.Stdout = bufOut
 	cmd.Stderr = bufErr
+
+	if bufIn != nil {
+		cmd.Stdin = bufIn
+	}
+
 	if err := cmd.Start(); err != nil {
 		return nil, nil, err
 	}
@@ -112,12 +118,24 @@ func ExecDir(timeout time.Duration, dir, desc, cmdName string, args ...string) (
 
 // Exec starts executing a shell command, it tracks corresponding process and timeout.
 func ExecTimeout(timeout time.Duration, desc, cmdName string, args ...string) ([]byte, []byte, error) {
-	return ExecDir(timeout, "", desc, cmdName, args...)
+	return ExecDir(timeout, nil, "", desc, cmdName, args...)
 }
 
 // Exec starts executing a shell command, it tracks corresponding its process and use default timeout.
 func Exec(desc, cmdName string, args ...string) ([]byte, []byte, error) {
-	return ExecDir(-1, "", desc, cmdName, args...)
+	return ExecDir(-1, nil, "", desc, cmdName, args...)
+}
+
+// ExecTimeoutWithInput starts executing a shell command with custom standard input,
+// it tracks corresponding process and timeout.
+func ExecTimeoutWithInput(timeout time.Duration, bufIn io.Reader, desc, cmdName string, args ...string) ([]byte, []byte, error) {
+	return ExecDir(timeout, bufIn, "", desc, cmdName, args...)
+}
+
+// Exec starts executing a shell command with custom standard input,
+// it tracks corresponding its process and use default timeout.
+func ExecWithInput(desc string, bufIn io.Reader, cmdName string, args ...string) ([]byte, []byte, error) {
+	return ExecDir(-1, bufIn, "", desc, cmdName, args...)
 }
 
 // Kill kills and removes a process from global list.
