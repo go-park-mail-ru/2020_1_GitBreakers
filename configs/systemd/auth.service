@@ -1,0 +1,9 @@
+[Unit]
+Description=auth
+
+[Service]
+ExecStart=/home/ubuntu/CodeHub/bin/auth
+EnvironmentFile=/home/ubuntu/CodeHub/.env
+
+[Install]
+WantedBy=multi-user.target

@@ -42,6 +42,7 @@ func (GU *GitUseCase) DeleteByOwnerID(ownerID int64, repoName string) error {
 }
 
 func (GU *GitUseCase) GetRepoList(userName string, requestUserID *int64) (gitmodels.RepositorySet, error) {
+	// FIXME(nickeskov): hardcode limit and offset
 	rawRepoList, err := GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
 	if err != nil {
 		return nil, errors.Wrap(err, "didn't get repolist")

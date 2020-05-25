@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
-	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
+	codehubMetrics "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/issues"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/merge"
@@ -40,21 +40,18 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	prometheus.MustRegister(monitoring2.Hits, monitoring2.RequestDuration, monitoring2.DBQueryDuration)
+	prometheus.MustRegister(codehubMetrics.Hits, codehubMetrics.RequestDuration, codehubMetrics.DBQueryDuration)
 
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
-		logrus.Errorln("Failed to open logfile:", err)
-		f = os.Stdout
+		logrus.Fatalln("Failed to open logfile:", err)
 	}
 
-	customLogger := logger.NewTextFormatSimpleLogger(f)
+	customLogger := logger.NewTextFormatSimpleLogger(f, 1)
 
 	defer func() {
-		if f != os.Stdout {
-			if err := f.Close(); err != nil {
-				logrus.Errorln("Failed to close logfile:", err)
-			}
+		if err := f.Close(); err != nil {
+			logrus.Errorln("Failed to close logfile:", err)
 		}
 	}()
 
@@ -123,7 +120,7 @@ func StartNew() {
 	})
 
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(customLogger)
 	checkAuthMiddleware := middleware.CreateCheckAuthMiddleware(customLogger)
 
 	csrfMiddleware := middleware.CreateCSRFMiddleware(
@@ -166,9 +163,11 @@ func StartNew() {
 	handlersRouter.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
 	handlersRouter.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/id/{id}/profile", userSetHandler.GetInfoByID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
-	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/id/{id}/repo", repoHandler.GetRepoListByUserID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.DeleteRepo).Methods(http.MethodDelete)
 

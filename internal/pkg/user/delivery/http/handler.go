@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
@@ -13,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -279,6 +281,40 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(userData, w); err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)
+}
+
+func (UsHttp *UserHttp) GetInfoByID(w http.ResponseWriter, r *http.Request) {
+	slug := mux.Vars(r)["id"]
+
+	id, err := strconv.ParseInt(slug, 10, 64)
+	if err != nil {
+		UsHttp.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("bad request: %v", err))
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	userData, err := UsHttp.UClient.GetByID(id)
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		UsHttp.Logger.HttpLogWarning(r.Context(), "user", "GetByLogin",
+			errors.Cause(err).Error())
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	case err != nil:
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
 	}
 
 	if _, _, err := easyjson.MarshalToHTTPResponseWriter(userData, w); err != nil {

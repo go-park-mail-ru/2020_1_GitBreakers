@@ -14,6 +14,7 @@ import (
 	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"net/http"
+	"strconv"
 )
 
 type GitDelivery struct {
@@ -156,6 +157,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 	userIDFromContext := r.Context().Value(models.UserIDKey)
 	userIDPtr := GD.idToIntPointer(userIDFromContext)
 
+	// FIXME(nickeskov): use limit and offset query parameters
 	userName := mux.Vars(r)["username"]
 
 	if userName == "" {
@@ -181,9 +183,66 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 		GD.Logger.HttpInfo(r.Context(), fmt.Sprintf("access denied for user=%s", userName), http.StatusForbidden)
 		w.WriteHeader(http.StatusForbidden)
 		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
 	}
 
 	_, _, _ = easyjson.MarshalToHTTPResponseWriter(repo, w)
+
+	GD.Logger.HttpInfo(r.Context(), "repolist received", http.StatusOK)
+}
+
+//
+////все репозитории юзера
+func (GD *GitDelivery) GetRepoListByUserID(w http.ResponseWriter, r *http.Request) {
+	userIDFromContext := r.Context().Value(models.UserIDKey)
+	userIDPtr := GD.idToIntPointer(userIDFromContext)
+
+	// FIXME(nickeskov): use limit and offset query parameters
+	slugID := mux.Vars(r)["id"]
+	reposOwnerID, err := strconv.ParseInt(slugID, 10, 64)
+	if err != nil {
+		GD.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("bad request: %v", err))
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	reposOwnerModel, err := GD.UserUC.GetByID(reposOwnerID)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpInfo(r.Context(), "user doesn't exist", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
+	}
+
+	repo, err := GD.UC.GetRepoList(reposOwnerModel.Login, userIDPtr)
+	switch {
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpInfo(r.Context(), fmt.Sprintf("access denied for userIDPtr=%v",
+			userIDPtr), http.StatusForbidden)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(repo, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "repolist received", http.StatusOK)
 }

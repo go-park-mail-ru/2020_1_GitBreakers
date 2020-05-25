@@ -33,7 +33,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -155,7 +155,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -279,7 +279,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -378,7 +378,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -485,7 +485,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -598,7 +598,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 

@@ -38,7 +38,7 @@ func TestCodeHubModifyStar(t *testing.T) {
 	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
 	UClientMock := mock_clients.NewMockUserClientI(ctrl)
 	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	CodeHubHandlers.Logger = &newlogger
 	CodeHubHandlers.NewsClient = NewsClientMock
@@ -189,7 +189,7 @@ func TestCodeHubStarredRepos(t *testing.T) {
 	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
 	UClientMock := mock_clients.NewMockUserClientI(ctrl)
 	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	CodeHubHandlers.Logger = &newlogger
 	CodeHubHandlers.NewsClient = NewsClientMock
@@ -282,7 +282,7 @@ func TestCodeHubUserWithStar(t *testing.T) {
 	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
 	UClientMock := mock_clients.NewMockUserClientI(ctrl)
 	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	CodeHubHandlers.Logger = &newlogger
 	CodeHubHandlers.NewsClient = NewsClientMock
@@ -381,7 +381,7 @@ func TestCodeHubNewIssue(t *testing.T) {
 	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
 	UClientMock := mock_clients.NewMockUserClientI(ctrl)
 	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	CodeHubHandlers.Logger = &newlogger
 	CodeHubHandlers.NewsClient = NewsClientMock
@@ -561,7 +561,7 @@ func TestCodeHubUpdateIssue(t *testing.T) {
 	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
 	UClientMock := mock_clients.NewMockUserClientI(ctrl)
 	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	CodeHubHandlers.Logger = &newlogger
 	CodeHubHandlers.NewsClient = NewsClientMock
@@ -771,7 +771,7 @@ func TestCodeHubGetIssues(t *testing.T) {
 	UCCodeHubMock := mockCodehub.NewMockUCCodeHubI(ctrl)
 	UClientMock := mock_clients.NewMockUserClientI(ctrl)
 	NewsClientMock := mock_clients.NewMockNewsClientI(ctrl)
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	CodeHubHandlers.Logger = &newlogger
 	CodeHubHandlers.NewsClient = NewsClientMock

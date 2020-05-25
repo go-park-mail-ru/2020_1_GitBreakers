@@ -17,7 +17,6 @@ const (
 
 type RepoPullReq struct {
 	db         *sqlx.DB
-	//gitRepo    git.GitRepoI
 	pullReqDir string
 }
 
@@ -37,6 +36,7 @@ func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
 		err := rows.Scan(
 			&pr.ID,
 			&pr.AuthorId,
+			&pr.CloserUserId,
 			&pr.FromRepoID,
 			&pr.ToRepoID,
 			&pr.BranchFrom,
@@ -62,15 +62,17 @@ func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
 	return pullRequests, nil
 }
 
-func updateMergeRequestsStatusByRepoId(exec SQLInterfaces.Executer,
+func updateOpenedMergeRequestsStatusByRepoId(exec SQLInterfaces.Executer,
 	status codehub.MergeRequestStatus, repoID int64) error {
 	_, err := exec.Exec(`
 			UPDATE merge_requests
 			SET status = $1
-			WHERE to_repository_id = $2
-			   OR from_repository_id = $2`,
+			WHERE (to_repository_id = $2
+			   OR from_repository_id = $2)
+			   AND status NOT IN ($3, $4, $5)`,
 		status,
 		repoID,
+		codehub.StatusError, codehub.StatusMerged, codehub.StatusRejected,
 	)
 	return err
 }
@@ -78,7 +80,8 @@ func updateMergeRequestsStatusByRepoId(exec SQLInterfaces.Executer,
 func (repo RepoPullReq) CreateMR(request models.PullRequest) error {
 	var isExist bool
 
-	if request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
+	if request.FromRepoID == nil ||
+		*request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
 		return entityerrors.Invalid()
 	}
 
@@ -130,6 +133,7 @@ func (repo RepoPullReq) GetAllMROut(repoID int64, limit int64, offset int64) (pu
 	rows, err := repo.db.Query(`
 				SELECT mrv.id,
 					   mrv.author_id,
+				       mrv.closer_user_id,
 					   mrv.from_repository_id,
 					   mrv.to_repository_id,
 					   mrv.from_repository_branch,
@@ -172,6 +176,7 @@ func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pul
 	rows, err := repo.db.Query(`
 				SELECT mrv.id,
 					   mrv.author_id,
+				       mrv.closer_user_id,
 					   mrv.from_repository_id,
 					   mrv.to_repository_id,
 					   mrv.from_repository_branch,
@@ -210,13 +215,21 @@ func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pul
 	return pullRequests, nil
 }
 
-func (repo RepoPullReq) ApproveMerge(pullReqID int64) error {
+func (repo RepoPullReq) ApproveMerge(approverID, pullReqID int64) error {
 	err := repo.db.QueryRow(`
 			UPDATE merge_requests
 			SET is_closed   = TRUE,
-				is_accepted = TRUE
+				is_accepted = TRUE,
+			    closer_user_id = $2,
+			    status = $3
 			WHERE id = $1
-			RETURNING id`, pullReqID).Scan(&pullReqID)
+			RETURNING id`,
+		pullReqID,
+		approverID,
+		codehub.StatusMerged,
+	).Scan(
+		&pullReqID,
+	)
 	switch {
 	case err == sql.ErrNoRows:
 		return entityerrors.DoesNotExist()
@@ -227,7 +240,9 @@ func (repo RepoPullReq) ApproveMerge(pullReqID int64) error {
 	return nil
 }
 
-func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int64) (pullRequests models.PullReqSet, err error) {
+func (repo RepoPullReq) GetAllMRForUser(userID int64, limit int64, offset int64) (pullRequests models.PullReqSet, err error) {
+	pullRequests = models.PullReqSet{}
+
 	var isUserExist bool
 	if err := repo.db.QueryRow(checkAuthorExistSQL, userID).Scan(&isUserExist); err != nil {
 		return nil, err
@@ -238,6 +253,7 @@ func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int
 	rows, err := repo.db.Query(`
 				SELECT mrv.id,
 					   mrv.author_id,
+				       mrv.closer_user_id,
 					   mrv.from_repository_id,
 					   mrv.to_repository_id,
 					   mrv.from_repository_branch,
@@ -256,7 +272,7 @@ func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int
 				FROM merge_requests_view AS mrv 
 					JOIN user_profile_view AS upvfrom ON mrv.git_repository_from_owner_id = upvfrom.id
 					JOIN user_profile_view AS upvto ON mrv.git_repository_to_owner_id = upvto.id
-				WHERE mrv.author_id = $1 AND mrv.is_closed = FALSE LIMIT $2
+				WHERE mrv.author_id = $1 LIMIT $2
 				OFFSET $3`,
 		userID, limit, offset,
 	)
@@ -276,14 +292,18 @@ func (repo RepoPullReq) GetOpenedMRForUser(userID int64, limit int64, offset int
 	return pullRequests, nil
 }
 
-func (repo RepoPullReq) RejectMR(mrID int64) error {
+func (repo RepoPullReq) RejectMR(rejecterID, mrID int64) error {
 	err := repo.db.QueryRow(`
 			UPDATE merge_requests
 			SET is_closed   = TRUE,
-				is_accepted = FALSE
+				is_accepted = FALSE,
+			    closer_user_id = $2,
+			    status = $3
 			WHERE id = $1
 			RETURNING id`,
 		mrID,
+		rejecterID,
+		codehub.StatusRejected,
 	).Scan(
 		&mrID,
 	)
@@ -297,7 +317,7 @@ func (repo RepoPullReq) RejectMR(mrID int64) error {
 	return nil
 }
 
-func (repo RepoPullReq) UpdateMergeRequestsStatusByRepoId(status codehub.MergeRequestStatus,
+func (repo RepoPullReq) UpdateOpenedMergeRequestsStatusByRepoId(status codehub.MergeRequestStatus,
 	repoID int64) error {
-	return updateMergeRequestsStatusByRepoId(repo.db, status, repoID)
+	return updateOpenedMergeRequestsStatusByRepoId(repo.db, status, repoID)
 }

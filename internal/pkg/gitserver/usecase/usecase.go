@@ -84,5 +84,5 @@ func (u UseCase) UpdateMergeRequestsStatuses(ownerLogin, repoName string) error 
 		return err
 	}
 
-	return u.mergeRepo.UpdateMergeRequestsStatusByRepoId(codehub.StatusNeedsUpdate, repo.ID)
+	return u.mergeRepo.UpdateOpenedMergeRequestsStatusByRepoId(codehub.StatusNeedsUpdate, repo.ID)
 }
