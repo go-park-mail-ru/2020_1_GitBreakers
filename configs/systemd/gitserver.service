@@ -1,0 +1,9 @@
+[Unit]
+Description=gitserver
+
+[Service]
+ExecStart=/home/ubuntu/CodeHub/bin/gitserver
+EnvironmentFile=/home/ubuntu/CodeHub/.env
+
+[Install]
+WantedBy=multi-user.target
