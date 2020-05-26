@@ -283,24 +283,24 @@ func isRepositoryExistsInDBByID(querier SQLInterfaces.Querier, repoID int64) (bo
 }
 
 func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
-	repoID int64, branchName string) (bool, error) {
+	repoID int64, branchName string) (string, error) {
 
 	repoPath, err := repo.getRepoPathByID(querier, repoID)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		return false, errors.WithMessage(err, "repository does not exits")
+		return "", errors.WithMessage(err, "repository does not exits")
 	case err != nil:
-		return false, err
+		return "", err
 	}
 
 	gogitRepo, err := gogit.PlainOpen(repoPath)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	branchesRefsIter, err := gogitRepo.Branches()
 	if err != nil {
-		return false, errors.WithStack(err)
+		return "", errors.WithStack(err)
 	}
 
 	defer branchesRefsIter.Close()
@@ -310,7 +310,7 @@ func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
 			if err == io.EOF {
 				break
 			}
-			return false, errors.WithStack(err)
+			return "", errors.WithStack(err)
 		}
 		referenceName := ref.Name().String()
 
@@ -318,11 +318,11 @@ func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
 			gogitPlumbing.NewBranchReferenceName("").String())
 
 		if branchNameFromRef == branchName {
-			return true, nil
+			return ref.Hash().String(), nil
 		}
 	}
 
-	return false, nil
+	return "", nil
 }
 
 func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
@@ -1160,6 +1160,6 @@ func (repo Repository) IsRepoExistsByID(repoID int64) (bool, error) {
 	return isRepositoryExistsInDBByID(repo.db, repoID)
 }
 
-func (repo Repository) IsBranchExistInRepoByID(repoID int64, branchName string) (bool, error) {
+func (repo Repository) GetBranchHashIfExistInRepoByID(repoID int64, branchName string) (string, error) {
 	return repo.isBranchExistInRepoByID(repo.db, repoID, branchName)
 }

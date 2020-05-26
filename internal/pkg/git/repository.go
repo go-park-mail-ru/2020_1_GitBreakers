@@ -22,7 +22,7 @@ type GitRepoI interface {
 	IsRepoExistsByID(repoID int64) (bool, error)
 	IsRepoExistsByOwnerId(ownerId int64, repoName string) (bool, error)
 	IsRepoExistsByOwnerLogin(ownerLogin string, repoName string) (bool, error)
-	IsBranchExistInRepoByID(repoID int64, branchName string) (bool, error)
+	GetBranchHashIfExistInRepoByID(repoID int64, branchName string) (string, error)
 
 	GetBranchesByName(userLogin, repoName string) ([]git.Branch, error)
 	GetAnyReposByUserLogin(userLogin string, offset, limit int64) ([]git.Repository, error)

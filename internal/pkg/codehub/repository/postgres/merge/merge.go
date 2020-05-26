@@ -38,21 +38,29 @@ func NewPullRequestRepository(db *sqlx.DB, gitRepo gitPackage.GitRepoI, pullReqD
 }
 
 func (repo RepoPullReq) CreateMR(request models.PullRequest) (pr models.PullRequest, err error) {
+	// TODO(nickeskov): check if diff is empty and reject this mr
 	if request.FromRepoID == nil ||
 		*request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
 		return models.PullRequest{}, entityerrors.Invalid()
 	}
 
-	if isExist, err := repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom); err != nil {
+	var isExist bool
+	var fromBranchHash, toBranchHash string
+
+	if fromBranchHash, isExist, err = repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom); err != nil {
 		return models.PullRequest{}, err
 	} else if !isExist {
 		return models.PullRequest{}, entityerrors.DoesNotExist()
 	}
 
-	if isExist, err := repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo); err != nil {
+	if toBranchHash, isExist, err = repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo); err != nil {
 		return models.PullRequest{}, err
 	} else if !isExist {
 		return models.PullRequest{}, entityerrors.DoesNotExist()
+	}
+
+	if fromBranchHash == toBranchHash {
+		return models.PullRequest{}, entityerrors.Conflict()
 	}
 
 	// TODO(nickeskov):Check commit hashes differs
@@ -202,6 +210,7 @@ func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pul
 }
 
 func (repo RepoPullReq) ApproveMerge(mrID int64, approver models.User) (err error) {
+	// TODO(nickeskov): check if diff is empty and reject this mr
 	pr, err := repo.GetMRByID(mrID)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
@@ -543,16 +552,16 @@ func finishTransaction(tx *sql.Tx, err error) error {
 	return err
 }
 
-func (repo RepoPullReq) isExistRepoAndBranch(repoID int64, branchName string) (bool, error) {
-	isExist, err := repo.gitRepo.IsBranchExistInRepoByID(repoID, branchName)
+func (repo RepoPullReq) isExistRepoAndBranch(repoID int64, branchName string) (string, bool, error) {
+	branchHash, err := repo.gitRepo.GetBranchHashIfExistInRepoByID(repoID, branchName)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		return false, nil
+		return branchHash, false, nil
 	case err != nil:
-		return false, errors.WithStack(err)
+		return branchHash, false, errors.WithStack(err)
 	}
 
-	return isExist, nil
+	return branchHash, branchHash != "", nil
 }
 
 func (repo RepoPullReq) updateMRGitStorage(request models.PullRequest, fetchDepth int) error {
@@ -722,8 +731,10 @@ func (repo RepoPullReq) forceCloseMRAndRemoveMRStorage(executer SQLInterfaces.Ex
 
 func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
 	request models.PullRequest, fetchDepth int) (codehub.MergeRequestStatus, error) {
+
 	// Check To repository branch
-	isToExist, err := repo.gitRepo.IsBranchExistInRepoByID(request.ToRepoID, request.BranchTo)
+	// TODO(nickeskov): check hash
+	_, isToExist, err := repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo)
 	if err != nil {
 		return codehub.MRStatusNone, errors.WithStack(err)
 	}
@@ -735,7 +746,8 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
 	}
 
 	// Check From repository branch
-	isFromExist, err := repo.gitRepo.IsBranchExistInRepoByID(*request.FromRepoID, request.BranchFrom)
+	// TODO(nickeskov): check hash
+	_, isFromExist, err := repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom)
 	if err != nil {
 		return codehub.MRStatusNone, errors.WithStack(err)
 	}
