@@ -6,8 +6,3 @@ const (
 	ActionHTTPProtocol  ActionProtocol = "http"
 	ActionHTTPSProtocol ActionProtocol = "https"
 )
-
-const (
-	OriginRemoteName   = "origin"
-	UpstreamRemoteName = "upstream"
-)

@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
@@ -476,7 +477,7 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = GD.CodeHubUC.CreatePL(plModel)
+	pr, err := GD.CodeHubUC.CreatePL(plModel)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -495,6 +496,19 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(pr, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	GD.Logger.HttpInfo(
+		r.Context(),
+		fmt.Sprintf("successfully created pr=%+v", pr),
+		http.StatusCreated,
+	)
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -659,4 +673,82 @@ func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (GD *HttpCodehub) GetMRByID(w http.ResponseWriter, r *http.Request) {
+	strMRID := mux.Vars(r)["id"]
+
+	mrID, err := strconv.ParseInt(strMRID, 10, 64)
+	if err != nil {
+		GD.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("bad request: %v", err))
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	pr, err := GD.CodeHubUC.GetMRByID(mrID)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogInfo(r.Context(),
+			fmt.Sprintf("merge request with id=%d does not exist", mrID))
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(pr, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	GD.Logger.HttpInfo(
+		r.Context(),
+		fmt.Sprintf("successfully get mr with id=%d", mrID),
+		http.StatusOK,
+	)
+}
+
+func (GD *HttpCodehub) GetMRDiffByID(w http.ResponseWriter, r *http.Request) {
+	strMRID := mux.Vars(r)["id"]
+
+	mrID, err := strconv.ParseInt(strMRID, 10, 64)
+	if err != nil {
+		GD.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("bad request: %v", err))
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	diff, err := GD.CodeHubUC.GetMRDiffByID(mrID)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogInfo(r.Context(),
+			fmt.Sprintf("merge request with id=%d does not exist", mrID))
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	case err != nil:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
+	}
+
+	prDiff := models.PullLRequestDiff{
+		Diff: diff,
+	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(prDiff, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	GD.Logger.HttpInfo(
+		r.Context(),
+		fmt.Sprintf("successfully get diff for mr with id=%d", mrID),
+		http.StatusOK,
+	)
 }

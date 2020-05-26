@@ -198,6 +198,9 @@ func StartNew() {
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.UndoPullReq).Methods(http.MethodDelete)
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.ApproveMerge).Methods(http.MethodPut)
 
+	handlersRouter.HandleFunc("/func/repo/pullrequest/{id}", CHubHandler.GetMRByID).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/pullrequest/{id}/diff", CHubHandler.GetMRDiffByID).Methods(http.MethodGet)
+
 	handlersRouter.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
 
 	// static files server
@@ -245,7 +248,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repoCodeHubStar := stars.NewStarRepository(db)
 	repoCodeHubNews := news.NewRepoNews(db)
 	repoCodeHubSearch := search.NewSearchRepository(db)
-	repoMerge := merge.NewPullRequestRepository(db, absPullsDir)
+	repoMerge := merge.NewPullRequestRepository(db, repogit, absPullsDir)
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
 

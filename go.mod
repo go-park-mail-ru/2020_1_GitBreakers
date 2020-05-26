@@ -7,21 +7,22 @@ require (
 	github.com/alicebob/miniredis/v2 v2.11.4
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/bxcodec/faker/v3 v3.3.0
-	github.com/go-git/go-git/v5 v5.0.0
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0
-	github.com/golangci/golangci-lint v1.27.0 // indirect
+	github.com/google/btree v1.0.0 // indirect
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
-	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/consul/api v1.4.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
 	github.com/mailru/easyjson v0.7.1
+	github.com/onsi/ginkgo v1.12.0 // indirect
+	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/otiai10/copy v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1

@@ -69,12 +69,12 @@ func getMimeTypeOfFile(gogitFile *gogitPlumbingObj.File) (string, error) {
 	return http.DetectContentType(buffer), nil
 }
 
-func isRepoExistsInDbByOwnerId(queryer SQLInterfaces.Querier, ownerId int64, repoName string) (bool, error) {
+func isRepoExistsInDbByOwnerId(querier SQLInterfaces.Querier, ownerId int64, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
 	var isRepoExists bool
-	err := queryer.QueryRow(
+	err := querier.QueryRow(
 		"SELECT EXISTS(SELECT 1 FROM git_repositories WHERE owner_id = $1 and name = $2)",
 		ownerId,
 		repoName,
@@ -87,12 +87,12 @@ func isRepoExistsInDbByOwnerId(queryer SQLInterfaces.Querier, ownerId int64, rep
 	return isRepoExists, nil
 }
 
-func isRepoExistsInDbByOwnerLogin(queryer SQLInterfaces.Querier, ownerLogin string, repoName string) (bool, error) {
+func isRepoExistsInDbByOwnerLogin(querier SQLInterfaces.Querier, ownerLogin string, repoName string) (bool, error) {
 	if repoName == "" {
 		return false, entityerrors.Invalid()
 	}
 	var isRepoExists bool
-	err := queryer.QueryRow(`
+	err := querier.QueryRow(`
 			SELECT EXISTS(
 						   SELECT 1
 						   FROM git_repository_user_view
@@ -110,9 +110,9 @@ func isRepoExistsInDbByOwnerLogin(queryer SQLInterfaces.Querier, ownerLogin stri
 	return isRepoExists, nil
 }
 
-func getByIdQ(queryer SQLInterfaces.Querier, id int64) (git.Repository, error) {
+func getByIdQ(querier SQLInterfaces.Querier, id int64) (git.Repository, error) {
 	var gitRepo git.Repository
-	err := queryer.QueryRow(`
+	err := querier.QueryRow(`
 			SELECT 	id,
 			       	owner_id,
 			       	name,
@@ -177,8 +177,8 @@ func deleteByIdQ(exec SQLInterfaces.Executer, id int64) (err error) {
 	return nil
 }
 
-func createNewRepoSQLEntity(queryer SQLInterfaces.Querier, newRepo git.Repository) (newRepoId int64, err error) {
-	err = queryer.QueryRow(
+func createNewRepoSQLEntity(querier SQLInterfaces.Querier, newRepo git.Repository) (newRepoId int64, err error) {
+	err = querier.QueryRow(
 		`INSERT INTO git_repositories (owner_id, name, description, is_public, is_fork, parent_id) 
 				VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 		newRepo.OwnerID,
@@ -232,12 +232,12 @@ func (repo Repository) convertToRepoPath(userLogin, repoName string) string {
 	return path.Clean(repoPath)
 }
 
-func (repo Repository) createRepoPath(queryer SQLInterfaces.Querier, ownerId int64, repoName string) (string, error) {
+func (repo Repository) createRepoPath(querier SQLInterfaces.Querier, ownerId int64, repoName string) (string, error) {
 	if repoName == "" {
 		return "", entityerrors.Invalid()
 	}
 	var userLogin string
-	err := queryer.QueryRow(
+	err := querier.QueryRow(
 		"SELECT login FROM users WHERE id = $1",
 		ownerId,
 	).Scan(
@@ -247,6 +247,82 @@ func (repo Repository) createRepoPath(queryer SQLInterfaces.Querier, ownerId int
 		return "", err
 	}
 	return repo.convertToRepoPath(userLogin, repoName), nil
+}
+
+func (repo Repository) getRepoPathByID(querier SQLInterfaces.Querier, repoID int64) (string, error) {
+	var userLogin, repoName string
+
+	err := querier.QueryRow(`
+			SELECT user_login, name
+			FROM git_repository_user_view
+			WHERE id = $1`,
+		repoID,
+	).Scan(
+		&userLogin,
+		&repoName,
+	)
+	switch {
+	case err == sql.ErrNoRows:
+		return "", entityerrors.DoesNotExist()
+	case err != nil:
+		return "", errors.WithStack(err)
+	}
+
+	return repo.convertToRepoPath(userLogin, repoName), nil
+}
+
+func isRepositoryExistsInDBByID(querier SQLInterfaces.Querier, repoID int64) (bool, error) {
+	var isExist bool
+	err := querier.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM git_repositories WHERE id = $1)`,
+		repoID,
+	).Scan(
+		&isExist,
+	)
+	return isExist, err
+}
+
+func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
+	repoID int64, branchName string) (string, error) {
+
+	repoPath, err := repo.getRepoPathByID(querier, repoID)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return "", errors.WithMessage(err, "repository does not exits")
+	case err != nil:
+		return "", err
+	}
+
+	gogitRepo, err := gogit.PlainOpen(repoPath)
+	if err != nil {
+		return "", err
+	}
+
+	branchesRefsIter, err := gogitRepo.Branches()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	defer branchesRefsIter.Close()
+	for {
+		ref, err := branchesRefsIter.Next()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", errors.WithStack(err)
+		}
+		referenceName := ref.Name().String()
+
+		branchNameFromRef := strings.TrimPrefix(referenceName,
+			gogitPlumbing.NewBranchReferenceName("").String())
+
+		if branchNameFromRef == branchName {
+			return ref.Hash().String(), nil
+		}
+	}
+
+	return "", nil
 }
 
 func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
@@ -1074,4 +1150,16 @@ func (repo Repository) Fork(forkRepoName string, userID, repoBaseID int64) (err 
 	}
 
 	return nil
+}
+
+func (repo Repository) GetRepoPathByID(repoID int64) (string, error) {
+	return repo.getRepoPathByID(repo.db, repoID)
+}
+
+func (repo Repository) IsRepoExistsByID(repoID int64) (bool, error) {
+	return isRepositoryExistsInDBByID(repo.db, repoID)
+}
+
+func (repo Repository) GetBranchHashIfExistInRepoByID(repoID int64, branchName string) (string, error) {
+	return repo.isBranchExistInRepoByID(repo.db, repoID, branchName)
 }

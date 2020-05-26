@@ -75,17 +75,17 @@ func StartNew() {
 
 	absGitRepoDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_REPOS_DIR))
 	if pathErr != nil {
-		customLogger.Fatalln("bad git directory path:", err)
+		customLogger.Fatalln("bad git repositories directory path:", err)
 		return
 	}
 
 	absPullsDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_PULLRQ_DIR))
 	if pathErr != nil {
-		log.Fatalln("bad git directory path:", err)
+		log.Fatalln("bad git pull requests directory path:", err)
 	}
 
 	gitRepos := gitRepository.NewRepository(db, absGitRepoDir)
-	mergeRepos := mergeRepository.NewPullRequestRepository(db, absPullsDir)
+	mergeRepos := mergeRepository.NewPullRequestRepository(db, gitRepos, absPullsDir)
 
 	gitkitConfig := gitkit.Config{
 		Dir:        conf.GIT_USER_REPOS_DIR,

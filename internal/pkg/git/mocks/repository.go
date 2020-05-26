@@ -153,6 +153,36 @@ func (mr *MockGitRepoIMockRecorder) GetPermissionByID(currentUserId, repoID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissionByID", reflect.TypeOf((*MockGitRepoI)(nil).GetPermissionByID), currentUserId, repoID)
 }
 
+// GetRepoPathByID mocks base method.
+func (m *MockGitRepoI) GetRepoPathByID(repoID int64) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepoPathByID", repoID)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRepoPathByID indicates an expected call of GetRepoPathByID.
+func (mr *MockGitRepoIMockRecorder) GetRepoPathByID(repoID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoPathByID", reflect.TypeOf((*MockGitRepoI)(nil).GetRepoPathByID), repoID)
+}
+
+// IsRepoExistsByID mocks base method.
+func (m *MockGitRepoI) IsRepoExistsByID(repoID int64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsRepoExistsByID", repoID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsRepoExistsByID indicates an expected call of IsRepoExistsByID.
+func (mr *MockGitRepoIMockRecorder) IsRepoExistsByID(repoID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsRepoExistsByID", reflect.TypeOf((*MockGitRepoI)(nil).IsRepoExistsByID), repoID)
+}
+
 // IsRepoExistsByOwnerId mocks base method.
 func (m *MockGitRepoI) IsRepoExistsByOwnerId(ownerId int64, repoName string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -181,6 +211,21 @@ func (m *MockGitRepoI) IsRepoExistsByOwnerLogin(ownerLogin, repoName string) (bo
 func (mr *MockGitRepoIMockRecorder) IsRepoExistsByOwnerLogin(ownerLogin, repoName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsRepoExistsByOwnerLogin", reflect.TypeOf((*MockGitRepoI)(nil).IsRepoExistsByOwnerLogin), ownerLogin, repoName)
+}
+
+// GetBranchHashIfExistInRepoByID mocks base method.
+func (m *MockGitRepoI) GetBranchHashIfExistInRepoByID(repoID int64, branchName string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBranchHashIfExistInRepoByID", repoID, branchName)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBranchHashIfExistInRepoByID indicates an expected call of GetBranchHashIfExistInRepoByID.
+func (mr *MockGitRepoIMockRecorder) GetBranchHashIfExistInRepoByID(repoID, branchName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranchHashIfExistInRepoByID", reflect.TypeOf((*MockGitRepoI)(nil).GetBranchHashIfExistInRepoByID), repoID, branchName)
 }
 
 // GetBranchesByName mocks base method.
