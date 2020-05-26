@@ -625,7 +625,7 @@ func (repo RepoPullReq) createEmptyMRStorage(request models.PullRequest) error {
 	return nil
 }
 
-func (repo RepoPullReq) getDiff(request models.PullRequest) (stdout, stderr string, err error) {
+func (repo RepoPullReq) getGitDiff(request models.PullRequest) (stdout, stderr string, err error) {
 	mrRepoPath := repo.getMrDirByID(request.ID)
 
 	gitDiffArgs := []string{
@@ -688,7 +688,7 @@ func updateMRDiffInDBByID(executer SQLInterfaces.Executer, mrID int64, diff stri
 }
 
 func (repo RepoPullReq) renewMRDiff(executer SQLInterfaces.Executer, request models.PullRequest) (diff string, err error) {
-	diff, _, err = repo.getDiff(request)
+	diff, _, err = repo.getGitDiff(request)
 	if err != nil {
 		return "", err
 	}

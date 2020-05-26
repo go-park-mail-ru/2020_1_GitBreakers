@@ -736,15 +736,14 @@ func (GD *HttpCodehub) GetMRDiffByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prDiff := models.PullLRequestDiff{
-		Diff: diff,
-	}
-
-	if _, _, err := easyjson.MarshalToHTTPResponseWriter(prDiff, w); err != nil {
+	if _, err := w.Write([]byte(diff)); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// Set plain text, no json
+	w.Header().Set("Content-Type", "plain/text")
 
 	GD.Logger.HttpInfo(
 		r.Context(),
