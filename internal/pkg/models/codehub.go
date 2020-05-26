@@ -59,10 +59,6 @@ type PullRequest struct {
 	FromAuthorLogin *string   `json:"from_author_login" db:"" valid:"-"`
 }
 
-type PullLRequestDiff struct {
-	Diff string `json:"diff" db:"diff" valid:"-"`
-}
-
 type ContextKey string
 
 var (
