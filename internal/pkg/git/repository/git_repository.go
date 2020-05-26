@@ -298,14 +298,31 @@ func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
 		return false, err
 	}
 
-	switch _, branchErr := gogitRepo.Branch(branchName); branchErr {
-	case gogit.ErrBranchNotFound:
-		return false, nil
-	case nil:
-		return true, nil
-	default:
-		return false, err
+	branchesRefsIter, err := gogitRepo.Branches()
+	if err != nil {
+		return false, errors.WithStack(err)
 	}
+
+	defer branchesRefsIter.Close()
+	for {
+		ref, err := branchesRefsIter.Next()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return false, errors.WithStack(err)
+		}
+		referenceName := ref.Name().String()
+
+		branchNameFromRef := strings.TrimPrefix(referenceName,
+			gogitPlumbing.NewBranchReferenceName("").String())
+
+		if branchNameFromRef == branchName {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {

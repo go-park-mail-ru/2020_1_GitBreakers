@@ -23,4 +23,6 @@ type UCCodeHubI interface {
 	ApprovePL(pl models.PullRequest, userID int64) error
 	ClosePL(pl models.PullRequest, userID int64) error
 	GetAllMRUser(userID, limit, offset int64) (models.PullReqSet, error)
+	GetMRByID(mrID int64) (models.PullRequest, error)
+	GetMRDiffByID(mrID int64) (string, error)
 }

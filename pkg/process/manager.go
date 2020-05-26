@@ -14,7 +14,9 @@ var (
 	ErrExecTimeout = errors.New("process execution timeout")
 )
 
-const DefaultTimeout = time.Minute
+const (
+	DefaultTimeout = time.Minute
+)
 
 // Process represents a running process calls shell command.
 type Process struct {
@@ -71,7 +73,9 @@ func Remove(pid int64) bool {
 }
 
 // Exec starts executing a shell command in given path, it tracks corresponding process and timeout.
-func ExecDir(timeout time.Duration, bufIn io.Reader, dir, desc, cmdName string, args ...string) ([]byte, []byte, error) {
+func ExecDir(timeout time.Duration, bufIn io.Reader, dir, desc,
+	cmdName string, args ...string) (cmdOut []byte, cmdErr []byte, err error) {
+
 	if timeout == -1 {
 		timeout = DefaultTimeout
 	}
@@ -98,7 +102,6 @@ func ExecDir(timeout time.Duration, bufIn io.Reader, dir, desc, cmdName string, 
 		done <- cmd.Wait()
 	}()
 
-	var err error
 	select {
 	case <-time.After(timeout):
 		err := ErrExecTimeout

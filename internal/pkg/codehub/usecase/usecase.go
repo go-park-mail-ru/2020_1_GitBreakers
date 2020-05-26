@@ -208,3 +208,11 @@ func (UC *UCCodeHub) GetAllMRUser(userID, limit, offset int64) (models.PullReqSe
 	}
 	return MRList, err
 }
+
+func (UC *UCCodeHub) GetMRByID(mrID int64) (models.PullRequest, error) {
+	return UC.RepoMerge.GetMRByID(mrID)
+}
+
+func (UC *UCCodeHub) GetMRDiffByID(mrID int64) (string, error) {
+	return UC.RepoMerge.GetMRDiffByID(mrID)
+}

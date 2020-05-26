@@ -266,3 +266,33 @@ func (mr *MockUCCodeHubIMockRecorder) GetAllMRUser(userID, limit, offset interfa
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMRUser", reflect.TypeOf((*MockUCCodeHubI)(nil).GetAllMRUser), userID, limit, offset)
 }
+
+// GetMRByID mocks base method.
+func (m *MockUCCodeHubI) GetMRByID(mrID int64) (models.PullRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMRByID", mrID)
+	ret0, _ := ret[0].(models.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMRByID indicates an expected call of GetMRByID.
+func (mr *MockUCCodeHubIMockRecorder) GetMRByID(mrID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMRByID", reflect.TypeOf((*MockUCCodeHubI)(nil).GetMRByID), mrID)
+}
+
+// GetMRDiffByID mocks base method.
+func (m *MockUCCodeHubI) GetMRDiffByID(mrID int64) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMRDiffByID", mrID)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMRDiffByID indicates an expected call of GetMRDiffByID.
+func (mr *MockUCCodeHubIMockRecorder) GetMRDiffByID(mrID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMRDiffByID", reflect.TypeOf((*MockUCCodeHubI)(nil).GetMRDiffByID), mrID)
+}

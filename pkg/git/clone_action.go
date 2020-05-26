@@ -9,14 +9,16 @@ import (
 
 type ActionProtocol string
 
-func CloneBranchOnly(proto ActionProtocol, absSrc, absDst, srcBranch string, depth int) (Repository, error) {
+func CloneBranchOnly(proto ActionProtocol, absSrcPath, absDstPath, srcBranch,
+	remoteName string, depth int) (Repository, error) {
+
 	if proto == ActionNoneProtocol {
 		return Repository{}, errors.Wrap(entityerrors.Invalid(), "invalid protocol")
 	}
 
-	gogitRepo, err := gogit.PlainClone(absDst, false, &gogit.CloneOptions{
-		URL:           convertToProtoURL(proto, absSrc),
-		RemoteName:    OriginRemoteName,
+	gogitRepo, err := gogit.PlainClone(absDstPath, false, &gogit.CloneOptions{
+		URL:           ConvertToProtoURL(proto, absSrcPath),
+		RemoteName:    remoteName,
 		ReferenceName: gogitPlumbing.NewBranchReferenceName(srcBranch),
 		SingleBranch:  true,
 		NoCheckout:    false,
