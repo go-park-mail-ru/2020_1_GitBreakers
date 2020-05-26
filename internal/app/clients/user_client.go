@@ -112,8 +112,15 @@ func (c *UserClient) CheckPass(login string, pass string) (bool, error) {
 	if checkPassResp != nil {
 		return checkPassResp.GetIsCorrect(), err
 	}
-	//в случае неуспешного запроса(ошибка клиента или сервера)
-	return false, err
+	stat := status.Convert(err)
+	switch {
+	case stat.Message() == entityerrors.DoesNotExist().Error():
+		// если такого пользователя не существует
+		return false, entityerrors.DoesNotExist()
+	default:
+		//в случае неуспешного запроса(ошибка клиента или сервера)
+		return false, err
+	}
 }
 func (c *UserClient) UploadAvatar(UserID int64, fileName string, fileData []byte, fileSize int64) (err error) {
 	const ChunkSize int = 1 << 16 //64kb

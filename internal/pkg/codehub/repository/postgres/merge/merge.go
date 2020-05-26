@@ -712,9 +712,8 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer, r
 	if !isToExist {
 		err := repo.forceCloseMRAndRemoveMRStorage(executer, request.ID,
 			codehub.MRStatusBadToBranch)
-		if err != nil {
-			return err
-		}
+
+		return errors.WithStack(err)
 	}
 
 	// Check From repository branch
@@ -725,9 +724,8 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer, r
 	if !isFromExist {
 		err := repo.forceCloseMRAndRemoveMRStorage(executer, request.ID,
 			codehub.MRStatusBadFromBranch)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+
+		return errors.WithStack(err)
 	}
 
 	// Fetching updated
