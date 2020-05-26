@@ -259,8 +259,6 @@ func (repo RepoPullReq) ApproveMerge(mrID int64, approver models.User) (err erro
 }
 
 func (repo RepoPullReq) GetAllMRForUser(userID int64, limit int64, offset int64) (pullRequests models.PullReqSet, err error) {
-	pullRequests = models.PullReqSet{}
-
 	rows, err := repo.db.Query(`
 				SELECT mrv.id,
 					   mrv.author_id,
@@ -360,7 +358,7 @@ func (repo RepoPullReq) GetOpenedMRAssociatedWithRepoByRepoID(repoID int64) (pul
 		codehub.MRStatusOK, codehub.MRStatusConflict,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	defer func() {
@@ -369,7 +367,7 @@ func (repo RepoPullReq) GetOpenedMRAssociatedWithRepoByRepoID(repoID int64) (pul
 		}
 	}()
 
-	pullRequests = models.PullReqSet{}
+	pullRequests = make(models.PullReqSet, 0)
 
 	for rows.Next() {
 		var pr models.PullRequest
@@ -442,7 +440,7 @@ func (repo RepoPullReq) GetMRByID(mrID int64) (models.PullRequest, error) {
 }
 
 func scanPullReq(rows *sql.Rows) (models.PullReqSet, error) {
-	var pullRequests models.PullReqSet
+	pullRequests := make(models.PullReqSet, 0)
 
 	for rows.Next() {
 		var pr models.PullRequest
