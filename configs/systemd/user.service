@@ -4,6 +4,8 @@ Description=user
 [Service]
 ExecStart=/home/ubuntu/CodeHub/bin/user
 EnvironmentFile=/home/ubuntu/CodeHub/.env
+User=ubuntu
+Group=ubuntu
 
 [Install]
 WantedBy=multi-user.target
