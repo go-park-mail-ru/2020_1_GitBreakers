@@ -24,9 +24,13 @@ func (repo Repository) FetchBranchForce(remoteName, branchName string, depth int
 		Tags:       gogit.NoTags,
 		Force:      true,
 	})
-	if err != nil {
+
+	switch {
+	case err == gogit.NoErrAlreadyUpToDate:
+		return nil
+	case err != nil:
 		return errors.WithStack(err)
 	}
 
-	return err
+	return nil
 }

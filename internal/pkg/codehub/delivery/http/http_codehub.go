@@ -477,7 +477,7 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = GD.CodeHubUC.CreatePL(plModel)
+	pr, err := GD.CodeHubUC.CreatePL(plModel)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -496,6 +496,19 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(pr, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	GD.Logger.HttpInfo(
+		r.Context(),
+		fmt.Sprintf("successfully created pr=%+v", pr),
+		http.StatusCreated,
+	)
+
 	w.WriteHeader(http.StatusCreated)
 }
 

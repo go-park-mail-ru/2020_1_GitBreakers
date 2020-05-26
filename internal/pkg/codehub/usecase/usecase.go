@@ -152,7 +152,7 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (
 		return nil, entityerrors.Invalid()
 	}
 }
-func (UC *UCCodeHub) CreatePL(request models.PullRequest) error {
+func (UC *UCCodeHub) CreatePL(request models.PullRequest) (models.PullRequest, error) {
 	return UC.RepoMerge.CreateMR(request)
 }
 func (UC *UCCodeHub) GetPLIn(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error) {
@@ -173,7 +173,12 @@ func (UC *UCCodeHub) ApprovePL(pl models.PullRequest, userID int64) error {
 	}
 
 	if permission == perm.OwnerAccess() || permission == perm.AdminAccess() {
-		return UC.RepoMerge.ApproveMerge(userID, pl.ID)
+		approver, err := UC.UserRepo.GetUserByIDWithoutPass(userID)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		return UC.RepoMerge.ApproveMerge(pl.ID, approver)
 	}
 
 	return entityerrors.AccessDenied()
@@ -203,10 +208,7 @@ func (UC *UCCodeHub) ClosePL(pl models.PullRequest, userID int64) error {
 
 func (UC *UCCodeHub) GetAllMRUser(userID, limit, offset int64) (models.PullReqSet, error) {
 	MRList, err := UC.RepoMerge.GetAllMRForUser(userID, limit, offset)
-	if err != nil {
-		return models.PullReqSet{}, err
-	}
-	return MRList, err
+	return MRList, errors.WithStack(err)
 }
 
 func (UC *UCCodeHub) GetMRByID(mrID int64) (models.PullRequest, error) {

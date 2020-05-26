@@ -5,14 +5,14 @@ import (
 	gogitPlumbing "github.com/go-git/go-git/v5/plumbing"
 )
 
-func (repo Repository) Checkout(refName gogitPlumbing.ReferenceName, isForce bool) error {
+func (repo Repository) Checkout(referenceName string, isForce bool) error {
 	worktree, err := repo.Worktree()
 	if err != nil {
 		return err
 	}
 
 	err = worktree.Checkout(&gogit.CheckoutOptions{
-		Branch: refName,
+		Branch: gogitPlumbing.ReferenceName(referenceName),
 		Force:  isForce,
 	})
 

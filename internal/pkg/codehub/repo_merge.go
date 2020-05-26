@@ -3,12 +3,12 @@ package codehub
 import "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 
 type RepoMergeI interface {
-	CreateMR(request models.PullRequest) error
+	CreateMR(request models.PullRequest) (models.PullRequest, error)
 	GetAllMROut(repoID int64, limit int64, offset int64) (models.PullReqSet, error)
 	GetAllMRIn(repoID int64, limit int64, offset int64) (models.PullReqSet, error)
 	GetMRDiffByID(mrID int64) (string, error)
 	GetMRByID(mrID int64) (models.PullRequest, error)
-	ApproveMerge(approverID, pullReqID int64) error
+	ApproveMerge(pullReqID int64, approver models.User) error
 	GetAllMRForUser(userID int64, limit int64, offset int64) (models.PullReqSet, error)
 	RejectMR(rejecterID, mrID int64) error
 	GetOpenedMRAssociatedWithRepoByRepoID(repoID int64) (models.PullReqSet, error)

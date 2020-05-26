@@ -17,7 +17,7 @@ type UCCodeHubI interface {
 	GetUserStaredList(repoID int64, limit int64, offset int64) (models.UserSet, error)
 	Search(query, params string, limit, offset, userID int64) (interface{}, error)
 
-	CreatePL(request models.PullRequest) error
+	CreatePL(request models.PullRequest) (models.PullRequest, error)
 	GetPLIn(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error)
 	GetPLOut(repo gitmodels.Repository, limit int64, offset int64) (models.PullReqSet, error)
 	ApprovePL(pl models.PullRequest, userID int64) error

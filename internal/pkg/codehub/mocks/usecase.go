@@ -181,11 +181,12 @@ func (mr *MockUCCodeHubIMockRecorder) Search(query, params, limit, offset, userI
 }
 
 // CreatePL mocks base method.
-func (m *MockUCCodeHubI) CreatePL(request models.PullRequest) error {
+func (m *MockUCCodeHubI) CreatePL(request models.PullRequest) (models.PullRequest, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePL", request)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(models.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CreatePL indicates an expected call of CreatePL.
