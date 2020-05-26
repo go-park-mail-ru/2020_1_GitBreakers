@@ -4,6 +4,8 @@ Description=gitserver
 [Service]
 ExecStart=/home/ubuntu/CodeHub/bin/gitserver
 EnvironmentFile=/home/ubuntu/CodeHub/.env
+User=ubuntu
+Group=ubuntu
 
 [Install]
 WantedBy=multi-user.target
