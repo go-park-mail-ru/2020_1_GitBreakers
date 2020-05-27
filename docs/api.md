@@ -759,6 +759,38 @@ branch указываем название веток текстовое
 }
 ```
 Ответ:
+```json
+{
+    "author_id": 40,
+    "branch_from": "dev",
+    "branch_to": "master",
+    "closer_user_id": null,
+    "created_at": "2020-05-26T20:17:46.776782Z",
+    "from_author_login": "nickeskov",
+    "from_repo_id": 61,
+    "from_repo_name": "codehub",
+    "id": 69,
+    "is_accepted": false,
+    "is_closed": false,
+    "label": "",
+    "message": "",
+    "status": "ok",
+    "title": "In Master",
+    "to_author_login": "nickeskov",
+    "to_repo_id": 61,
+    "to_repo_name": "codehub"
+}
+```
+Возможные значения поля status в ответе (по этим полям не стоит определять закрыт pull request или нет):
+* "" - Это некорректное значение, если такое значение пришло, что-то явно не так
+* "ok" - Всё хорошо, сервер сам может слить ветки (pull request открыт)
+* "error" - Произошла ошибка (pull request закрыт)
+* "merged" - Слит (pull request закрыт)
+* "rejected" - Отклонён (pull request закрыт)
+* "conflict" - Конфликт (сервер не может провести автоматическое слияние)
+* "bad_to_branch" - Target ветки не существует (pull request закрыт)
+* "bad_from_branch" - Source ветки не существует (pull request закрыт)
+
 1. 201 created
 2. 400 некорректный json или сами данные
 3. 401 unauthorized
