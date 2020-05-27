@@ -163,11 +163,11 @@ func StartNew() {
 	handlersRouter.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
 	handlersRouter.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/user/id/{id}/profile", userSetHandler.GetInfoByID).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/id/{id:[0-9]+}/profile", userSetHandler.GetInfoByID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 	handlersRouter.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/user/id/{id}/repo", repoHandler.GetRepoListByUserID).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/id/{id:[0-9]+}/repo", repoHandler.GetRepoListByUserID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.DeleteRepo).Methods(http.MethodDelete)
 
@@ -180,26 +180,26 @@ func StartNew() {
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
-	handlersRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 
-	handlersRouter.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 
 	CsrfRouter.HandleFunc("/func/repo/fork", repoHandler.Fork).Methods(http.MethodPost)
 
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.CreatePullReq).Methods(http.MethodPost)
-	handlersRouter.HandleFunc("/func/repo/{repoID}/pullrequests/{direction}", CHubHandler.GetPullReqList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/pullrequests/{direction}", CHubHandler.GetPullReqList).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.UndoPullReq).Methods(http.MethodDelete)
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.ApproveMerge).Methods(http.MethodPut)
 
-	handlersRouter.HandleFunc("/func/repo/pullrequest/{id}", CHubHandler.GetMRByID).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/func/repo/pullrequest/{id}/diff", CHubHandler.GetMRDiffByID).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/pullrequest/{id:[0-9]+}", CHubHandler.GetMRByID).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/pullrequest/{id:[0-9]+}/diff", CHubHandler.GetMRDiffByID).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
 

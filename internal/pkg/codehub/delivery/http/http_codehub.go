@@ -464,11 +464,13 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := res.(int64)
 	plModel := models.PullRequest{}
+
 	if err := easyjson.UnmarshalFromReader(r.Body, &plModel); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	plModel.AuthorId = &userID
 	isCorrect, err := govalidator.ValidateStruct(plModel)
 	if !isCorrect || err != nil {
@@ -600,6 +602,10 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusForbidden)
+		return
+	case errors.Is(err, entityerrors.Conflict()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusConflict)
 		return
 	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
