@@ -353,9 +353,12 @@ func (repo RepoPullReq) GetOpenedMRAssociatedWithRepoByRepoID(repoID int64) (pul
 				FROM merge_requests AS mr
 				WHERE (to_repository_id = $1
 				   OR from_repository_id = $1)
-				   AND status IN ($2, $3)`,
+				   AND status IN ($2, $3, $4, $5)`,
 		repoID,
-		codehub.MRStatusOK, codehub.MRStatusConflict,
+		codehub.MRStatusOK,
+		codehub.MRStatusConflict,
+		codehub.MRStatusUpToDate,
+		codehub.MRStatusNoChanges,
 	)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -623,12 +626,14 @@ func (repo RepoPullReq) createEmptyMRStorage(request models.PullRequest) error {
 	return nil
 }
 
+// getGitDiff between firstRef and secondRef
 func (repo RepoPullReq) getGitDiff(request models.PullRequest) (stdout, stderr string, err error) {
 	mrRepoPath := repo.getMrDirByID(request.ID)
 
 	gitDiffArgs := []string{
 		"diff",
 		"--full-index", // for binary data such as images, executables and other blobs
+		"-M",           // detect renaming
 		git.CreateRemoteRefName(toRemoteName, request.BranchTo),
 		git.CreateRemoteRefName(fromRemoteName, request.BranchFrom),
 	}
