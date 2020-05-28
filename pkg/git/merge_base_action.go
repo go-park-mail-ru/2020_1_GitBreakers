@@ -25,6 +25,7 @@ func (repo Repository) MergeBase(firstCommitHash, secondCommitHash string) ([]st
 	}
 
 	mergeBasesHashes := make([]string, 0, len(mergeBases))
+
 	for i := range mergeBases {
 		mergeBasesHashes = append(mergeBasesHashes, mergeBases[i].Hash.String())
 	}

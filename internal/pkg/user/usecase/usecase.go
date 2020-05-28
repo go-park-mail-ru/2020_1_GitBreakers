@@ -79,6 +79,9 @@ func (UC *UCUser) Update(userID int64, newUserData models.User) error {
 func (UC *UCUser) GetByLogin(login string) (models.User, error) {
 	return UC.RepUser.GetByLoginWithoutPass(login)
 }
+func (UC *UCUser) GetByEmail(email string) (models.User, error) {
+	return UC.RepUser.GetByEmail(email)
+}
 func (UC *UCUser) GetByID(userID int64) (models.User, error) {
 	return UC.RepUser.GetUserByIDWithoutPass(userID)
 }

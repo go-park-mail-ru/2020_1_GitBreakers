@@ -19,4 +19,5 @@ type RepoUser interface {
 	UploadAvatar(Name string, Content []byte) error
 	UpdateAvatarPath(User models.User, Name string) error
 	UserCanUpdate(user models.User) (bool, error)
+	GetByEmail(email string) (models.User, error)
 }
