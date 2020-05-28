@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/middleware"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	sessMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session/mocks"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/golang/mock/gomock"
@@ -839,11 +840,13 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 
 	m := mock_clients.NewMockUserClientI(ctrl)
 	s := sessMock.NewMockSessDelivery(ctrl)
+	usMock := mocks.NewMockUCUser(ctrl)
 	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 
 	userHandlers.UClient = m
 	userHandlers.SessHttp = s
 	userHandlers.Logger = &newlogger
+	userHandlers.UCUser = usMock
 
 	testInput := models.User{}
 	err := faker.FakeData(&testInput)
@@ -884,6 +887,10 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 		gomock.InOrder(
 			m.EXPECT().
 				GetByLogin(someLogin).
+				Return(models.User{}, entityerrors.DoesNotExist()).
+				Times(1),
+			usMock.EXPECT().
+				GetByEmail(someLogin).
 				Return(models.User{}, entityerrors.DoesNotExist()).
 				Times(1),
 		)

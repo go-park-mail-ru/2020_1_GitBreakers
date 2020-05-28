@@ -279,10 +279,18 @@ func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		UsHttp.Logger.HttpLogInfo(r.Context(),
-			fmt.Sprintf("user with login=%s does not exist", slug))
-		w.WriteHeader(http.StatusNotFound)
-		return
+		userData, err = UsHttp.UCUser.GetByEmail(slug)
+
+		switch {
+		case errors.Is(err, entityerrors.DoesNotExist()):
+			w.WriteHeader(http.StatusNotFound)
+			UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+			return
+		case err != nil:
+			UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	case err != nil:
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -331,3 +339,4 @@ func (UsHttp *UserHttp) GetInfoByID(w http.ResponseWriter, r *http.Request) {
 
 	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)
 }
+
