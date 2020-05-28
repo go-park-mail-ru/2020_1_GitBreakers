@@ -16,6 +16,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -908,9 +909,14 @@ func (repo RepoPullReq) mergePullRequestAndPushInToRepo(pr models.PullRequest, m
 		return errors.WithStack(fmt.Errorf("git merge --no-ff --no-commit [%s]: %v - %s", mrRepoPath, err, errOut))
 	}
 
+	mergerName := strings.Trim(merger.Name, " \n\r")
+	if mergerName == "" {
+		mergerName = merger.Login
+	}
+
 	gitCommitArgs := []string{
 		"commit",
-		fmt.Sprintf("--author='%s <%s>'", merger.Name, merger.Email),
+		fmt.Sprintf("--author='%s <%s>'", mergerName, merger.Email),
 		"-m",
 		fmt.Sprintf("Merge branch '%s' of %s/%s into %s",
 			pr.BranchFrom, *pr.FromAuthorLogin, *pr.FromRepoName, pr.BranchTo),
