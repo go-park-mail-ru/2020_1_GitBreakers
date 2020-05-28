@@ -339,4 +339,3 @@ func (UsHttp *UserHttp) GetInfoByID(w http.ResponseWriter, r *http.Request) {
 
 	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)
 }
-

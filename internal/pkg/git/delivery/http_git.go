@@ -600,12 +600,14 @@ func (GD *GitDelivery) GetFileContentByBranch(w http.ResponseWriter, r *http.Req
 		http.Error(w, http.StatusText(http.StatusRequestEntityTooLarge), http.StatusRequestEntityTooLarge)
 
 	case err == nil:
+		contentType := http.DetectContentType(content)
+		w.Header().Set("Content-Type", contentType)
+
 		if _, err := w.Write(content); err != nil {
 			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 
-		w.Header().Set("Content-Type", http.DetectContentType(content))
 		w.WriteHeader(http.StatusOK)
 
 	default:
@@ -626,39 +628,41 @@ func (GD *GitDelivery) GetFileContentByCommitHash(w http.ResponseWriter, r *http
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		GD.Logger.HttpLogInfo(r.Context(),
-			fmt.Sprintf("not dound in repo=%s/%s in branch=%s file=%s for user with id=%v",
+			fmt.Sprintf("not dound in repo=%s/%s in hash=%s file=%s for user with id=%v",
 				userName, repoName, commitHash, filePath, userIDPointer))
 
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 
 	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpLogInfo(r.Context(),
-			fmt.Sprintf("access denied in repo=%s/%s in branch=%s file=%s for user with id=%v",
+			fmt.Sprintf("access denied in repo=%s/%s in hash=%s file=%s for user with id=%v",
 				userName, repoName, commitHash, filePath, userIDPointer))
 
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 
 	case errors.Is(err, entityerrors.Invalid()):
 		GD.Logger.HttpLogInfo(r.Context(),
-			fmt.Sprintf("bad request in repo=%s/%s in branch=%s file=%s for user with id=%v",
+			fmt.Sprintf("bad request in repo=%s/%s in hash=%s file=%s for user with id=%v",
 				userName, repoName, commitHash, filePath, userIDPointer))
 
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 
 	case errors.Is(err, entityerrors.TooLarge()):
 		GD.Logger.HttpLogInfo(r.Context(),
-			fmt.Sprintf("too large file in repo=%s/%s in branch=%s file=%s for user with id=%v",
+			fmt.Sprintf("too large file in repo=%s/%s in hash=%s file=%s for user with id=%v",
 				userName, repoName, commitHash, filePath, userIDPointer))
 
 		http.Error(w, http.StatusText(http.StatusRequestEntityTooLarge), http.StatusRequestEntityTooLarge)
 
 	case err == nil:
+		contentType := http.DetectContentType(content)
+		w.Header().Set("Content-Type", contentType)
+
 		if _, err := w.Write(content); err != nil {
 			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 
-		w.Header().Set("Content-Type", http.DetectContentType(content))
 		w.WriteHeader(http.StatusOK)
 
 	default:

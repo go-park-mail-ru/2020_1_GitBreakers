@@ -178,7 +178,7 @@ func StartNew() {
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}",
 		repoHandler.GetBranchInfoByNames).Methods(http.MethodGet)
 
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}/tree/{path}",
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}/tree/{path:.*}",
 		repoHandler.GetFileContentByBranch).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branches",
@@ -187,7 +187,7 @@ func StartNew() {
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}",
 		repoHandler.GetCommitsList).Methods(http.MethodGet)
 
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commit/{hash}/tree/{path}",
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commit/{hash}/tree/{path:.*}",
 		repoHandler.GetFileContentByCommitHash).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}",
