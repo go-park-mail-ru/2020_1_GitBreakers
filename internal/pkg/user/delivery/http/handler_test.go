@@ -62,7 +62,7 @@ var userHandlers UserHttp
 //				Value: "tj38r39i3r3j4953",
 //			}, nil).Times(1)
 //
-//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Login, false)
+//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.LoginByLoginOrEmail, false)
 //
 //		apitest.New("Login-OK").
 //			Handler(middlewareMock).
@@ -89,7 +89,7 @@ var userHandlers UserHttp
 //				Value: "tj38r39i3r3j4953",
 //			}, nil).Times(0)
 //
-//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Login, true)
+//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.LoginByLoginOrEmail, true)
 //
 //		apitest.New("Login already auth").
 //			Handler(middlewareMock).
@@ -111,7 +111,7 @@ var userHandlers UserHttp
 //			CheckPass(testInput.Login, testInput.Password).
 //			Return(true, nil).Times(0)
 //
-//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Login, false)
+//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.LoginByLoginOrEmail, false)
 //
 //		apitest.New("Some error in UseCase").
 //			Handler(middlewareMock).
@@ -138,7 +138,7 @@ var userHandlers UserHttp
 //					Value: "tj38r39i3r3j4953",
 //				}, errors.New("some error")).Times(1))
 //
-//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Login, false)
+//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.LoginByLoginOrEmail, false)
 //
 //		apitest.New("Error in session").
 //			Handler(middlewareMock).
@@ -156,7 +156,7 @@ var userHandlers UserHttp
 //				GetByLogin(testInput.Login).
 //				Return(testUser, nil).Times(0))
 //
-//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Login, false)
+//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.LoginByLoginOrEmail, false)
 //
 //		apitest.New("Invalid json").
 //			Handler(middlewareMock).
@@ -176,7 +176,7 @@ var userHandlers UserHttp
 //				GetByLogin(invalidLogin).
 //				Return(testUser, nil).Times(0))
 //
-//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.Login, false)
+//		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.LoginByLoginOrEmail, false)
 //
 //		apitest.New("Invalid json").
 //			Handler(middlewareMock).
@@ -855,7 +855,6 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 
 	t.Run("Get info by login", func(t *testing.T) {
 		someLogin := "keksik"
-		err := faker.FakeData(&someLogin)
 
 		require.Nil(t, err)
 
@@ -866,8 +865,8 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 				Times(1),
 		)
 
-		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login": someLogin})
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLoginOrEmail, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login_or_email": someLogin})
 
 		apitest.New("Get info by login").
 			Handler(middlewareMock).
@@ -878,30 +877,23 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 			End()
 	})
 
-	t.Run("Get info login doesn't exsist", func(t *testing.T) {
-		someLogin := "keksik"
-		err := faker.FakeData(&someLogin)
-
-		require.Nil(t, err)
+	t.Run("Get info email doesn't exsist", func(t *testing.T) {
+		someEmail := "keksik@keksik.com"
 
 		gomock.InOrder(
-			m.EXPECT().
-				GetByLogin(someLogin).
-				Return(models.User{}, entityerrors.DoesNotExist()).
-				Times(1),
 			usMock.EXPECT().
-				GetByEmail(someLogin).
+				GetByEmail(someEmail).
 				Return(models.User{}, entityerrors.DoesNotExist()).
 				Times(1),
 		)
 
-		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login": someLogin})
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLoginOrEmail, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login_or_email": someEmail})
 
 		apitest.New("Get info login doesn't exsist").
 			Handler(middlewareMock).
 			Method(http.MethodGet).
-			URL("/profile/" + someLogin).
+			URL("/profile/" + someEmail).
 			Expect(t).
 			Status(http.StatusNotFound).
 			End()
@@ -919,8 +911,8 @@ func TestUserHttp_GetInfoByLogin(t *testing.T) {
 				Times(1),
 		)
 
-		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLogin, false)
-		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login": someLogin})
+		middlewareMock := middleware.AuthMiddlewareMock(userHandlers.GetInfoByLoginOrEmail, false)
+		middlewareMock = middleware.SetMuxVars(middlewareMock, map[string]string{"login_or_email": someLogin})
 
 		apitest.New("Get info login doesn't exsist").
 			Handler(middlewareMock).

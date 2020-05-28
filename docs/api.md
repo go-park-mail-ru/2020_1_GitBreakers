@@ -23,6 +23,9 @@ required: login: string(>3 симв), password:string(>5 симв)
     "password": "string"
 }
 ```
+Примечания:
+- полем login может быть как логин пользователя, так и его email 
+
 Ответ:
 1. 200 OK+поставит куки session_id
 2. 400 невалдиный json или невалидные поля

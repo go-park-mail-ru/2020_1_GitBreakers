@@ -156,13 +156,13 @@ func StartNew() {
 
 	CsrfRouter.HandleFunc("/csrftoken", csrfHandlers.GetNewCsrfTokenHandler).Methods(http.MethodGet)
 
-	handlersRouter.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
+	handlersRouter.HandleFunc("/session", userSetHandler.LoginByLoginOrEmail).Methods(http.MethodPost)
 	handlersRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
 
 	handlersRouter.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
 	handlersRouter.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
-	handlersRouter.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/profile/{login_or_email}", userSetHandler.GetInfoByLoginOrEmail).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/user/id/{id:[0-9]+}/profile", userSetHandler.GetInfoByID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
 	handlersRouter.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
