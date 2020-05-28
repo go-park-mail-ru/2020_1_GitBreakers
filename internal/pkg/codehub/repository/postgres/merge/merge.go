@@ -765,10 +765,12 @@ func (repo RepoPullReq) checkMRConflicts(request models.PullRequest,
 	}
 
 	if _, _, err := repo.applyPatchCheck(request, patch); err != nil {
+
 		// Fallback on three way merge (recursive strategy)
 		if _, _, err = repo.applyPatchCheck(request, patch, "--3way"); err != nil {
 			return codehub.MRStatusConflict, nil
 		}
+
 	}
 
 	return codehub.MRStatusOK, nil

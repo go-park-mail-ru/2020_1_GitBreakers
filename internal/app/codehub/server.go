@@ -283,6 +283,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		SessHttp: &sessDelivery,
 		Logger:   &logger,
 		UClient:  &userClient,
+		UCUser:   &userUCase,
 	}
 
 	gitDelivery := gitDeliv.GitDelivery{
