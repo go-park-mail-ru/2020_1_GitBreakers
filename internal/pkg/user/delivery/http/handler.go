@@ -7,6 +7,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
@@ -22,6 +23,7 @@ type UserHttp struct {
 	SessHttp session.SessDelivery
 	Logger   *logger.SimpleLogger
 	UClient  interfaces.UserClientI
+	UCUser   user.UCUser
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
@@ -122,18 +124,22 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := govalidator.ValidateStruct(input); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "govalidator", "validate struct", errors.Cause(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	User, err := UsHttp.UClient.GetByLogin(input.Login)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		w.WriteHeader(http.StatusNotFound)
-		UsHttp.Logger.HttpLogError(r.Context(), "", "GetByLogin", errors.Cause(err))
-		return
+		User, err = UsHttp.UCUser.GetByEmail(input.Login)
+
+		switch {
+		case errors.Is(err, entityerrors.DoesNotExist()):
+			w.WriteHeader(http.StatusNotFound)
+			UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+			return
+		case err != nil:
+			UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 	case err != nil:
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)

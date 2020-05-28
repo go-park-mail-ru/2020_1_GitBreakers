@@ -47,6 +47,17 @@ func (repo UserRepo) GetUserByIDWithoutPass(ID int64) (models.User, error) {
 	storedUser.Password = ""
 	return storedUser, nil
 }
+func (repo UserRepo) GetByEmail(email string) (models.User, error) {
+	User := models.User{}
+	err := repo.db.Get(&User, "SELECT id, login, email,name, avatar_path,created_at FROM users WHERE email = $1", email)
+	switch {
+	case err == sql.ErrNoRows:
+		return User, entityerrors.DoesNotExist()
+	case err != nil:
+		return User, errors.Wrap(err, "error while scanning in repository")
+	}
+	return User, nil
+}
 
 func (repo UserRepo) GetUserByLoginWithPass(login string) (models.User, error) {
 	User := models.User{}

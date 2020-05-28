@@ -11,5 +11,6 @@ type UCUser interface {
 	GetByLogin(login string) (models.User, error)
 	GetByID(userID int64) (models.User, error)
 	CheckPass(login string, pass string) (bool, error)
+	GetByEmail(email string) (models.User, error)
 	UploadAvatar(UserID int64, fileName string, fileData []byte) error
 }
