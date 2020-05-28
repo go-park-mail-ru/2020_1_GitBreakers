@@ -11,6 +11,7 @@ var (
 	ErrAccessDenied EntityError = errors.New("access to entity denied")
 	ErrContentEmpty EntityError = errors.New("entity content empty")
 	ErrConflict     EntityError = errors.New("entity conflicts with other entities")
+	ErrTooLarge     EntityError = errors.New("entity too large")
 )
 
 func DoesNotExist() error {
@@ -35,4 +36,8 @@ func ContentEmpty() error {
 
 func Conflict() error {
 	return ErrConflict
+}
+
+func TooLarge() error {
+	return ErrTooLarge
 }

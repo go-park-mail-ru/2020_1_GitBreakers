@@ -162,3 +162,35 @@ func (GU *GitUseCase) GetBranchInfoByNames(userLogin, repoName, branchName strin
 
 	return branch, errors.WithStack(err)
 }
+
+func (GU *GitUseCase) GetFileContentByBranch(userLogin, repoName, branchName, filePath string, currUserID *int64) ([]byte, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(currUserID, userLogin, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return nil, entityerrors.DoesNotExist()
+	case err == nil && !isReadyToRead:
+		return nil, entityerrors.AccessDenied()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	content, err := GU.Repo.GetFileContentByBranch(userLogin, repoName, branchName, filePath)
+
+	return content, errors.WithStack(err)
+}
+
+func (GU *GitUseCase) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath string, currUserID *int64) ([]byte, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(currUserID, userLogin, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return nil, entityerrors.DoesNotExist()
+	case err == nil && !isReadyToRead:
+		return nil, entityerrors.AccessDenied()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	content, err := GU.Repo.GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath)
+
+	return content, errors.WithStack(err)
+}
