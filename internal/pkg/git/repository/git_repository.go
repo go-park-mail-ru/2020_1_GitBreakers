@@ -518,7 +518,7 @@ func (repo Repository) GetReposByUserLogin(requesterId *int64, userLogin string,
 				FROM git_repository_parent_user_view AS repo
 					JOIN users_git_repositories AS ugr ON repo.id = ugr.repository_id
 				WHERE repo.user_login = $1
-				AND (ugr.user_id = $2 AND ugr.role <> $3 OR repo.is_public = TRUE) OFFSET $4
+				AND (ugr.user_id = $2 AND ugr.role NOT IN ($3) OR repo.is_public = TRUE) OFFSET $4
 				LIMIT $5`,
 		userLogin, requesterId, perm.NoAccess(), offset, limit)
 

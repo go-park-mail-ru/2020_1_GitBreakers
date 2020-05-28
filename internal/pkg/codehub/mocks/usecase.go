@@ -166,7 +166,7 @@ func (mr *MockUCCodeHubIMockRecorder) GetUserStaredList(repoID, limit, offset in
 }
 
 // Search mocks base method.
-func (m *MockUCCodeHubI) Search(query, params string, limit, offset, userID int64) (interface{}, error) {
+func (m *MockUCCodeHubI) Search(query, params string, limit, offset int64, userID *int64) (interface{}, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Search", query, params, limit, offset, userID)
 	ret0, _ := ret[0].(interface{})

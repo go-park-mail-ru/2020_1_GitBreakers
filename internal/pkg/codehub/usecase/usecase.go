@@ -127,6 +127,7 @@ func (UC *UCCodeHub) GetNews(repoID, userID, limit, offset int64) (models.NewsSe
 		return models.NewsSet{}, entityerrors.AccessDenied()
 	}
 }
+
 func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) (models.UserSet, error) {
 	UserSet, err := UC.RepoStar.GetUserStaredList(repoID, limit, offset)
 	if UserSet != nil {
@@ -134,15 +135,19 @@ func (UC *UCCodeHub) GetUserStaredList(repoID int64, limit int64, offset int64) 
 	}
 	return models.UserSet{}, err
 }
-func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (interface{}, error) {
+
+func (UC *UCCodeHub) Search(query, params string, limit, offset int64, userID *int64) (interface{}, error) {
 	switch params {
 	case "allusers":
 		return UC.SearchRepo.GetFromUsers(query, limit, offset)
 
 	case "allrepo":
-		return UC.SearchRepo.GetFromAllRepos(query, limit, offset)
+		return UC.SearchRepo.GetFromAllRepos(query, limit, offset, userID)
 
 	case "myrepo":
+		if userID == nil {
+			return nil, entityerrors.AccessDenied()
+		}
 		return UC.SearchRepo.GetFromOwnRepos(query, limit, offset, userID)
 
 	case "starredrepo":
@@ -152,6 +157,7 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (
 		return nil, entityerrors.Invalid()
 	}
 }
+
 func (UC *UCCodeHub) CreatePL(request models.PullRequest) (models.PullRequest, error) {
 	if request.FromRepoID == nil ||
 		*request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
@@ -220,7 +226,8 @@ func (UC *UCCodeHub) ApprovePL(pl models.PullRequest, userID int64) error {
 }
 
 func (UC *UCCodeHub) ClosePL(pl models.PullRequest, userID int64) error {
-	var isCorrect bool
+	isCorrect := false
+
 	if pl.AuthorId != nil && *pl.AuthorId == userID {
 		isCorrect = true
 	} else {
