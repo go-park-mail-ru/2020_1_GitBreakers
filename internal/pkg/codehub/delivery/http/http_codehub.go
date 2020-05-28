@@ -403,29 +403,34 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 
 func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(models.UserIDKey)
-	if res == nil {
-		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+	var userIDPtr *int64
+
+	if res != nil {
+		userID := res.(int64)
+		userIDPtr = &userID
 	}
-	userID := res.(int64)
 
 	query := r.URL.Query().Get("query")
 	params := mux.Vars(r)["params"]
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 	if err != nil {
-		limit = 100
+		limit = 100 // TODO(nickeskov): send bad request
 	}
 
 	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
 	if err != nil {
-		offset = 0
+		offset = 0 // TODO(nickeskov): send bad request
 	}
-	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset), userID)
+
+	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset), userIDPtr)
 	switch {
 	case errors.Is(err, entityerrors.Invalid()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -433,26 +438,19 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repolist, ok := data.(models.RepoSet)
-	if ok {
-		if _, _, err := easyjson.MarshalToHTTPResponseWriter(repolist, w); err != nil {
+	switch dataToMarshall := data.(type) {
+	case easyjson.Marshaler:
+		if _, _, err := easyjson.MarshalToHTTPResponseWriter(dataToMarshall, w); err != nil {
 			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 			w.WriteHeader(http.StatusInternalServerError)
-			return
+		} else {
+			GD.Logger.HttpLogInfo(r.Context(), "successfully search call")
+			w.WriteHeader(http.StatusOK)
 		}
-		return
+	default:
+		GD.Logger.HttpLogInfo(r.Context(), "bad request")
+		w.WriteHeader(http.StatusBadRequest)
 	}
-
-	userlist, ok := data.(models.UserSet)
-	if ok {
-		if _, _, err := easyjson.MarshalToHTTPResponseWriter(userlist, w); err != nil {
-			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-	w.WriteHeader(http.StatusBadRequest)
 }
 
 func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {

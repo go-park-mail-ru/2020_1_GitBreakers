@@ -11,30 +11,30 @@ import (
 	reflect "reflect"
 )
 
-// MockRepoStarI is a mock of RepoStarI interface
+// MockRepoStarI is a mock of RepoStarI interface.
 type MockRepoStarI struct {
 	ctrl     *gomock.Controller
 	recorder *MockRepoStarIMockRecorder
 }
 
-// MockRepoStarIMockRecorder is the mock recorder for MockRepoStarI
+// MockRepoStarIMockRecorder is the mock recorder for MockRepoStarI.
 type MockRepoStarIMockRecorder struct {
 	mock *MockRepoStarI
 }
 
-// NewMockRepoStarI creates a new mock instance
+// NewMockRepoStarI creates a new mock instance.
 func NewMockRepoStarI(ctrl *gomock.Controller) *MockRepoStarI {
 	mock := &MockRepoStarI{ctrl: ctrl}
 	mock.recorder = &MockRepoStarIMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepoStarI) EXPECT() *MockRepoStarIMockRecorder {
 	return m.recorder
 }
 
-// IsExistStar mocks base method
+// IsExistStar mocks base method.
 func (m *MockRepoStarI) IsExistStar(userID, repoID int64) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsExistStar", userID, repoID)
@@ -43,13 +43,13 @@ func (m *MockRepoStarI) IsExistStar(userID, repoID int64) (bool, error) {
 	return ret0, ret1
 }
 
-// IsExistStar indicates an expected call of IsExistStar
+// IsExistStar indicates an expected call of IsExistStar.
 func (mr *MockRepoStarIMockRecorder) IsExistStar(userID, repoID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExistStar", reflect.TypeOf((*MockRepoStarI)(nil).IsExistStar), userID, repoID)
 }
 
-// AddStar mocks base method
+// AddStar mocks base method.
 func (m *MockRepoStarI) AddStar(userID, repoID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddStar", userID, repoID)
@@ -57,13 +57,13 @@ func (m *MockRepoStarI) AddStar(userID, repoID int64) error {
 	return ret0
 }
 
-// AddStar indicates an expected call of AddStar
+// AddStar indicates an expected call of AddStar.
 func (mr *MockRepoStarIMockRecorder) AddStar(userID, repoID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddStar", reflect.TypeOf((*MockRepoStarI)(nil).AddStar), userID, repoID)
 }
 
-// DelStar mocks base method
+// DelStar mocks base method.
 func (m *MockRepoStarI) DelStar(userID, repoID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DelStar", userID, repoID)
@@ -71,13 +71,13 @@ func (m *MockRepoStarI) DelStar(userID, repoID int64) error {
 	return ret0
 }
 
-// DelStar indicates an expected call of DelStar
+// DelStar indicates an expected call of DelStar.
 func (mr *MockRepoStarIMockRecorder) DelStar(userID, repoID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DelStar", reflect.TypeOf((*MockRepoStarI)(nil).DelStar), userID, repoID)
 }
 
-// GetStarredRepos mocks base method
+// GetStarredRepos mocks base method.
 func (m *MockRepoStarI) GetStarredRepos(userID, limit, offset int64) ([]git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset)
@@ -86,13 +86,13 @@ func (m *MockRepoStarI) GetStarredRepos(userID, limit, offset int64) ([]git.Repo
 	return ret0, ret1
 }
 
-// GetStarredRepos indicates an expected call of GetStarredRepos
+// GetStarredRepos indicates an expected call of GetStarredRepos.
 func (mr *MockRepoStarIMockRecorder) GetStarredRepos(userID, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockRepoStarI)(nil).GetStarredRepos), userID, limit, offset)
 }
 
-// GetUserStaredList mocks base method
+// GetUserStaredList mocks base method.
 func (m *MockRepoStarI) GetUserStaredList(repoID, limit, offset int64) ([]models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserStaredList", repoID, limit, offset)
@@ -101,7 +101,7 @@ func (m *MockRepoStarI) GetUserStaredList(repoID, limit, offset int64) ([]models
 	return ret0, ret1
 }
 
-// GetUserStaredList indicates an expected call of GetUserStaredList
+// GetUserStaredList indicates an expected call of GetUserStaredList.
 func (mr *MockRepoStarIMockRecorder) GetUserStaredList(repoID, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserStaredList", reflect.TypeOf((*MockRepoStarI)(nil).GetUserStaredList), repoID, limit, offset)
