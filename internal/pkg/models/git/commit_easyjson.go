@@ -216,6 +216,8 @@ func easyjson6efd7357DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 			}
 		case "tree_hash":
 			out.TreeHash = string(in.String())
+		case "message":
+			out.Message = string(in.String())
 		case "commit_parents":
 			if in.IsNull() {
 				in.Skip()
@@ -292,6 +294,11 @@ func easyjson6efd7357EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModel
 		const prefix string = ",\"tree_hash\":"
 		out.RawString(prefix)
 		out.String(string(in.TreeHash))
+	}
+	{
+		const prefix string = ",\"message\":"
+		out.RawString(prefix)
+		out.String(string(in.Message))
 	}
 	{
 		const prefix string = ",\"commit_parents\":"

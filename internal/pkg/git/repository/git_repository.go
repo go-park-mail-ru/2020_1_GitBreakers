@@ -49,6 +49,7 @@ func convertToGitCommitModel(gogitCommit *gogitPlumbingObj.Commit) git.Commit {
 		CommitterEmail:    gogitCommit.Committer.Email,
 		CommitterWhen:     gogitCommit.Committer.When,
 		TreeHash:          gogitCommit.TreeHash.String(),
+		Message:           gogitCommit.Message,
 		CommitParents:     gogitCommitParentsHashes,
 	}
 }

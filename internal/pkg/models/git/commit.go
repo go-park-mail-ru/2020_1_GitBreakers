@@ -11,6 +11,7 @@ type Commit struct {
 	CommitterEmail    string    `json:"committer_email" valid:"-"`
 	CommitterWhen     time.Time `json:"committer_when" valid:"-"`
 	TreeHash          string    `json:"tree_hash" valid:"-"`
+	Message           string    `json:"message" valid:"-"`
 	CommitParents     []string  `json:"commit_parents" valid:"-"`
 }
 type CommitRequest struct {
