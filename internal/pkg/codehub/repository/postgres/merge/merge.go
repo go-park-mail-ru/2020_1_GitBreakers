@@ -38,32 +38,17 @@ func NewPullRequestRepository(db *sqlx.DB, gitRepo gitPackage.GitRepoI, pullReqD
 }
 
 func (repo RepoPullReq) CreateMR(request models.PullRequest) (pr models.PullRequest, err error) {
-	// TODO(nickeskov): check if diff is empty and reject this mr
-	if request.FromRepoID == nil ||
-		*request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
-		return models.PullRequest{}, entityerrors.Invalid()
-	}
-
-	var isExist bool
-	var fromBranchHash, toBranchHash string
-
-	if fromBranchHash, isExist, err = repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom); err != nil {
+	if _, isExist, err := repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom); err != nil {
 		return models.PullRequest{}, err
 	} else if !isExist {
 		return models.PullRequest{}, entityerrors.DoesNotExist()
 	}
 
-	if toBranchHash, isExist, err = repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo); err != nil {
+	if _, isExist, err := repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo); err != nil {
 		return models.PullRequest{}, err
 	} else if !isExist {
 		return models.PullRequest{}, entityerrors.DoesNotExist()
 	}
-
-	if fromBranchHash == toBranchHash {
-		return models.PullRequest{}, entityerrors.Conflict()
-	}
-
-	// TODO(nickeskov):Check commit hashes differs
 
 	tx, err := repo.db.Begin()
 	if err != nil {
@@ -210,7 +195,6 @@ func (repo RepoPullReq) GetAllMRIn(repoID int64, limit int64, offset int64) (pul
 }
 
 func (repo RepoPullReq) ApproveMerge(mrID int64, approver models.User) (err error) {
-	// TODO(nickeskov): check if diff is empty and reject this mr
 	pr, err := repo.GetMRByID(mrID)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
@@ -223,7 +207,7 @@ func (repo RepoPullReq) ApproveMerge(mrID int64, approver models.User) (err erro
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if mrStatus != codehub.MRStatusOK {
+	if mrStatus != codehub.MRStatusOK && mrStatus != codehub.MRStatusNoChanges {
 		return entityerrors.Conflict()
 	}
 
@@ -418,24 +402,27 @@ func (repo RepoPullReq) UpdateOpenedMRAssociatedWithRepoByRepoID(repoID int64) [
 	return errorsSlice
 }
 
-func (repo RepoPullReq) GetMRDiffByID(mrID int64) (string, error) {
-	var diff []byte
+func (repo RepoPullReq) GetMRDiffByID(mrID int64) (models.PullRequestDiff, error) {
+	var diffModel models.PullRequestDiff
 
 	err := repo.db.QueryRow(`
-			SELECT diff FROM merge_requests
+			SELECT diff, 
+			       status
+			FROM merge_requests
 			WHERE id = $1`,
 		mrID,
 	).Scan(
-		&diff,
+		&diffModel.Diff,
+		&diffModel.Status,
 	)
 	switch {
 	case err == sql.ErrNoRows:
-		return "", entityerrors.DoesNotExist()
+		return models.PullRequestDiff{}, entityerrors.DoesNotExist()
 	case err != nil:
-		return "", errors.WithStack(err)
+		return models.PullRequestDiff{}, errors.WithStack(err)
 	}
 
-	return string(diff), nil
+	return diffModel, nil
 }
 
 func (repo RepoPullReq) GetMRByID(mrID int64) (models.PullRequest, error) {
@@ -626,17 +613,21 @@ func (repo RepoPullReq) createEmptyMRStorage(request models.PullRequest) error {
 	return nil
 }
 
-// getGitDiff between firstRef and secondRef
-func (repo RepoPullReq) getGitDiff(request models.PullRequest) (stdout, stderr string, err error) {
+// getGitDiff between baseRef and headRef
+func (repo RepoPullReq) getGitDiff(request models.PullRequest, baseRef, headRef string,
+	extraArgs ...string) (stdout, stderr string, err error) {
+
 	mrRepoPath := repo.getMrDirByID(request.ID)
 
 	gitDiffArgs := []string{
 		"diff",
-		"--full-index", // for binary data such as images, executables and other blobs
+		"--full-index", // show full hash sum of commits
 		"-M",           // detect renaming
-		git.CreateRemoteRefName(toRemoteName, request.BranchTo),
-		git.CreateRemoteRefName(fromRemoteName, request.BranchFrom),
+		baseRef,
+		headRef,
 	}
+
+	gitDiffArgs = append(gitDiffArgs, extraArgs...)
 
 	outBuf, errBuf, err := process.ExecDir(-1, nil, mrRepoPath,
 		fmt.Sprintf("calc new diff for mr with path=%s", mrRepoPath),
@@ -653,19 +644,48 @@ func (repo RepoPullReq) getGitDiff(request models.PullRequest) (stdout, stderr s
 	return stdout, stderr, err
 }
 
+// getFormatPatch between firstRef and secondRef
+func (repo RepoPullReq) getFormatPatch(request models.PullRequest, baseRef, headRef string,
+	extraArgs ...string) (stdout, stderr string, err error) {
+
+	mrRepoPath := repo.getMrDirByID(request.ID)
+
+	gitFormatPatchArgs := []string{
+		"format-patch",
+		"--stdout", // print to stdout
+		fmt.Sprintf("%s..%s", baseRef, headRef),
+	}
+	gitFormatPatchArgs = append(gitFormatPatchArgs, extraArgs...)
+
+	outBuf, errBuf, err := process.ExecDir(-1, nil, mrRepoPath,
+		fmt.Sprintf("calc new format patch for mr with path=%s", mrRepoPath),
+		"git", gitFormatPatchArgs...,
+	)
+
+	if outBuf != nil {
+		stdout = string(outBuf)
+	}
+	if errBuf != nil {
+		stderr = string(errBuf)
+	}
+
+	return stdout, stderr, err
+}
+
 func (repo RepoPullReq) applyPatchCheck(request models.PullRequest,
-	diff string) (stdout, stderr string, err error) {
+	patch string, extraArgs ...string) (stdout, stderr string, err error) {
 
 	mrRepoPath := repo.getMrDirByID(request.ID)
 
 	gitApplyArgs := []string{
 		"apply", "--check",
 	}
+	gitApplyArgs = append(gitApplyArgs, extraArgs...)
 
-	inBuf := bytes.NewBufferString(diff)
+	inBuf := bytes.NewBufferString(patch)
 
 	outBuf, errBuf, err := process.ExecDir(-1, inBuf, mrRepoPath,
-		fmt.Sprintf("calc new diff for mr with path=%s", mrRepoPath),
+		fmt.Sprintf("apply patch to repo with path=%s", mrRepoPath),
 		"git", gitApplyArgs...,
 	)
 
@@ -691,7 +711,10 @@ func updateMRDiffInDBByID(executer SQLInterfaces.Executer, mrID int64, diff stri
 }
 
 func (repo RepoPullReq) renewMRDiff(executer SQLInterfaces.Executer, request models.PullRequest) (diff string, err error) {
-	diff, _, err = repo.getGitDiff(request)
+	toRemoteRefName := git.CreateRemoteRefName(toRemoteName, request.BranchTo)
+	fromRemoteRefName := git.CreateRemoteRefName(fromRemoteName, request.BranchFrom)
+
+	diff, _, err = repo.getGitDiff(request, toRemoteRefName, fromRemoteRefName)
 	if err != nil {
 		return "", err
 	}
@@ -702,6 +725,53 @@ func (repo RepoPullReq) renewMRDiff(executer SQLInterfaces.Executer, request mod
 	}
 
 	return diff, nil
+}
+
+func (repo RepoPullReq) checkMRConflicts(request models.PullRequest,
+	toBranchHash, fromBranchHash string) (codehub.MergeRequestStatus, error) {
+
+	if fromBranchHash == toBranchHash {
+		return codehub.MRStatusUpToDate, nil
+	}
+
+	mrDir := repo.getMrDirByID(request.ID)
+
+	gitRepo, err := git.OpenRepository(mrDir)
+	if err != nil {
+		return codehub.MRStatusNone, errors.WithStack(err)
+	}
+
+	mergeBases, err := gitRepo.MergeBase(fromBranchHash, toBranchHash)
+	if err != nil {
+		return codehub.MRStatusNone, errors.WithStack(err)
+	}
+
+	for i := range mergeBases {
+		if fromBranchHash == mergeBases[i] {
+			return codehub.MRStatusUpToDate, nil
+		}
+	}
+
+	toRemoteRefName := git.CreateRemoteRefName(toRemoteName, request.BranchTo)
+	fromRemoteRefName := git.CreateRemoteRefName(fromRemoteName, request.BranchFrom)
+
+	patch, _, err := repo.getFormatPatch(request, toRemoteRefName, fromRemoteRefName)
+	if err != nil {
+		return codehub.MRStatusNone, errors.WithStack(err)
+	}
+
+	if patch == "" || patch == "\n" || patch == "\r\n" {
+		return codehub.MRStatusNoChanges, nil
+	}
+
+	if _, _, err := repo.applyPatchCheck(request, patch); err != nil {
+		// Fallback on three way merge (recursive strategy)
+		if _, _, err = repo.applyPatchCheck(request, patch, "--3way"); err != nil {
+			return codehub.MRStatusConflict, nil
+		}
+	}
+
+	return codehub.MRStatusOK, nil
 }
 
 func (repo RepoPullReq) forceCloseMRAndRemoveMRStorage(executer SQLInterfaces.Executer, mrID int64,
@@ -732,33 +802,46 @@ func (repo RepoPullReq) forceCloseMRAndRemoveMRStorage(executer SQLInterfaces.Ex
 	return err
 }
 
-func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
-	request models.PullRequest, fetchDepth int) (codehub.MergeRequestStatus, error) {
+func (repo RepoPullReq) checkFromAndToBranches(executer SQLInterfaces.Executer,
+	request models.PullRequest) (mrStatus codehub.MergeRequestStatus, toBranchHash, fromBranchHash string, err error) {
 
-	// Check To repository branch
-	// TODO(nickeskov): check hash
-	_, isToExist, err := repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo)
+	var isExist bool
+
+	toBranchHash, isExist, err = repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo)
 	if err != nil {
-		return codehub.MRStatusNone, errors.WithStack(err)
+		return codehub.MRStatusNone, "", "", errors.WithStack(err)
 	}
-	if !isToExist {
+	if !isExist {
 		err := repo.forceCloseMRAndRemoveMRStorage(executer, request.ID,
 			codehub.MRStatusBadToBranch)
 
-		return codehub.MRStatusBadToBranch, errors.WithStack(err)
+		return codehub.MRStatusBadToBranch, "", "", errors.WithStack(err)
 	}
 
-	// Check From repository branch
-	// TODO(nickeskov): check hash
-	_, isFromExist, err := repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom)
+	fromBranchHash, isExist, err = repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom)
 	if err != nil {
-		return codehub.MRStatusNone, errors.WithStack(err)
+		return codehub.MRStatusNone, "", "", errors.WithStack(err)
 	}
-	if !isFromExist {
+	if !isExist {
 		err := repo.forceCloseMRAndRemoveMRStorage(executer, request.ID,
 			codehub.MRStatusBadFromBranch)
 
-		return codehub.MRStatusBadFromBranch, errors.WithStack(err)
+		return codehub.MRStatusBadFromBranch, "", "", errors.WithStack(err)
+	}
+
+	return codehub.MRStatusNone, toBranchHash, fromBranchHash, nil
+}
+
+func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
+	request models.PullRequest, fetchDepth int) (mrStatus codehub.MergeRequestStatus, err error) {
+
+	var toBranchHash, fromBranchHash string
+
+	// Check To And From repository branches
+	if mrStatus, toBranchHash, fromBranchHash, err = repo.checkFromAndToBranches(executer, request); err != nil {
+		return codehub.MRStatusNone, errors.WithStack(err)
+	} else if mrStatus != codehub.MRStatusNone {
+		return mrStatus, nil
 	}
 
 	// Fetching updated
@@ -771,7 +854,7 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
 	}
 
 	// Renew diff and store it in db
-	diff, renewDifErr := repo.renewMRDiff(executer, request)
+	_, renewDifErr := repo.renewMRDiff(executer, request)
 	if renewDifErr != nil {
 		err := repo.forceCloseMRAndRemoveMRStorage(executer, request.ID, codehub.MRStatusError)
 		if err != nil {
@@ -780,10 +863,9 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
 		return codehub.MRStatusError, errors.WithStack(renewDifErr)
 	}
 
-	// Apply patch, if it conflicts, set status conflict
-	mrStatus := codehub.MRStatusOK
-	if _, _, patchErr := repo.applyPatchCheck(request, diff); patchErr != nil {
-		mrStatus = codehub.MRStatusConflict
+	// Check mr and get new MR status
+	if mrStatus, err = repo.checkMRConflicts(request, toBranchHash, fromBranchHash); err != nil {
+		return codehub.MRStatusNone, errors.WithStack(err)
 	}
 
 	// Update status in db

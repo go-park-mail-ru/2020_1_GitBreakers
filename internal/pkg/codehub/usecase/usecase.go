@@ -153,8 +153,20 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset, userID int64) (
 	}
 }
 func (UC *UCCodeHub) CreatePL(request models.PullRequest) (models.PullRequest, error) {
-	if request.FromRepoID == nil {
+	if request.FromRepoID == nil ||
+		*request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
 		return models.PullRequest{}, entityerrors.Invalid()
+	}
+
+	if *request.FromRepoID != request.ToRepoID {
+		fromRepo, err := UC.GitRepo.GetByID(*request.FromRepoID)
+		if err != nil {
+			return models.PullRequest{}, errors.WithStack(err)
+		}
+
+		if fromRepo.ParentRepositoryInfo.ID == nil || *fromRepo.ParentRepositoryInfo.ID != request.ToRepoID {
+			return models.PullRequest{}, entityerrors.Invalid()
+		}
 	}
 
 	toRepoIdAccess, err := UC.GitRepo.CheckReadAccessById(request.AuthorId, request.ToRepoID)
@@ -238,6 +250,6 @@ func (UC *UCCodeHub) GetMRByID(mrID int64) (models.PullRequest, error) {
 	return UC.RepoMerge.GetMRByID(mrID)
 }
 
-func (UC *UCCodeHub) GetMRDiffByID(mrID int64) (string, error) {
+func (UC *UCCodeHub) GetMRDiffByID(mrID int64) (models.PullRequestDiff, error) {
 	return UC.RepoMerge.GetMRDiffByID(mrID)
 }

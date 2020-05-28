@@ -284,10 +284,10 @@ func (mr *MockUCCodeHubIMockRecorder) GetMRByID(mrID interface{}) *gomock.Call {
 }
 
 // GetMRDiffByID mocks base method.
-func (m *MockUCCodeHubI) GetMRDiffByID(mrID int64) (string, error) {
+func (m *MockUCCodeHubI) GetMRDiffByID(mrID int64) (models.PullRequestDiff, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMRDiffByID", mrID)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(models.PullRequestDiff)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

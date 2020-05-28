@@ -787,8 +787,8 @@ branch указываем название веток текстовое
 * "error" - Произошла ошибка (pull request закрыт)
 * "merged" - Слит (pull request закрыт)
 * "rejected" - Отклонён (pull request закрыт)
-* "conflict" - Cервер **не может** слить ветки из-за конфликта (pull request открыт)
-* "up_to_date" - Сервер **не может**  слить ветки, так как они ссылаются на один и тот же коммит (pull request открыт)
+* "conflict" - Сервер **не может** слить ветки из-за конфликта (pull request открыт)
+* "up_to_date" - Сервер **не может** слить ветки, так как эти изменения уже есть в целевой ветке (pull request открыт)
 * "no_changes" - Сервер сам **может** слить ветки, но не обнаружено изменений (pull request открыт)
 * "bad_to_branch" - Target ветки не существует (pull request закрыт)
 * "bad_from_branch" - Source ветки не существует (pull request закрыт)
@@ -837,11 +837,18 @@ title from_repo to_repo branch_to branch_from обязательны
 * "error" - Произошла ошибка (pull request закрыт)
 * "merged" - Слит (pull request закрыт)
 * "rejected" - Отклонён (pull request закрыт)
-* "conflict" - Cервер **не может** слить ветки из-за конфликта (pull request открыт)
-* "up_to_date" - Сервер **не может**  слить ветки, так как они ссылаются на один и тот же коммит (pull request открыт)
+* "conflict" - Сервер **не может** слить ветки из-за конфликта (pull request открыт)
+* "up_to_date" - Сервер **не может** слить ветки, так как эти изменения уже есть в целевой ветке (pull request открыт)
 * "no_changes" - Сервер сам **может** слить ветки, но не обнаружено изменений (pull request открыт)
 * "bad_to_branch" - Target ветки не существует (pull request закрыт)
 * "bad_from_branch" - Source ветки не существует (pull request закрыт)
+
+Nullable поля:
+* author_id
+* closer_user_id
+* from_repo_id
+* from_author_login
+* from_repo_name
 
 1. 200 ok
 2. 400 невалидный json или сами данные
@@ -908,11 +915,18 @@ title from_repo to_repo branch_to branch_from обязательны
 * "error" - Произошла ошибка (pull request закрыт)
 * "merged" - Слит (pull request закрыт)
 * "rejected" - Отклонён (pull request закрыт)
-* "conflict" - Cервер **не может** слить ветки из-за конфликта (pull request открыт)
-* "up_to_date" - Сервер **не может**  слить ветки, так как они ссылаются на один и тот же коммит (pull request открыт)
+* "conflict" - Сервер **не может** слить ветки из-за конфликта (pull request открыт)
+* "up_to_date" - Сервер **не может** слить ветки, так как эти изменения уже есть в целевой ветке (pull request открыт)
 * "no_changes" - Сервер сам **может** слить ветки, но не обнаружено изменений (pull request открыт)
 * "bad_to_branch" - Target ветки не существует (pull request закрыт)
 * "bad_from_branch" - Source ветки не существует (pull request закрыт)
+
+Nullable поля:
+* author_id
+* closer_user_id
+* from_repo_id
+* from_author_login
+* from_repo_name
 
 1. 200 ok
 2. 400 невалидный json или сами данные(id не существуют)
@@ -955,11 +969,18 @@ title from_repo to_repo branch_to branch_from обязательны
 * "error" - Произошла ошибка (pull request закрыт)
 * "merged" - Слит (pull request закрыт)
 * "rejected" - Отклонён (pull request закрыт)
-* "conflict" - Cервер **не может** слить ветки из-за конфликта (pull request открыт)
-* "up_to_date" - Сервер **не может**  слить ветки, так как они ссылаются на один и тот же коммит (pull request открыт)
+* "conflict" - Сервер **не может** слить ветки из-за конфликта (pull request открыт)
+* "up_to_date" - Сервер **не может** слить ветки, так как эти изменения уже есть в целевой ветке (pull request открыт)
 * "no_changes" - Сервер сам **может** слить ветки, но не обнаружено изменений (pull request открыт)
 * "bad_to_branch" - Target ветки не существует (pull request закрыт)
 * "bad_from_branch" - Source ветки не существует (pull request закрыт)
+
+Nullable поля:
+* author_id
+* closer_user_id
+* from_repo_id
+* from_author_login
+* from_repo_name
 
 1. 200 ok
 2. 400 невалидный json или сами данные(id не существуют)
@@ -972,16 +993,26 @@ title from_repo to_repo branch_to branch_from обязательны
 - **id**  - id pull request
 
 Ответ:
-```diff
-diff --git a/adaddagw b/adaddagw
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
-diff --git a/lolmdasher b/lolmdasher
-new file mode 100644
-index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+```json
+{
+  "diff": "string",
+  "status":"ok"  
+}
 ```
 Примечания:
-- diff может быть пустым
+- Поле diff может быть пустым
+
+Возможные значения поля status в ответе (по этим полям не стоит определять закрыт pull request или нет):
+* "" - Это некорректное значение, если такое значение пришло, что-то явно не так
+* "ok" - Сервер сам **может** слить ветки (pull request открыт)
+* "error" - Произошла ошибка (pull request закрыт)
+* "merged" - Слит (pull request закрыт)
+* "rejected" - Отклонён (pull request закрыт)
+* "conflict" - Сервер **не может** слить ветки из-за конфликта (pull request открыт)
+* "up_to_date" - Сервер **не может** слить ветки, так как эти изменения уже есть в целевой ветке (pull request открыт)
+* "no_changes" - Сервер сам **может** слить ветки, но не обнаружено изменений (pull request открыт)
+* "bad_to_branch" - Target ветки не существует (pull request закрыт)
+* "bad_from_branch" - Source ветки не существует (pull request закрыт)
 
 1. 200 ok
 2. 400 - некорректный id (не удалось преобразовать в число)
