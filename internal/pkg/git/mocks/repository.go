@@ -318,6 +318,36 @@ func (mr *MockGitRepoIMockRecorder) GetFileByPath(userLogin, repoName, commitHas
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileByPath", reflect.TypeOf((*MockGitRepoI)(nil).GetFileByPath), userLogin, repoName, commitHash, path)
 }
 
+// GetFileContentByBranch mocks base method.
+func (m *MockGitRepoI) GetFileContentByBranch(userLogin, repoName, branchName, filePath string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileContentByBranch", userLogin, repoName, branchName, filePath)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileContentByBranch indicates an expected call of GetFileContentByBranch.
+func (mr *MockGitRepoIMockRecorder) GetFileContentByBranch(userLogin, repoName, branchName, filePath interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileContentByBranch", reflect.TypeOf((*MockGitRepoI)(nil).GetFileContentByBranch), userLogin, repoName, branchName, filePath)
+}
+
+// GetFileContentByCommitHash mocks base method.
+func (m *MockGitRepoI) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileContentByCommitHash", userLogin, repoName, commitHash, filePath)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileContentByCommitHash indicates an expected call of GetFileContentByCommitHash.
+func (mr *MockGitRepoIMockRecorder) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileContentByCommitHash", reflect.TypeOf((*MockGitRepoI)(nil).GetFileContentByCommitHash), userLogin, repoName, commitHash, filePath)
+}
+
 // GetCommitsByCommitHash mocks base method.
 func (m *MockGitRepoI) GetCommitsByCommitHash(userLogin, repoName, commitHash string, offset, limit int64) ([]git.Commit, error) {
 	m.ctrl.T.Helper()

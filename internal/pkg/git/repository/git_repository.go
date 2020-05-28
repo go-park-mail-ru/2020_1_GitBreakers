@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"bytes"
 	"database/sql"
 	gogit "github.com/go-git/go-git/v5"
 	gogitPlumbing "github.com/go-git/go-git/v5/plumbing"
@@ -361,6 +362,36 @@ func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
 	}
 
 	return "", nil
+}
+
+func getFileContentIntTreeByPath(rootTree *gogitPlumbingObj.Tree, filePath string) ([]byte, error) {
+	gogitFile, err := rootTree.File(filePath)
+	switch {
+	case err == gogitPlumbingObj.ErrFileNotFound:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	if gogitFile.Type() != gogitPlumbing.BlobObject {
+		return nil, entityerrors.Invalid()
+	}
+
+	gogitFileReader, err := gogitFile.Blob.Reader()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	gogitFileContent, err := ioutil.ReadAll(gogitFileReader)
+
+	switch err {
+	case bytes.ErrTooLarge:
+		return nil, entityerrors.TooLarge()
+	case nil:
+		return gogitFileContent, nil
+	default:
+		return nil, errors.WithStack(err)
+	}
 }
 
 func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
@@ -814,7 +845,7 @@ func (repo Repository) GetByID(id int64) (git.Repository, error) {
 	return getByIdQ(repo.db, id)
 }
 
-func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path string) ([]git.FileInCommit, error) {
+func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, filePath string) ([]git.FileInCommit, error) {
 	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
 	switch {
 	case err == gogit.ErrRepositoryNotExists:
@@ -841,9 +872,12 @@ func (repo Repository) FilesInCommitByPath(userLogin, repoName, commitHash, path
 			userLogin, repoName, commitHash)
 	}
 
+	// Clean the filePath
+	filePath = path.Clean(filePath)
+
 	var treeByPath *gogitPlumbingObj.Tree
-	if path != "" && path != "/" && path != "./" { // FIXME(nickeskov): this is a crunch to check root of repo
-		treeByPath, err = rootTree.Tree(path)
+	if filePath != "." && filePath != "/" {
+		treeByPath, err = rootTree.Tree(filePath)
 		if err != nil {
 			return nil, entityerrors.DoesNotExist()
 		}
@@ -1220,4 +1254,79 @@ func (repo Repository) GetBranchInfoByNames(userLogin, repoName, branchName stri
 	}
 
 	return branch, nil
+}
+
+func (repo Repository) GetFileContentByBranch(userLogin, repoName, branchName, filePath string) ([]byte, error) {
+	filePath = path.Clean(filePath)
+	if filePath == "." || filePath == "/" {
+		return nil, entityerrors.Invalid()
+	}
+
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	branch, err := getBranchFromGoGitRepo(gogitRepo, branchName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	commit, err := gogitRepo.CommitObject(gogitPlumbing.NewHash(branch.Commit.CommitHash))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	rootTree, err := commit.Tree()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	content, err := getFileContentIntTreeByPath(rootTree, filePath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return content, nil
+}
+
+func (repo Repository) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath string) ([]byte, error) {
+	filePath = path.Clean(filePath)
+	if filePath == "." || filePath == "/" {
+		return nil, entityerrors.Invalid()
+	}
+
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	commit, err := gogitRepo.CommitObject(gogitPlumbing.NewHash(commitHash))
+	switch {
+	case err == gogitPlumbing.ErrObjectNotFound:
+		return nil, entityerrors.DoesNotExist()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	rootTree, err := commit.Tree()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	content, err := getFileContentIntTreeByPath(rootTree, filePath)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return content, nil
 }

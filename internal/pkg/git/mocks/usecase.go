@@ -181,6 +181,36 @@ func (mr *MockGitUseCaseIMockRecorder) GetFileByPath(params, requestUserID inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileByPath", reflect.TypeOf((*MockGitUseCaseI)(nil).GetFileByPath), params, requestUserID)
 }
 
+// GetFileContentByBranch mocks base method.
+func (m *MockGitUseCaseI) GetFileContentByBranch(userLogin, repoName, branchName, filePath string, currUserID *int64) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileContentByBranch", userLogin, repoName, branchName, filePath, currUserID)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileContentByBranch indicates an expected call of GetFileContentByBranch.
+func (mr *MockGitUseCaseIMockRecorder) GetFileContentByBranch(userLogin, repoName, branchName, filePath, currUserID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileContentByBranch", reflect.TypeOf((*MockGitUseCaseI)(nil).GetFileContentByBranch), userLogin, repoName, branchName, filePath, currUserID)
+}
+
+// GetFileContentByCommitHash mocks base method.
+func (m *MockGitUseCaseI) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath string, currUserID *int64) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileContentByCommitHash", userLogin, repoName, commitHash, filePath, currUserID)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileContentByCommitHash indicates an expected call of GetFileContentByCommitHash.
+func (mr *MockGitUseCaseIMockRecorder) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath, currUserID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileContentByCommitHash", reflect.TypeOf((*MockGitUseCaseI)(nil).GetFileContentByCommitHash), userLogin, repoName, commitHash, filePath, currUserID)
+}
+
 // GetRepoHead mocks base method.
 func (m *MockGitUseCaseI) GetRepoHead(userLogin, repoName string, requestUserID *int64) (git.Branch, error) {
 	m.ctrl.T.Helper()

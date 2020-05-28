@@ -175,11 +175,26 @@ func StartNew() {
 
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/head", repoHandler.GetRepoHead).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}", repoHandler.GetBranchInfoByNames).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}", repoHandler.GetCommitsList).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}",
+		repoHandler.GetBranchInfoByNames).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}/tree/{path}",
+		repoHandler.GetFileContentByBranch).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branches",
+		repoHandler.GetBranchList).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}",
+		repoHandler.GetCommitsList).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commit/{hash}/tree/{path}",
+		repoHandler.GetFileContentByCommitHash).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}",
+		repoHandler.ShowFiles).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}",
+		repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
 
 	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
@@ -195,7 +210,9 @@ func StartNew() {
 	CsrfRouter.HandleFunc("/func/repo/fork", repoHandler.Fork).Methods(http.MethodPost)
 
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.CreatePullReq).Methods(http.MethodPost)
-	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/pullrequests/{direction}", CHubHandler.GetPullReqList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/pullrequests/{direction}",
+		CHubHandler.GetPullReqList).Methods(http.MethodGet)
+
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.UndoPullReq).Methods(http.MethodDelete)
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.ApproveMerge).Methods(http.MethodPut)
 
