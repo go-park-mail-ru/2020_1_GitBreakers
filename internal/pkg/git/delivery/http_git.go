@@ -67,7 +67,7 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 	userName, repoName := mux.Vars(r)["username"], mux.Vars(r)["reponame"]
 	userID := r.Context().Value(models.UserIDKey)
 
-	Repo, err := GD.UC.GetRepo(userName, repoName, GD.idToIntPointer(userID))
+	repo, err := GD.UC.GetRepo(userName, repoName, GD.idToIntPointer(userID))
 
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
@@ -84,7 +84,11 @@ func (GD *GitDelivery) GetRepo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _ = easyjson.MarshalToHTTPResponseWriter(Repo, w)
+	if _, _, err = easyjson.MarshalToHTTPResponseWriter(repo, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "repo received", http.StatusOK)
 }
@@ -190,7 +194,11 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _ = easyjson.MarshalToHTTPResponseWriter(repo, w)
+	if _, _, err = easyjson.MarshalToHTTPResponseWriter(repo, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "repolist received", http.StatusOK)
 }
@@ -270,7 +278,11 @@ func (GD *GitDelivery) GetBranchList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _ = easyjson.MarshalToHTTPResponseWriter(branches, w)
+	if _, _, err = easyjson.MarshalToHTTPResponseWriter(branches, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "branches received", http.StatusOK)
 }
@@ -313,7 +325,11 @@ func (GD *GitDelivery) GetCommitsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _ = easyjson.MarshalToHTTPResponseWriter(res, w)
+	if _, _, err = easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "commits list received", http.StatusOK)
 }
@@ -365,7 +381,11 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _, _ = easyjson.MarshalToHTTPResponseWriter(res, w)
+	if _, _, err = easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "files returned", http.StatusOK)
 }
@@ -376,6 +396,7 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 	vars := mux.Vars(r)
 	userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
 
+	// TODO(nickeskov): hardcode limit and offset
 	res, err := GD.UC.GetCommitsByBranchName(userName, repoName, branchName, 0, 100, userIDpointer)
 
 	switch {
@@ -393,7 +414,11 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	_, _, _ = easyjson.MarshalToHTTPResponseWriter(res, w)
+	if _, _, err = easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	GD.Logger.HttpInfo(r.Context(), "commits returned", http.StatusOK)
 }
@@ -438,6 +463,8 @@ func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		if _, _, err := easyjson.MarshalToHTTPResponseWriter(res, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			w.WriteHeader(http.StatusInternalServerError)
 		} else {
 			GD.Logger.HttpInfo(
 				r.Context(),
@@ -488,12 +515,50 @@ func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusConflict)
 		return
-	case err != nil:
+	case err == nil:
+		GD.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("fork successfully created, forkData=%+v", forkData))
+		w.WriteHeader(http.StatusCreated)
+	default:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
 
+func (GD *GitDelivery) GetBranchInfoByNames(w http.ResponseWriter, r *http.Request) {
+	userIDPointer := GD.idToIntPointer(r.Context().Value(models.UserIDKey))
+
+	vars := mux.Vars(r)
+
+	userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
+
+	branch, err := GD.UC.GetBranchInfoByNames(userName, repoName, branchName, userIDPointer)
+	switch {
+	case errors.Is(err, entityerrors.AccessDenied()):
+		GD.Logger.HttpLogInfo(r.Context(),
+			fmt.Sprintf("access denied to repo=%s/%s branch=%s for user with id=%v",
+				userName, repoName, branchName, userIDPointer))
+		w.WriteHeader(http.StatusForbidden)
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		GD.Logger.HttpLogInfo(r.Context(),
+			fmt.Sprintf("not dound repo=%s/%s branch=%s for user with id=%v",
+				userName, repoName, branchName, userIDPointer))
+		w.WriteHeader(http.StatusNotFound)
+
+	case err == nil:
+		GD.Logger.HttpLogInfo(r.Context(), fmt.Sprintf(
+			"successfully get branchInfo repo=%s/%s branch=%s for user with id=%v",
+			userName, repoName, branchName, userIDPointer))
+		if _, _, err = easyjson.MarshalToHTTPResponseWriter(branch, w); err != nil {
+			GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+	default:
+		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func (GD *GitDelivery) idToIntPointer(id interface{}) *int64 {

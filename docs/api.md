@@ -463,29 +463,55 @@ Required: name(alphanumeric),
 Запрос: `/api/v1/repo/{username}/{reponame}/head` типа `GET`
 Образец: `89.208.198.186:8080/api/v1/repo/logggers/hefherser/head`
 Ответ:
-1. 200 ok
-    ```json
-    {
-        "name": "master",
-        "commit": {
-            "commit_hash": "1e16727dfaf12c018cb4c069762d9ab9d62c0814",
-            "commit_author_name": "UlianaBespalova",
-            "commit_author_email": "43138516+UlianaBespalova@users.noreply.github.com",
-            "commit_author_when": "2020-04-27T20:06:36+03:00",
-            "committer_name": "GitHub",
-            "committer_email": "noreply@github.com",
-            "committer_when": "2020-04-27T20:06:36+03:00",
-            "tree_hash": "88b5bc91f0d49751be59e28ee5e5e4204ab12733",
-            "commit_parents": [
-                "4a7bc0859ace4e7c479d3739756d81f0c9cb7bc8"
-            ]
-        }
+```json
+{
+    "name": "master",
+    "commit": {
+        "commit_hash": "1e16727dfaf12c018cb4c069762d9ab9d62c0814",
+        "commit_author_name": "UlianaBespalova",
+        "commit_author_email": "43138516+UlianaBespalova@users.noreply.github.com",
+        "commit_author_when": "2020-04-27T20:06:36+03:00",
+        "committer_name": "GitHub",
+        "committer_email": "noreply@github.com",
+        "committer_when": "2020-04-27T20:06:36+03:00",
+        "tree_hash": "88b5bc91f0d49751be59e28ee5e5e4204ab12733",
+        "commit_parents": [
+            "4a7bc0859ace4e7c479d3739756d81f0c9cb7bc8"
+        ]
     }
-    ```
+}
+```
+1. 200 ok
 2. 204 no content - репозиторий существует,
     но не имеет состояния по умолчанию (ветки master)
 3. 403 - нет прав доступа на просмотр
 4. 404 - запрашиваемый репозиторий не существует
+
+### 4.7 Получение информации о ветке по имени
+Запрос: `/repo/{username}/{reponame}/branch/{branchname}` типа `GET`
+Образец: `89.208.198.186:8080/api/v1/repo/nickeskov/codehub/branch/master`
+Ответ:
+```json
+{
+    "name": "master",
+    "commit": {
+        "commit_hash": "1e16727dfaf12c018cb4c069762d9ab9d62c0814",
+        "commit_author_name": "UlianaBespalova",
+        "commit_author_email": "43138516+UlianaBespalova@users.noreply.github.com",
+        "commit_author_when": "2020-04-27T20:06:36+03:00",
+        "committer_name": "GitHub",
+        "committer_email": "noreply@github.com",
+        "committer_when": "2020-04-27T20:06:36+03:00",
+        "tree_hash": "88b5bc91f0d49751be59e28ee5e5e4204ab12733",
+        "commit_parents": [
+            "4a7bc0859ace4e7c479d3739756d81f0c9cb7bc8"
+        ]
+    }
+}
+```
+1. 200 ok
+3. 403 - нет прав доступа на просмотр
+4. 404 - запрашиваемый репозиторий или ветка не существует
 
 ## 5. Issues
 ### 5.1 Создать issues
@@ -738,7 +764,7 @@ new_name новое имя которое будет отображатся
 }
 ```
 Ответ:
-1. 200 ok
+1. 201 created
 2. 400 невалидный json или сами данные
 3. 401 unauthorized
 4. 403 форкаем приватный репак

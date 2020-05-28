@@ -282,6 +282,44 @@ func isRepositoryExistsInDBByID(querier SQLInterfaces.Querier, repoID int64) (bo
 	return isExist, err
 }
 
+func getBranchFromGoGitRepo(gogitRepo *gogit.Repository, branchName string) (git.Branch, error) {
+	branchesRefsIter, err := gogitRepo.Branches()
+	if err != nil {
+		return git.Branch{}, errors.WithStack(err)
+	}
+
+	defer branchesRefsIter.Close()
+	for {
+		ref, err := branchesRefsIter.Next()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return git.Branch{}, errors.WithStack(err)
+		}
+		referenceName := ref.Name().String()
+
+		branchNameFromRef := strings.TrimPrefix(referenceName,
+			gogitPlumbing.NewBranchReferenceName("").String())
+
+		if branchNameFromRef == branchName {
+			gogitCommit, err := gogitRepo.CommitObject(ref.Hash())
+			if err != nil {
+				return git.Branch{}, errors.WithStack(err)
+			}
+
+			branchModel := git.Branch{
+				Name:   branchNameFromRef,
+				Commit: convertToGitCommitModel(gogitCommit),
+			}
+
+			return branchModel, nil
+		}
+	}
+
+	return git.Branch{}, entityerrors.DoesNotExist()
+}
+
 func (repo Repository) isBranchExistInRepoByID(querier SQLInterfaces.Querier,
 	repoID int64, branchName string) (string, error) {
 
@@ -1162,4 +1200,24 @@ func (repo Repository) IsRepoExistsByID(repoID int64) (bool, error) {
 
 func (repo Repository) GetBranchHashIfExistInRepoByID(repoID int64, branchName string) (string, error) {
 	return repo.isBranchExistInRepoByID(repo.db, repoID, branchName)
+}
+
+func (repo Repository) GetBranchInfoByNames(userLogin, repoName, branchName string) (git.Branch, error) {
+	gogitRepo, err := gogit.PlainOpen(repo.convertToRepoPath(userLogin, repoName))
+	switch {
+	case err == gogit.ErrRepositoryNotExists:
+		return git.Branch{}, entityerrors.DoesNotExist()
+	case err != nil:
+		return git.Branch{}, errors.WithStack(err)
+	}
+
+	branch, err := getBranchFromGoGitRepo(gogitRepo, branchName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return git.Branch{}, entityerrors.DoesNotExist()
+	case err != nil:
+		return git.Branch{}, errors.WithStack(err)
+	}
+
+	return branch, nil
 }

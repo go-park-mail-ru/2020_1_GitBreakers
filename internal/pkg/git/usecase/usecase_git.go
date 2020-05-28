@@ -146,3 +146,19 @@ func (GU *GitUseCase) Fork(repoID int64, author, repoName, newName string, currU
 
 	return err
 }
+
+func (GU *GitUseCase) GetBranchInfoByNames(userLogin, repoName, branchName string, currUserID *int64) (gitmodels.Branch, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(currUserID, userLogin, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return gitmodels.Branch{}, entityerrors.DoesNotExist()
+	case err == nil && !isReadyToRead:
+		return gitmodels.Branch{}, entityerrors.AccessDenied()
+	case err != nil:
+		return gitmodels.Branch{}, errors.WithStack(err)
+	}
+
+	branch, err := GU.Repo.GetBranchInfoByNames(userLogin, repoName, branchName)
+
+	return branch, errors.WithStack(err)
+}
