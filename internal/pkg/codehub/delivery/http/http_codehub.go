@@ -481,7 +481,7 @@ func (GD *HttpCodehub) CreatePullReq(w http.ResponseWriter, r *http.Request) {
 
 	pr, err := GD.CodeHubUC.CreatePL(plModel)
 	switch {
-	case errors.Is(err, entityerrors.DoesNotExist()):
+	case errors.Is(err, entityerrors.DoesNotExist()) || errors.Is(err, entityerrors.Invalid()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -742,14 +742,11 @@ func (GD *HttpCodehub) GetMRDiffByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := w.Write([]byte(diff)); err != nil {
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(diff, w); err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	// Set plain text, no json
-	w.Header().Set("Content-Type", "plain/text")
 
 	GD.Logger.HttpInfo(
 		r.Context(),
