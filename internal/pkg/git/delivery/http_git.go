@@ -356,6 +356,7 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 	res, err := GD.UC.FilesInCommitByPath(showParams, userIDpointer)
 
 	if err != nil {
+		// FIXME(nickeskov): what is this??? ignoring error, fix int
 		res, err := GD.UC.GetFileByPath(showParams, userIDpointer)
 
 		switch {
@@ -366,6 +367,10 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, entityerrors.DoesNotExist()):
 			GD.Logger.HttpInfo(r.Context(), "not found this repo or path", http.StatusNotFound)
 			w.WriteHeader(http.StatusNotFound)
+			return
+		case errors.Is(err, entityerrors.Invalid()):
+			GD.Logger.HttpInfo(r.Context(), "trying get invalid entity", http.StatusNotAcceptable)
+			w.WriteHeader(http.StatusNotAcceptable)
 			return
 		case err != nil:
 			GD.Logger.HttpLogError(r.Context(), "", "", errors.Cause(err))
