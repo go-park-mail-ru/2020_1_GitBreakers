@@ -14,6 +14,7 @@ import (
 	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
@@ -233,8 +234,14 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//6MB max
-	if err := r.ParseMultipartForm(6 << 20); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "http", "ParseMultipartForm", errors.Cause(err))
+	err := r.ParseMultipartForm(6 << 20)
+	switch {
+	case err == multipart.ErrMessageTooLarge:
+		UsHttp.Logger.HttpLogError(r.Context(), "http", "ParseMultipartForm", err)
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	case err != nil:
+		UsHttp.Logger.HttpLogError(r.Context(), "http", "ParseMultipartForm", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -256,6 +263,12 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	if _, err := io.Copy(binaryImage, image); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := checkImageFileContentType(binaryImage.Bytes()); err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -334,4 +347,28 @@ func (UsHttp *UserHttp) GetInfoByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)
+}
+
+func checkImageFileContentType(fileContent []byte) (string, error) {
+	contentType := http.DetectContentType(fileContent)
+
+	extension, ok := allowedImagesContentTypes[contentType]
+	if !ok {
+		return "", errors.WithMessage(entityerrors.Invalid(),
+			"this content type is not allowed")
+	}
+
+	return extension, nil
+}
+
+var allowedImagesContentTypes = map[string]string{
+	"image/bmp":                "bmp",
+	"image/gif":                "gif",
+	"image/png":                "png",
+	"image/jpeg":               "jpeg",
+	"image/jpg":                "jpg",
+	"image/svg+xml":            "svg",
+	"image/webp":               "webp",
+	"image/tiff":               "tiff",
+	"image/vnd.microsoft.icon": "ico",
 }
