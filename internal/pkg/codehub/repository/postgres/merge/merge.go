@@ -17,6 +17,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
@@ -386,21 +387,37 @@ func (repo RepoPullReq) GetOpenedMRAssociatedWithRepoByRepoID(repoID int64) (pul
 	return pullRequests, nil
 }
 
-func (repo RepoPullReq) UpdateOpenedMRAssociatedWithRepoByRepoID(repoID int64) []error {
+func (repo RepoPullReq) UpdateOpenedMRAssociatedWithRepoByRepoID(repoID int64) (errorsSummary []error) {
 	requests, err := repo.GetOpenedMRAssociatedWithRepoByRepoID(repoID)
 	if err != nil {
 		return []error{err}
 	}
 
-	var errorsSlice []error
-	for _, request := range requests {
-		_, err := repo.fullUpdatePullRequest(repo.db, request, 0) // zero means fetch full
-		if err != nil {
-			errorsSlice = append(errorsSlice, err)
+	if len(requests) > 0 {
+		errUnfiltered := make([]error, len(requests))
+		wg := sync.WaitGroup{}
+
+		for i := range requests {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				_, err := repo.fullUpdatePullRequest(repo.db, requests[idx], 0) // zero means fetch full
+				if err != nil {
+					errUnfiltered[idx] = err
+				}
+			}(i)
+		}
+
+		wg.Wait()
+
+		for _, err := range errUnfiltered {
+			if err != nil {
+				errorsSummary = append(errorsSummary, err)
+			}
 		}
 	}
 
-	return errorsSlice
+	return errorsSummary
 }
 
 func (repo RepoPullReq) GetMRDiffByID(mrID int64) (models.PullRequestDiff, error) {
@@ -836,12 +853,11 @@ func (repo RepoPullReq) checkFromAndToBranches(executer SQLInterfaces.Executer,
 }
 
 func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
-	request models.PullRequest, fetchDepth int) (mrStatus codehub.MergeRequestStatus, err error) {
-
-	var toBranchHash, fromBranchHash string
+	request models.PullRequest, fetchDepth int) (codehub.MergeRequestStatus, error) {
 
 	// Check To And From repository branches
-	if mrStatus, toBranchHash, fromBranchHash, err = repo.checkFromAndToBranches(executer, request); err != nil {
+	mrStatus, toBranchHash, fromBranchHash, err := repo.checkFromAndToBranches(executer, request)
+	if  err != nil {
 		return codehub.MRStatusNone, errors.WithStack(err)
 	} else if mrStatus != codehub.MRStatusNone {
 		return mrStatus, nil
@@ -857,8 +873,7 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
 	}
 
 	// Renew diff and store it in db
-	_, renewDifErr := repo.renewMRDiff(executer, request)
-	if renewDifErr != nil {
+	if _, renewDifErr := repo.renewMRDiff(executer, request); renewDifErr != nil {
 		err := repo.forceCloseMRAndRemoveMRStorage(executer, request.ID, codehub.MRStatusError)
 		if err != nil {
 			renewDifErr = errors.WithMessage(renewDifErr, err.Error())
