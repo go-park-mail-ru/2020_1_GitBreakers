@@ -8,10 +8,10 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http/helpers"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
-	"net/http"
 	"time"
 )
 
@@ -89,7 +89,7 @@ func (UC *UCUser) CheckPass(login string, pass string) (bool, error) {
 	return UC.RepUser.CheckPass(login, pass)
 }
 func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) error {
-	imgExtension, err := checkFileContentType(fileData)
+	imgExtension, err := helpers.CheckImageFileContentType(fileData)
 	if err != nil {
 		return err
 	}
@@ -116,28 +116,4 @@ func (UC *UCUser) UploadAvatar(UserID int64, fileName string, fileData []byte) e
 		return errors.Wrap(err, "err in repo UpdateAvatarPath")
 	}
 	return nil
-}
-
-func checkFileContentType(fileContent []byte) (string, error) {
-	contentType := http.DetectContentType(fileContent)
-
-	extension, ok := allowedContentType[contentType]
-	if !ok {
-		return "", errors.WithMessage(entityerrors.Invalid(),
-			"this content type is not allowed")
-	}
-
-	return extension, nil
-}
-
-var allowedContentType = map[string]string{
-	"image/bmp":                "bmp",
-	"image/gif":                "gif",
-	"image/png":                "png",
-	"image/jpeg":               "jpeg",
-	"image/jpg":                "jpg",
-	"image/svg+xml":            "svg",
-	"image/webp":               "webp",
-	"image/tiff":               "tiff",
-	"image/vnd.microsoft.icon": "ico",
 }

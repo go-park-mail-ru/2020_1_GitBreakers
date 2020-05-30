@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http/helpers"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
@@ -266,7 +267,7 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := checkImageFileContentType(binaryImage.Bytes()); err != nil {
+	if _, err := helpers.CheckImageFileContentType(binaryImage.Bytes()); err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -347,28 +348,4 @@ func (UsHttp *UserHttp) GetInfoByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)
-}
-
-func checkImageFileContentType(fileContent []byte) (string, error) {
-	contentType := http.DetectContentType(fileContent)
-
-	extension, ok := allowedImagesContentTypes[contentType]
-	if !ok {
-		return "", errors.WithMessage(entityerrors.Invalid(),
-			"this content type is not allowed")
-	}
-
-	return extension, nil
-}
-
-var allowedImagesContentTypes = map[string]string{
-	"image/bmp":                "bmp",
-	"image/gif":                "gif",
-	"image/png":                "png",
-	"image/jpeg":               "jpeg",
-	"image/jpg":                "jpg",
-	"image/svg+xml":            "svg",
-	"image/webp":               "webp",
-	"image/tiff":               "tiff",
-	"image/vnd.microsoft.icon": "ico",
 }

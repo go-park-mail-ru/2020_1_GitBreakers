@@ -188,7 +188,7 @@ func TestGitUseCase_GetRepoList(t *testing.T) {
 				CheckReadAccess(&someUser.ID, gomock.Any(), gomock.Any()).
 				Return(true, nil).Times(repoCount))
 
-		repolistFromDB, err := useCase.GetRepoList(someUser.Login, &someUser.ID)
+		repolistFromDB, err := useCase.GetRepoList(someUser.Login, 0, 100, &someUser.ID)
 
 		require.Nil(t, err)
 		require.EqualValues(t, repolist, repolistFromDB)
@@ -202,7 +202,7 @@ func TestGitUseCase_GetRepoList(t *testing.T) {
 				CheckReadAccess(&someUser.ID, gomock.Any(), gomock.Any()).
 				Return(true, nil).Times(0))
 
-		repolistFromDB, err := useCase.GetRepoList(someUser.Login, &someUser.ID)
+		repolistFromDB, err := useCase.GetRepoList(someUser.Login, 0, 100, &someUser.ID)
 
 		require.Error(t, err)
 		require.Nil(t, repolistFromDB)

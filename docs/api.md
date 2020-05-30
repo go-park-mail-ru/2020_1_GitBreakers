@@ -190,7 +190,9 @@ Required: name(alphanumeric),
 2. 403 нет прав на просмотр(приватный)
 3. 404 не найден репозиторий с таким username+reponame
 ### 3.3 Получить список своих репозиториев
-Запрос: `/api/v1/user/repo` типа `GET`
+Запрос: `/api/v1/user/repo?offset=0&limit=100` типа `GET`
+offset - смещение относительно всей выборки
+limit - ограничение количества объектов
 Ответ:
 1. 200 ok
 ```json
@@ -230,8 +232,12 @@ Required: name(alphanumeric),
     }
 ]
 ```
+2. 401 unauthorized
+
 ### 3.4 Получить список репозиториев юзера его логину
-Запрос: `/api/v1/user/repo/{username}` типа `GET`
+Запрос: `/api/v1/user/repo/{username}?offset=0&limit=100` типа `GET`
+offset - смещение относительно всей выборки
+limit - ограничение количества объектов
 Ответ:
 1. 200 ok
 ```json
@@ -257,10 +263,12 @@ Required: name(alphanumeric),
     }
 ]
 ```
-2. 404 не найден такой юзер
+1. 404 не найден такой юзер
 
 ### 3.5 Получить список репозиториев юзера его ID
-Запрос: `/api/v1/user/id/{id}/repo` типа `GET`
+Запрос: `/api/v1/user/id/{id}/repo?offset=0&limit=100` типа `GET`
+offset - смещение относительно всей выборки
+limit - ограничение количества объектов
 Ответ:
 1. 200 ok
 ```json
@@ -286,7 +294,7 @@ Required: name(alphanumeric),
     }
 ]
 ```
-2. 400 - некорректный id (не удалось преобразовать в число)
+2. 400 - id не удалось преобразовать в число
 3. 404 не найден такой юзер
 
 ### 3.6 Удалить репозиторий
@@ -368,8 +376,10 @@ Required: name(alphanumeric),
 2. 403 (нет прав на просмотр)
 3. 404 (нет такого юзера или репозитория или коммита)
 ### 4.3 Получить список коммитов ветки (аналог 4.2)
-Запрос: `/api/v1/repo/{username}/{reponame}/commits/branch/{branchname}` типа `GET`
+Запрос: `/api/v1/repo/{username}/{reponame}/commits/branch/{branchname}?offset=0&limit=100` типа `GET`
 {branchname} - обычное название ветки (master, dev,prod ...)
+offset - смещение относительно всей выборки
+limit - ограничение количества объектов
 Образец:
 `89.208.198.186:8080/api/v1/localhost:8080/repo/lox5000/testname/commits/branch/master`
 Ответ:
@@ -863,7 +873,8 @@ branch указываем название веток текстовое
 ### 10.2 Получение списка всех PullRequest в наш репо или из нашего репока
 Запрос: `/api/v1/func/repo/{repoID}/pullrequests/in?limit=2&offset=0` типа `GET`
 Запрос: `/api/v1/func/repo/{repoID}/pullrequests/out?limit=2&offset=0` типа `GET`
-limit offset - лимит и смещение
+offset - смещение относительно всей выборки
+limit - ограничение количества объектов
 title from_repo to_repo branch_to branch_from обязательны
 Ответ:
 ```json
@@ -945,7 +956,9 @@ Nullable поля:
 3. 401 unauthorized
 4. 403 лезем в какой-то чужой реквест
 ### 10.5 Все PullRequest юзера
-Запрос: `/api/v1/user/pullrequests?limit=1&offset=0` типа `GET`
+Запрос: `/api/v1/user/pullrequests?offset=0&limit=100` типа `GET`
+offset - смещение относительно всей выборки
+limit - ограничение количества объектов
 Ответ:
 ```json
 [

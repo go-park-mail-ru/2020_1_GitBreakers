@@ -77,18 +77,18 @@ func (mr *MockGitUseCaseIMockRecorder) DeleteByOwnerID(ownerID, repoName interfa
 }
 
 // GetRepoList mocks base method.
-func (m *MockGitUseCaseI) GetRepoList(userName string, requestUserID *int64) (git.RepositorySet, error) {
+func (m *MockGitUseCaseI) GetRepoList(userName string, offset, limit int64, requestUserID *int64) (git.RepositorySet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRepoList", userName, requestUserID)
+	ret := m.ctrl.Call(m, "GetRepoList", userName, offset, limit, requestUserID)
 	ret0, _ := ret[0].(git.RepositorySet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRepoList indicates an expected call of GetRepoList.
-func (mr *MockGitUseCaseIMockRecorder) GetRepoList(userName, requestUserID interface{}) *gomock.Call {
+func (mr *MockGitUseCaseIMockRecorder) GetRepoList(userName, offset, limit, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoList", reflect.TypeOf((*MockGitUseCaseI)(nil).GetRepoList), userName, requestUserID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoList", reflect.TypeOf((*MockGitUseCaseI)(nil).GetRepoList), userName, offset, limit, requestUserID)
 }
 
 // GetBranchList mocks base method.

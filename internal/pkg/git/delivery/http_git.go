@@ -8,6 +8,7 @@ import (
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http/helpers"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -172,7 +173,11 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 	userIDFromContext := r.Context().Value(models.UserIDKey)
 	userIDPtr := GD.idToIntPointer(userIDFromContext)
 
-	// FIXME(nickeskov): use limit and offset query parameters
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
+	if err != nil {
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
+	}
+
 	userName := mux.Vars(r)["username"]
 
 	if userName == "" {
@@ -192,7 +197,7 @@ func (GD *GitDelivery) GetRepoList(w http.ResponseWriter, r *http.Request) {
 		userName = userModel.Login
 	}
 
-	repo, err := GD.UC.GetRepoList(userName, userIDPtr)
+	repo, err := GD.UC.GetRepoList(userName, offset, limit, userIDPtr)
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpInfo(r.Context(), fmt.Sprintf("access denied for user=%s", userName), http.StatusForbidden)
@@ -220,13 +225,17 @@ func (GD *GitDelivery) GetRepoListByUserID(w http.ResponseWriter, r *http.Reques
 	userIDFromContext := r.Context().Value(models.UserIDKey)
 	userIDPtr := GD.idToIntPointer(userIDFromContext)
 
-	// FIXME(nickeskov): use limit and offset query parameters
 	slugID := mux.Vars(r)["id"]
 	reposOwnerID, err := strconv.ParseInt(slugID, 10, 64)
 	if err != nil {
 		GD.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("bad request: %v", err))
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
+	}
+
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
+	if err != nil {
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
 	}
 
 	reposOwnerModel, err := GD.UserUC.GetByID(reposOwnerID)
@@ -242,7 +251,7 @@ func (GD *GitDelivery) GetRepoListByUserID(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	repo, err := GD.UC.GetRepoList(reposOwnerModel.Login, userIDPtr)
+	repo, err := GD.UC.GetRepoList(reposOwnerModel.Login, offset, limit, userIDPtr)
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
 		GD.Logger.HttpInfo(r.Context(), fmt.Sprintf("access denied for userIDPtr=%v",
@@ -367,7 +376,7 @@ func (GD *GitDelivery) ShowFiles(w http.ResponseWriter, r *http.Request) {
 	res, err := GD.UC.FilesInCommitByPath(showParams, userIDpointer)
 
 	if err != nil {
-		// FIXME(nickeskov): what is this??? ignoring error, fix int
+		// FIXME(nickeskov): what is this??? ignoring error, fix it
 		res, err := GD.UC.GetFileByPath(showParams, userIDpointer)
 
 		switch {
@@ -412,8 +421,12 @@ func (GD *GitDelivery) GetCommitsByBranchName(w http.ResponseWriter, r *http.Req
 	vars := mux.Vars(r)
 	userName, repoName, branchName := vars["username"], vars["reponame"], vars["branchname"]
 
-	// TODO(nickeskov): hardcode limit and offset
-	res, err := GD.UC.GetCommitsByBranchName(userName, repoName, branchName, 0, 100, userIDpointer)
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
+	if err != nil {
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
+	}
+
+	res, err := GD.UC.GetCommitsByBranchName(userName, repoName, branchName, offset, limit, userIDpointer)
 
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
@@ -491,6 +504,7 @@ func (GD *GitDelivery) GetRepoHead(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
 func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
@@ -516,7 +530,13 @@ func (GD *GitDelivery) Fork(w http.ResponseWriter, r *http.Request) {
 		forkData.FromRepoID = -1
 	}
 
-	err = GD.UC.Fork(forkData.FromRepoID, forkData.FromAuthorName, forkData.FromRepoName, forkData.NewName, userID)
+	err = GD.UC.Fork(
+		forkData.FromRepoID,
+		forkData.FromAuthorName,
+		forkData.FromRepoName,
+		forkData.NewName,
+		userID,
+	)
 
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):

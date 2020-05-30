@@ -9,6 +9,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http/helpers"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
@@ -69,14 +70,9 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 	userLogin := mux.Vars(r)["login"]
 
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
 	if err != nil {
-		limit = 100
-	}
-
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
 	}
 
 	user, err := GD.UserClient.GetByLogin(userLogin)
@@ -88,7 +84,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repolist, err := GD.CodeHubUC.GetStarredRepos(user.ID, int64(limit), int64(offset))
+	repolist, err := GD.CodeHubUC.GetStarredRepos(user.ID, limit, offset)
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -103,6 +99,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 
 	GD.Logger.HttpLogInfo(r.Context(), "repolist got success")
 }
+
 func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
@@ -111,17 +108,12 @@ func (GD *HttpCodehub) UserWithStar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
 	if err != nil {
-		limit = 100
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
 	}
 
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0
-	}
-
-	userlist, err := GD.CodeHubUC.GetUserStaredList(int64(repoID), int64(limit), int64(offset))
+	userlist, err := GD.CodeHubUC.GetUserStaredList(int64(repoID), limit, offset)
 
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
@@ -276,7 +268,12 @@ func (GD *HttpCodehub) GetIssues(w http.ResponseWriter, r *http.Request) {
 		userID = -1 //соответствует неавторизованному юзеру
 	}
 
-	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID, 100, 0)
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
+	if err != nil {
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
+	}
+
+	issueslist, err := GD.CodeHubUC.GetIssuesList(int64(repoID), userID, limit, offset)
 
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
@@ -313,6 +310,8 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := res.(int64)
 	if !ok {
+		GD.Logger.HttpLogError(r.Context(), "http/codehub",
+			"CloseIssue", fmt.Errorf("cannot cast user id to int64"))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -344,6 +343,7 @@ func (GD *HttpCodehub) CloseIssue(w http.ResponseWriter, r *http.Request) {
 
 	GD.Logger.HttpLogInfo(r.Context(), "issues closed success")
 }
+
 func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
@@ -359,23 +359,14 @@ func (GD *HttpCodehub) GetNews(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := r.URL.Query()
-
-	limit, err := strconv.Atoi(query.Get("limit"))
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	offset, err := strconv.Atoi(query.Get("offset"))
-	if err != nil {
-		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), int64(limit), int64(offset))
+	news, err := GD.NewsClient.GetNews(int64(repoID), res.(int64), limit, offset)
 
 	switch {
 	case errors.Is(err, entityerrors.AccessDenied()):
@@ -412,17 +403,13 @@ func (GD *HttpCodehub) Search(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query().Get("query")
 	params := mux.Vars(r)["params"]
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
 	if err != nil {
-		limit = 100 // TODO(nickeskov): send bad request
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
 	}
 
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0 // TODO(nickeskov): send bad request
-	}
-
-	data, err := GD.CodeHubUC.Search(query, params, int64(limit), int64(offset), userIDPtr)
+	data, err := GD.CodeHubUC.Search(query, params, limit, offset, userIDPtr)
 	switch {
 	case errors.Is(err, entityerrors.Invalid()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -519,6 +506,7 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
 	repoID, err := strconv.Atoi(mux.Vars(r)["repoID"])
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
@@ -528,22 +516,17 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 	direction := mux.Vars(r)["direction"]
 	repoModel := gitmodels.Repository{ID: int64(repoID)}
 
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
 	if err != nil {
-		limit = 100
-	}
-
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
 	}
 
 	var PLlist models.PullReqSet
 	switch direction {
 	case "in":
-		PLlist, err = GD.CodeHubUC.GetPLIn(repoModel, int64(limit), int64(offset))
+		PLlist, err = GD.CodeHubUC.GetPLIn(repoModel, limit, offset)
 	case "out":
-		PLlist, err = GD.CodeHubUC.GetPLOut(repoModel, int64(limit), int64(offset))
+		PLlist, err = GD.CodeHubUC.GetPLOut(repoModel, limit, offset)
 	default:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -575,6 +558,7 @@ func (GD *HttpCodehub) GetPullReqList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
@@ -610,8 +594,8 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 }
+
 func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
@@ -644,9 +628,9 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 }
-func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) {
+
+func (GD *HttpCodehub) GetPLFromUser(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(models.UserIDKey)
 	if res == nil {
 		GD.Logger.HttpInfo(r.Context(), "unauthorized", http.StatusUnauthorized)
@@ -655,17 +639,12 @@ func (GD *HttpCodehub) GetAllPLFromUser(w http.ResponseWriter, r *http.Request) 
 	}
 	userID := res.(int64)
 
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
 	if err != nil {
-		limit = 100
+		offset, limit = helpers.DefaultOffset, helpers.DefaultLimit
 	}
 
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0
-	}
-
-	pllist, err := GD.CodeHubUC.GetAllMRUser(userID, int64(limit), int64(offset))
+	pllist, err := GD.CodeHubUC.GetAllMRUser(userID, limit, offset)
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)
