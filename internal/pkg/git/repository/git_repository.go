@@ -159,21 +159,42 @@ func getByIdQ(querier SQLInterfaces.Querier, id int64) (git.Repository, error) {
 	return gitRepo, nil
 }
 
-func deleteByIdQ(exec SQLInterfaces.Executer, id int64) (err error) {
-	_, err = exec.Exec(`
+func deleteByIdQ(execq SQLInterfaces.ExecQueryer, id int64) (err error) {
+	_, err = execq.Exec(`
 			DELETE FROM git_repository_user_stars WHERE repository_id = $1`,
 		id,
 	)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
-	_, err = exec.Exec(`
+	_, err = execq.Exec(`
 			DELETE FROM git_repositories WHERE id = $1`,
 		id,
 	)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
+	}
+
+	var isOpenedMrsExists bool
+	err = execq.QueryRow(`
+		SELECT EXISTS(
+               SELECT 1
+               FROM merge_requests
+               WHERE (from_repository_id = $1
+                   OR to_repository_id = $1)
+                 AND is_closed = FALSE
+           )`,
+		id,
+	).Scan(
+		&isOpenedMrsExists,
+	)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if isOpenedMrsExists {
+		return entityerrors.Conflict()
 	}
 
 	return nil
@@ -419,7 +440,8 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 
 	isRepoExist, err := isRepoExistsInDbByOwnerId(tx, newRepo.OwnerID, newRepo.Name)
 	if err != nil {
-		return 0, errors.Wrap(err, "error in create repository while checking if repository is not exits")
+		return 0, errors.Wrap(err,
+			"error in create repository while checking if repository is not exits")
 	}
 	if isRepoExist {
 		return 0, entityerrors.AlreadyExist()
@@ -428,19 +450,22 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 	// Create new db entity of git_repository
 	newRepoId, err := createNewRepoSQLEntity(tx, newRepo)
 	if err != nil {
-		return 0, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v",
+		return 0, errors.Wrapf(err,
+			"cannot create new git repository entity in postgres, newRepo=%+v",
 			newRepo)
 	}
 
 	err = createNewPermissionSQLEntity(tx, newRepo.OwnerID, newRepoId, perm.OwnerAccess())
 	if err != nil {
-		return 0, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
+		return 0, errors.Wrapf(err,
+			"cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
 	}
 
 	// Calculate path where git creates new repository on filesystem
 	repoPath, err = repo.createRepoPath(tx, newRepo.OwnerID, newRepo.Name)
 	if err != nil {
-		return 0, errors.Wrapf(err, "cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
+		return 0, errors.Wrapf(err,
+			"cannot create new git repository entity in postgres, newRepo=%+v", newRepo)
 	}
 
 	// Create new bare repository aka 'git init --bare' on repoPath
@@ -457,13 +482,13 @@ func (repo Repository) DeleteByOwnerID(ownerID int64, repoName string) (err erro
 
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer func() {
 		err = finishTransaction(tx, err)
 		if err == nil {
 			if removeErr := os.RemoveAll(repoPath); removeErr != nil {
-				err = removeErr
+				err = errors.WithStack(removeErr)
 			}
 		}
 	}()
@@ -486,13 +511,13 @@ func (repo Repository) DeleteByOwnerID(ownerID int64, repoName string) (err erro
 	case err == sql.ErrNoRows:
 		return entityerrors.DoesNotExist()
 	case err != nil:
-		return err
+		return errors.WithStack(err)
 	}
 
 	repoPath = repo.convertToRepoPath(userLogin, repoName)
 
 	if err = deleteByIdQ(tx, repoID); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil

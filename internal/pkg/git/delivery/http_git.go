@@ -138,6 +138,17 @@ func (GD *GitDelivery) DeleteRepo(w http.ResponseWriter, r *http.Request) {
 			http.StatusNotFound,
 		)
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	case errors.Is(err, entityerrors.Conflict()):
+		GD.Logger.HttpInfo(
+			r.Context(),
+			fmt.Sprintf(
+				"user with id=%d try delete repo=%s, but repo have opened pull requests",
+				ownerID,
+				repoName,
+			),
+			http.StatusConflict,
+		)
+		http.Error(w, http.StatusText(http.StatusConflict), http.StatusConflict)
 	case err != nil:
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError),
