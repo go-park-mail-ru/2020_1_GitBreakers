@@ -68,6 +68,14 @@ func (GD *HttpCodehub) ModifyStar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
+	var userIDPtr *int64
+
+	res := r.Context().Value(models.UserIDKey)
+	if res != nil {
+		userID := res.(int64)
+		userIDPtr = &userID
+	}
+
 	userLogin := mux.Vars(r)["login"]
 
 	offset, limit, err := helpers.ParseLimitAndOffset(r.URL.Query())
@@ -84,7 +92,7 @@ func (GD *HttpCodehub) StarredRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repolist, err := GD.CodeHubUC.GetStarredRepos(user.ID, limit, offset)
+	repolist, err := GD.CodeHubUC.GetStarredRepos(user.ID, limit, offset, userIDPtr)
 	if err != nil {
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusInternalServerError)

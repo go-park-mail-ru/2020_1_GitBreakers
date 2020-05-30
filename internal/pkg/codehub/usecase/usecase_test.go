@@ -87,9 +87,9 @@ func TestUCCodeHubStar(t *testing.T) {
 		}
 		limit := 10
 		offset := 2
-		m.EXPECT().GetStarredRepos(someUserOwner.ID, int64(limit), int64(offset)).Return(repolist, nil)
+		m.EXPECT().GetStarredRepos(someUserOwner.ID, int64(limit), int64(offset), nil).Return(repolist, nil)
 
-		reposetFromDb, err := useCase.GetStarredRepos(someUserOwner.ID, int64(limit), int64(offset))
+		reposetFromDb, err := useCase.GetStarredRepos(someUserOwner.ID, int64(limit), int64(offset), nil)
 
 		require.EqualValues(t, reposetFromDb, repolist) //тк репосет и []models.repository разные типы
 		require.NoError(t, err)

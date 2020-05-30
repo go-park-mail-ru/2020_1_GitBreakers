@@ -29,8 +29,8 @@ func (UC *UCCodeHub) ModifyStar(star models.Star) error {
 	}
 }
 
-func (UC *UCCodeHub) GetStarredRepos(userID, limit, offset int64) (models.RepoSet, error) {
-	repolist, err := UC.RepoStar.GetStarredRepos(userID, limit, offset)
+func (UC *UCCodeHub) GetStarredRepos(userID, limit, offset int64, requestUserID *int64) (models.RepoSet, error) {
+	repolist, err := UC.RepoStar.GetStarredRepos(userID, limit, offset, requestUserID)
 	if repolist != nil {
 		return repolist, err
 	}

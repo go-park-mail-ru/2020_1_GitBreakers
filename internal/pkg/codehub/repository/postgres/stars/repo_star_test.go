@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -211,10 +212,10 @@ func (s *starTestSuite) TestGetStarredRepos() {
 	var offset int64 = 0
 
 	s.mock.ExpectQuery("SELECT").
-		WithArgs(s.firstStargazer.ID, limit, offset).
+		WithArgs(s.firstStargazer.ID, limit, offset, nil, perm.NoAccess()).
 		WillReturnRows(starredRepositories)
 
-	result, err := s.starRepository.GetStarredRepos(s.firstStargazer.ID, limit, offset)
+	result, err := s.starRepository.GetStarredRepos(s.firstStargazer.ID, limit, offset,nil)
 	require.Nil(s.T(), err)
 	require.EqualValues(s.T(), s.gitRepositories, result)
 }

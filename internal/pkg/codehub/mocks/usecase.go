@@ -49,18 +49,18 @@ func (mr *MockUCCodeHubIMockRecorder) ModifyStar(star interface{}) *gomock.Call 
 }
 
 // GetStarredRepos mocks base method.
-func (m *MockUCCodeHubI) GetStarredRepos(userID, limit, offset int64) (models.RepoSet, error) {
+func (m *MockUCCodeHubI) GetStarredRepos(userID, limit, offset int64, requestUserID *int64) (models.RepoSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset)
+	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset, requestUserID)
 	ret0, _ := ret[0].(models.RepoSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStarredRepos indicates an expected call of GetStarredRepos.
-func (mr *MockUCCodeHubIMockRecorder) GetStarredRepos(userID, limit, offset interface{}) *gomock.Call {
+func (mr *MockUCCodeHubIMockRecorder) GetStarredRepos(userID, limit, offset, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockUCCodeHubI)(nil).GetStarredRepos), userID, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockUCCodeHubI)(nil).GetStarredRepos), userID, limit, offset, requestUserID)
 }
 
 // CreateIssue mocks base method.

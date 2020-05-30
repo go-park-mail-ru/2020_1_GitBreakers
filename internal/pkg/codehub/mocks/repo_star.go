@@ -78,18 +78,18 @@ func (mr *MockRepoStarIMockRecorder) DelStar(userID, repoID interface{}) *gomock
 }
 
 // GetStarredRepos mocks base method.
-func (m *MockRepoStarI) GetStarredRepos(userID, limit, offset int64) ([]git.Repository, error) {
+func (m *MockRepoStarI) GetStarredRepos(userID, limit, offset int64, requestUserID *int64) ([]git.Repository, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset)
+	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset, requestUserID)
 	ret0, _ := ret[0].([]git.Repository)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStarredRepos indicates an expected call of GetStarredRepos.
-func (mr *MockRepoStarIMockRecorder) GetStarredRepos(userID, limit, offset interface{}) *gomock.Call {
+func (mr *MockRepoStarIMockRecorder) GetStarredRepos(userID, limit, offset, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockRepoStarI)(nil).GetStarredRepos), userID, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockRepoStarI)(nil).GetStarredRepos), userID, limit, offset, requestUserID)
 }
 
 // GetUserStaredList mocks base method.

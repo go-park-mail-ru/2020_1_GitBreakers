@@ -207,7 +207,7 @@ func TestCodeHubStarredRepos(t *testing.T) {
 
 	t.Run("StarredRepos ok", func(t *testing.T) {
 		UCCodeHubMock.EXPECT().
-			GetStarredRepos(gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			GetStarredRepos(gomock.AssignableToTypeOf(int64(0)), limit, offset, nil).
 			Return(repolist, nil).
 			Times(1)
 		UClientMock.EXPECT().
@@ -230,7 +230,7 @@ func TestCodeHubStarredRepos(t *testing.T) {
 
 	t.Run("StarredRepos wrong login", func(t *testing.T) {
 		UCCodeHubMock.EXPECT().
-			GetStarredRepos(gomock.AssignableToTypeOf(int64(0)), limit, offset).
+			GetStarredRepos(gomock.AssignableToTypeOf(int64(0)), limit, offset, nil).
 			Return(repolist, nil).
 			Times(0)
 		UClientMock.EXPECT().
@@ -257,7 +257,7 @@ func TestCodeHubStarredRepos(t *testing.T) {
 				Return(testUser, nil).
 				Times(1),
 			UCCodeHubMock.EXPECT().
-				GetStarredRepos(gomock.AssignableToTypeOf(int64(0)), limit, offset).
+				GetStarredRepos(gomock.AssignableToTypeOf(int64(0)), limit, offset, nil).
 				Return(repolist, errors.New("some error")).
 				Times(1),
 		)
