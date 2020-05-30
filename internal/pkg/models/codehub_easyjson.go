@@ -301,7 +301,15 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 				*out.FromRepoID = int64(in.Int64())
 			}
 		case "to_repo_id":
-			out.ToRepoID = int64(in.Int64())
+			if in.IsNull() {
+				in.Skip()
+				out.ToRepoID = nil
+			} else {
+				if out.ToRepoID == nil {
+					out.ToRepoID = new(int64)
+				}
+				*out.ToRepoID = int64(in.Int64())
+			}
 		case "title":
 			out.Title = string(in.String())
 		case "message":
@@ -323,9 +331,25 @@ func easyjson315f7a6DecodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 		case "branch_to":
 			out.BranchTo = string(in.String())
 		case "to_repo_name":
-			out.ToRepoName = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.ToRepoName = nil
+			} else {
+				if out.ToRepoName == nil {
+					out.ToRepoName = new(string)
+				}
+				*out.ToRepoName = string(in.String())
+			}
 		case "to_author_login":
-			out.ToAuthorLogin = string(in.String())
+			if in.IsNull() {
+				in.Skip()
+				out.ToAuthorLogin = nil
+			} else {
+				if out.ToAuthorLogin == nil {
+					out.ToAuthorLogin = new(string)
+				}
+				*out.ToAuthorLogin = string(in.String())
+			}
 		case "from_repo_name":
 			if in.IsNull() {
 				in.Skip()
@@ -395,7 +419,11 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 	{
 		const prefix string = ",\"to_repo_id\":"
 		out.RawString(prefix)
-		out.Int64(int64(in.ToRepoID))
+		if in.ToRepoID == nil {
+			out.RawString("null")
+		} else {
+			out.Int64(int64(*in.ToRepoID))
+		}
 	}
 	{
 		const prefix string = ",\"title\":"
@@ -445,12 +473,20 @@ func easyjson315f7a6EncodeGithubComGoParkMailRu20201GitBreakersInternalPkgModels
 	{
 		const prefix string = ",\"to_repo_name\":"
 		out.RawString(prefix)
-		out.String(string(in.ToRepoName))
+		if in.ToRepoName == nil {
+			out.RawString("null")
+		} else {
+			out.String(string(*in.ToRepoName))
+		}
 	}
 	{
 		const prefix string = ",\"to_author_login\":"
 		out.RawString(prefix)
-		out.String(string(in.ToAuthorLogin))
+		if in.ToAuthorLogin == nil {
+			out.RawString("null")
+		} else {
+			out.String(string(*in.ToAuthorLogin))
+		}
 	}
 	{
 		const prefix string = ",\"from_repo_name\":"

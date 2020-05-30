@@ -453,7 +453,7 @@ func (repo Repository) Create(newRepo git.Repository) (id int64, err error) {
 }
 
 func (repo Repository) DeleteByOwnerID(ownerID int64, repoName string) (err error) {
-	var newForkRepoPath string
+	var repoPath string
 
 	tx, err := repo.db.Begin()
 	if err != nil {
@@ -462,7 +462,7 @@ func (repo Repository) DeleteByOwnerID(ownerID int64, repoName string) (err erro
 	defer func() {
 		err = finishTransaction(tx, err)
 		if err == nil {
-			if removeErr := os.RemoveAll(newForkRepoPath); removeErr != nil {
+			if removeErr := os.RemoveAll(repoPath); removeErr != nil {
 				err = removeErr
 			}
 		}
@@ -489,7 +489,7 @@ func (repo Repository) DeleteByOwnerID(ownerID int64, repoName string) (err erro
 		return err
 	}
 
-	newForkRepoPath = repo.convertToRepoPath(userLogin, repoName)
+	repoPath = repo.convertToRepoPath(userLogin, repoName)
 
 	if err = deleteByIdQ(tx, repoID); err != nil {
 		return err

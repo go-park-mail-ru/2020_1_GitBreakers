@@ -907,6 +907,9 @@ Nullable поля:
 * from_repo_id
 * from_author_login
 * from_repo_name
+* to_repo_id
+* to_author_login
+* to_repo_name
 
 1. 200 ok
 2. 400 невалидный json или сами данные
@@ -985,6 +988,9 @@ Nullable поля:
 * from_repo_id
 * from_author_login
 * from_repo_name
+* to_repo_id
+* to_author_login
+* to_repo_name
 
 1. 200 ok
 2. 400 невалидный json или сами данные(id не существуют)
@@ -1039,6 +1045,9 @@ Nullable поля:
 * from_repo_id
 * from_author_login
 * from_repo_name
+* to_repo_id
+* to_author_login
+* to_repo_name
 
 1. 200 ok
 2. 400 невалидный json или сами данные(id не существуют)

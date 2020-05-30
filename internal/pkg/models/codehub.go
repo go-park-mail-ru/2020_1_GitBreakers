@@ -43,7 +43,7 @@ type PullRequest struct {
 	AuthorId        *int64    `json:"author_id" db:"author_id" valid:"-"`
 	CloserUserId    *int64    `json:"closer_user_id" db:"closer_user_id" valid:"-"`
 	FromRepoID      *int64    `json:"from_repo_id" db:"from_repository_id" valid:"-"`
-	ToRepoID        int64     `json:"to_repo_id" db:"to_repository_id" valid:"-"`
+	ToRepoID        *int64     `json:"to_repo_id" db:"to_repository_id" valid:"-"`
 	Title           string    `json:"title" db:"title" valid:"stringlength(1|512)"`
 	Message         string    `json:"message" db:"message" valid:"-"`
 	Label           string    `json:"label" db:"label" valid:"-"`
@@ -53,8 +53,8 @@ type PullRequest struct {
 	IsAccepted      bool      `json:"is_accepted" db:"is_accepted" valid:"-"`
 	BranchFrom      string    `json:"branch_from" db:"from_repository_branch" valid:"-"`
 	BranchTo        string    `json:"branch_to" db:"to_repository_branch" valid:"-"`
-	ToRepoName      string    `json:"to_repo_name" db:"" valid:"-"`
-	ToAuthorLogin   string    `json:"to_author_login" db:"" valid:"-"`
+	ToRepoName      *string    `json:"to_repo_name" db:"" valid:"-"`
+	ToAuthorLogin   *string    `json:"to_author_login" db:"" valid:"-"`
 	FromRepoName    *string   `json:"from_repo_name" db:"" valid:"-"`
 	FromAuthorLogin *string   `json:"from_author_login" db:"" valid:"-"`
 }

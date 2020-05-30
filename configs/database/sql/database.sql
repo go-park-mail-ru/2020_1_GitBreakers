@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS merge_requests
     author_id              BIGINT,
     closer_user_id         BIGINT                   DEFAULT NULL,
     from_repository_id     BIGINT,
-    to_repository_id       BIGINT                                             NOT NULL,
+    to_repository_id       BIGINT,
     from_repository_branch VARCHAR(256)                                       NOT NULL CHECK ( from_repository_branch <> '' ),
     to_repository_branch   VARCHAR(256)                                       NOT NULL CHECK ( to_repository_branch <> '' ),
     title                  VARCHAR(256)                                       NOT NULL CHECK ( title <> '' ),
@@ -126,7 +126,8 @@ CREATE TABLE IF NOT EXISTS merge_requests
     created_at             TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     FOREIGN KEY (author_id) REFERENCES users (id)
-        ON DELETE SET NULL ON UPDATE CASCADE,
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
     FOREIGN KEY (closer_user_id) REFERENCES users (id)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
@@ -134,6 +135,6 @@ CREATE TABLE IF NOT EXISTS merge_requests
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     FOREIGN KEY (to_repository_id) REFERENCES git_repositories (id)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
         ON UPDATE CASCADE
 );

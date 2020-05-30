@@ -593,7 +593,7 @@ func (GD *HttpCodehub) ApproveMerge(w http.ResponseWriter, r *http.Request) {
 	err := GD.CodeHubUC.ApprovePL(plModel, userID)
 
 	switch {
-	case errors.Is(err, entityerrors.DoesNotExist()):
+	case errors.Is(err, entityerrors.DoesNotExist()) || errors.Is(err, entityerrors.Invalid()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -631,7 +631,7 @@ func (GD *HttpCodehub) UndoPullReq(w http.ResponseWriter, r *http.Request) {
 
 	err := GD.CodeHubUC.ClosePL(plModel, userID)
 	switch {
-	case errors.Is(err, entityerrors.DoesNotExist()):
+	case errors.Is(err, entityerrors.DoesNotExist()) || errors.Is(err, entityerrors.Invalid()):
 		GD.Logger.HttpLogCallerError(r.Context(), *GD, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return

@@ -159,23 +159,23 @@ func (UC *UCCodeHub) Search(query, params string, limit, offset int64, userID *i
 }
 
 func (UC *UCCodeHub) CreatePL(request models.PullRequest) (models.PullRequest, error) {
-	if request.FromRepoID == nil ||
-		*request.FromRepoID == request.ToRepoID && request.BranchFrom == request.BranchTo {
+	if request.FromRepoID == nil || request.ToRepoID == nil ||
+		*request.FromRepoID == *request.ToRepoID && request.BranchFrom == request.BranchTo {
 		return models.PullRequest{}, entityerrors.Invalid()
 	}
 
-	if *request.FromRepoID != request.ToRepoID {
+	if *request.FromRepoID != *request.ToRepoID {
 		fromRepo, err := UC.GitRepo.GetByID(*request.FromRepoID)
 		if err != nil {
 			return models.PullRequest{}, errors.WithStack(err)
 		}
 
-		if fromRepo.ParentRepositoryInfo.ID == nil || *fromRepo.ParentRepositoryInfo.ID != request.ToRepoID {
+		if fromRepo.ParentRepositoryInfo.ID == nil || *fromRepo.ParentRepositoryInfo.ID != *request.ToRepoID {
 			return models.PullRequest{}, entityerrors.Invalid()
 		}
 	}
 
-	toRepoIdAccess, err := UC.GitRepo.CheckReadAccessById(request.AuthorId, request.ToRepoID)
+	toRepoIdAccess, err := UC.GitRepo.CheckReadAccessById(request.AuthorId, *request.ToRepoID)
 	if err != nil {
 		return models.PullRequest{}, errors.WithStack(err)
 	}
@@ -208,7 +208,11 @@ func (UC *UCCodeHub) GetPLOut(repo gitmodels.Repository, limit int64, offset int
 }
 
 func (UC *UCCodeHub) ApprovePL(pl models.PullRequest, userID int64) error {
-	permission, err := UC.GitRepo.GetPermissionByID(&userID, pl.ToRepoID)
+	if pl.ToRepoID == nil || pl.FromRepoID == nil {
+		return entityerrors.Invalid()
+	}
+
+	permission, err := UC.GitRepo.GetPermissionByID(&userID, *pl.ToRepoID)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -230,8 +234,8 @@ func (UC *UCCodeHub) ClosePL(pl models.PullRequest, userID int64) error {
 
 	if pl.AuthorId != nil && *pl.AuthorId == userID {
 		isCorrect = true
-	} else {
-		permission, err := UC.GitRepo.GetPermissionByID(&userID, pl.ToRepoID)
+	} else if pl.FromRepoID != nil && pl.ToRepoID != nil {
+		permission, err := UC.GitRepo.GetPermissionByID(&userID, *pl.ToRepoID)
 		if err != nil {
 			return errors.WithStack(err)
 		}

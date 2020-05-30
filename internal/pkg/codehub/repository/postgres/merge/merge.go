@@ -40,13 +40,17 @@ func NewPullRequestRepository(db *sqlx.DB, gitRepo gitPackage.GitRepoI, pullReqD
 }
 
 func (repo RepoPullReq) CreateMR(request models.PullRequest) (pr models.PullRequest, err error) {
+	if request.FromRepoID == nil || request.ToRepoID == nil {
+		return models.PullRequest{}, entityerrors.Invalid()
+	}
+
 	if _, isExist, err := repo.isExistRepoAndBranch(*request.FromRepoID, request.BranchFrom); err != nil {
 		return models.PullRequest{}, err
 	} else if !isExist {
 		return models.PullRequest{}, entityerrors.DoesNotExist()
 	}
 
-	if _, isExist, err := repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo); err != nil {
+	if _, isExist, err := repo.isExistRepoAndBranch(*request.ToRepoID, request.BranchTo); err != nil {
 		return models.PullRequest{}, err
 	} else if !isExist {
 		return models.PullRequest{}, entityerrors.DoesNotExist()
@@ -596,7 +600,7 @@ func (repo RepoPullReq) updateMRGitStorage(request models.PullRequest, fetchDept
 }
 
 func (repo RepoPullReq) createEmptyMRStorage(request models.PullRequest) error {
-	toRepoPath, err := repo.gitRepo.GetRepoPathByID(request.ToRepoID)
+	toRepoPath, err := repo.gitRepo.GetRepoPathByID(*request.ToRepoID)
 	if err != nil {
 		return err
 	}
@@ -825,9 +829,16 @@ func (repo RepoPullReq) forceCloseMRAndRemoveMRStorage(executer SQLInterfaces.Ex
 func (repo RepoPullReq) checkFromAndToBranches(executer SQLInterfaces.Executer,
 	request models.PullRequest) (mrStatus codehub.MergeRequestStatus, toBranchHash, fromBranchHash string, err error) {
 
+	if request.ToRepoID == nil {
+		return codehub.MRStatusBadToBranch, "", "", nil
+	}
+	if request.FromRepoID == nil {
+		return codehub.MRStatusBadFromBranch, "", "", nil
+	}
+
 	var isExist bool
 
-	toBranchHash, isExist, err = repo.isExistRepoAndBranch(request.ToRepoID, request.BranchTo)
+	toBranchHash, isExist, err = repo.isExistRepoAndBranch(*request.ToRepoID, request.BranchTo)
 	if err != nil {
 		return codehub.MRStatusNone, "", "", errors.WithStack(err)
 	}
@@ -857,7 +868,7 @@ func (repo RepoPullReq) fullUpdatePullRequest(executer SQLInterfaces.Executer,
 
 	// Check To And From repository branches
 	mrStatus, toBranchHash, fromBranchHash, err := repo.checkFromAndToBranches(executer, request)
-	if  err != nil {
+	if err != nil {
 		return codehub.MRStatusNone, errors.WithStack(err)
 	} else if mrStatus != codehub.MRStatusNone {
 		return mrStatus, nil
