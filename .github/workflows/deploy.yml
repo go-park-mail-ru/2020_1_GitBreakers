@@ -5,23 +5,22 @@ on:
       - master
       - dev
 jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: tests
-        run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > cover2 && go tool cover -func cover2 | grep total
   linter:
-    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v1
         with:
-          version: v1.26
+          version: v1.27
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: tests
+        run: go test -coverpkg=./... -race -coverprofile=coverage.out ./... && cat coverage.out| fgrep -v "easyjson" | fgrep -v "mock" | fgrep -v "pb.go" > purified_coverage.out && go tool cover -func purified_coverage.out | grep total
   build:
-    needs: linter
+    needs: [ linter, tests ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -63,5 +62,3 @@ jobs:
             sudo systemctl restart gitserver.service
             sudo systemctl restart news.service
             sudo systemctl restart server.service
-
-

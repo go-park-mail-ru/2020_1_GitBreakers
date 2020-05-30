@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
-	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
+	codehubMetrics "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	http4 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/delivery/http"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/issues"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/merge"
@@ -40,21 +40,18 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	prometheus.MustRegister(monitoring2.Hits, monitoring2.RequestDuration, monitoring2.DBQueryDuration)
+	prometheus.MustRegister(codehubMetrics.Hits, codehubMetrics.RequestDuration, codehubMetrics.DBQueryDuration)
 
 	f, err := os.OpenFile(conf.LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
-		logrus.Errorln("Failed to open logfile:", err)
-		f = os.Stdout
+		logrus.Fatalln("Failed to open logfile:", err)
 	}
 
-	customLogger := logger.NewTextFormatSimpleLogger(f)
+	customLogger := logger.NewTextFormatSimpleLogger(f, 1)
 
 	defer func() {
-		if f != os.Stdout {
-			if err := f.Close(); err != nil {
-				logrus.Errorln("Failed to close logfile:", err)
-			}
+		if err := f.Close(); err != nil {
+			logrus.Errorln("Failed to close logfile:", err)
 		}
 	}()
 
@@ -123,7 +120,7 @@ func StartNew() {
 	})
 
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
-	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	loggerMWare := middlewareCommon.CreateAccessLogMiddleware(customLogger)
 	checkAuthMiddleware := middleware.CreateCheckAuthMiddleware(customLogger)
 
 	csrfMiddleware := middleware.CreateCSRFMiddleware(
@@ -159,45 +156,68 @@ func StartNew() {
 
 	CsrfRouter.HandleFunc("/csrftoken", csrfHandlers.GetNewCsrfTokenHandler).Methods(http.MethodGet)
 
-	handlersRouter.HandleFunc("/session", userSetHandler.Login).Methods(http.MethodPost)
+	handlersRouter.HandleFunc("/session", userSetHandler.LoginByLoginOrEmail).Methods(http.MethodPost)
 	handlersRouter.HandleFunc("/session", userSetHandler.Logout).Methods(http.MethodDelete)
 
 	handlersRouter.HandleFunc("/user/profile", userSetHandler.Create).Methods(http.MethodPost)
 	handlersRouter.HandleFunc("/user/profile", userSetHandler.GetInfo).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/profile", userSetHandler.Update).Methods(http.MethodPut)
-	handlersRouter.HandleFunc("/user/profile/{login}", userSetHandler.GetInfoByLogin).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/profile/{login_or_email}", userSetHandler.GetInfoByLoginOrEmail).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/id/{id:[0-9]+}/profile", userSetHandler.GetInfoByID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/avatar", userSetHandler.UploadAvatar).Methods(http.MethodPut)
-	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/user/repo", repoHandler.GetRepoList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/repo/{username}", repoHandler.GetRepoList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/id/{id:[0-9]+}/repo", repoHandler.GetRepoListByUserID).Methods(http.MethodGet)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.CreateRepo).Methods(http.MethodPost)
 	CsrfRouter.HandleFunc("/user/repo", repoHandler.DeleteRepo).Methods(http.MethodDelete)
 
-	handlersRouter.HandleFunc("/user/pullrequests", CHubHandler.GetAllPLFromUser).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/user/pullrequests", CHubHandler.GetPLFromUser).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}", repoHandler.GetRepo).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/repo/{username}/{reponame}/head", repoHandler.GetRepoHead).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branches", repoHandler.GetBranchList).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}", repoHandler.GetCommitsList).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}", repoHandler.ShowFiles).Methods(http.MethodGet)
-	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}", repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}",
+		repoHandler.GetBranchInfoByNames).Methods(http.MethodGet)
 
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
-	handlersRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branch/{branchname}/tree/{path:.*}",
+		repoHandler.GetFileContentByBranch).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/branches",
+		repoHandler.GetBranchList).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/hash/{hash}",
+		repoHandler.GetCommitsList).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commit/{hash}/tree/{path:.*}",
+		repoHandler.GetFileContentByCommitHash).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/files/{hashcommits}",
+		repoHandler.ShowFiles).Methods(http.MethodGet)
+
+	handlersRouter.HandleFunc("/repo/{username}/{reponame}/commits/branch/{branchname}",
+		repoHandler.GetCommitsByBranchName).Methods(http.MethodGet)
+
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.NewIssue).Methods(http.MethodPost)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.UpdateIssue).Methods(http.MethodPut)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.GetIssues).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/issues", CHubHandler.CloseIssue).Methods(http.MethodDelete)
 	//
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
-	CsrfRouter.HandleFunc("/func/repo/{repoID}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/stars", CHubHandler.ModifyStar).Methods(http.MethodPut)
+	CsrfRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/stars/users", CHubHandler.UserWithStar).Methods(http.MethodGet)
 	handlersRouter.HandleFunc("/func/repo/{login}/stars", CHubHandler.StarredRepos).Methods(http.MethodGet)
 
-	handlersRouter.HandleFunc("/func/repo/{repoID}/news", CHubHandler.GetNews).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/news", CHubHandler.GetNews).Methods(http.MethodGet)
 
 	CsrfRouter.HandleFunc("/func/repo/fork", repoHandler.Fork).Methods(http.MethodPost)
 
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.CreatePullReq).Methods(http.MethodPost)
-	handlersRouter.HandleFunc("/func/repo/{repoID}/pullrequests/{direction}", CHubHandler.GetPullReqList).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/{repoID:[0-9]+}/pullrequests/{direction}",
+		CHubHandler.GetPullReqList).Methods(http.MethodGet)
+
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.UndoPullReq).Methods(http.MethodDelete)
 	CsrfRouter.HandleFunc("/func/repo/pullrequests", CHubHandler.ApproveMerge).Methods(http.MethodPut)
+
+	handlersRouter.HandleFunc("/func/repo/pullrequest/{id:[0-9]+}", CHubHandler.GetMRByID).Methods(http.MethodGet)
+	handlersRouter.HandleFunc("/func/repo/pullrequest/{id:[0-9]+}/diff", CHubHandler.GetMRDiffByID).Methods(http.MethodGet)
 
 	handlersRouter.HandleFunc("/func/search/{params}", CHubHandler.Search).Methods(http.MethodGet)
 
@@ -246,7 +266,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	repoCodeHubStar := stars.NewStarRepository(db)
 	repoCodeHubNews := news.NewRepoNews(db)
 	repoCodeHubSearch := search.NewSearchRepository(db)
-	repoMerge := merge.NewPullRequestRepository(db, absPullsDir)
+	repoMerge := merge.NewPullRequestRepository(db, repogit, absPullsDir)
 
 	gitUseCase := usecase.GitUseCase{Repo: &repogit}
 
@@ -280,6 +300,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 		SessHttp: &sessDelivery,
 		Logger:   &logger,
 		UClient:  &userClient,
+		UCUser:   &userUCase,
 	}
 
 	gitDelivery := gitDeliv.GitDelivery{

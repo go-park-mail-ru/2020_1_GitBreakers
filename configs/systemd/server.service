@@ -1,0 +1,11 @@
+[Unit]
+Description=server
+
+[Service]
+ExecStart=/home/ubuntu/CodeHub/bin/server
+EnvironmentFile=/home/ubuntu/CodeHub/.env
+User=ubuntu
+Group=ubuntu
+
+[Install]
+WantedBy=multi-user.target

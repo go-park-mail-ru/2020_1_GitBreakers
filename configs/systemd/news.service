@@ -1,0 +1,11 @@
+[Unit]
+Description=news
+
+[Service]
+ExecStart=/home/ubuntu/CodeHub/bin/news
+EnvironmentFile=/home/ubuntu/CodeHub/.env
+User=ubuntu
+Group=ubuntu
+
+[Install]
+WantedBy=multi-user.target

@@ -11,30 +11,30 @@ import (
 	reflect "reflect"
 )
 
-// MockUCCodeHubI is a mock of UCCodeHubI interface
+// MockUCCodeHubI is a mock of UCCodeHubI interface.
 type MockUCCodeHubI struct {
 	ctrl     *gomock.Controller
 	recorder *MockUCCodeHubIMockRecorder
 }
 
-// MockUCCodeHubIMockRecorder is the mock recorder for MockUCCodeHubI
+// MockUCCodeHubIMockRecorder is the mock recorder for MockUCCodeHubI.
 type MockUCCodeHubIMockRecorder struct {
 	mock *MockUCCodeHubI
 }
 
-// NewMockUCCodeHubI creates a new mock instance
+// NewMockUCCodeHubI creates a new mock instance.
 func NewMockUCCodeHubI(ctrl *gomock.Controller) *MockUCCodeHubI {
 	mock := &MockUCCodeHubI{ctrl: ctrl}
 	mock.recorder = &MockUCCodeHubIMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUCCodeHubI) EXPECT() *MockUCCodeHubIMockRecorder {
 	return m.recorder
 }
 
-// ModifyStar mocks base method
+// ModifyStar mocks base method.
 func (m *MockUCCodeHubI) ModifyStar(star models.Star) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ModifyStar", star)
@@ -42,28 +42,28 @@ func (m *MockUCCodeHubI) ModifyStar(star models.Star) error {
 	return ret0
 }
 
-// ModifyStar indicates an expected call of ModifyStar
+// ModifyStar indicates an expected call of ModifyStar.
 func (mr *MockUCCodeHubIMockRecorder) ModifyStar(star interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyStar", reflect.TypeOf((*MockUCCodeHubI)(nil).ModifyStar), star)
 }
 
-// GetStarredRepos mocks base method
-func (m *MockUCCodeHubI) GetStarredRepos(userID, limit, offset int64) (models.RepoSet, error) {
+// GetStarredRepos mocks base method.
+func (m *MockUCCodeHubI) GetStarredRepos(userID, limit, offset int64, requestUserID *int64) (models.RepoSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset)
+	ret := m.ctrl.Call(m, "GetStarredRepos", userID, limit, offset, requestUserID)
 	ret0, _ := ret[0].(models.RepoSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetStarredRepos indicates an expected call of GetStarredRepos
-func (mr *MockUCCodeHubIMockRecorder) GetStarredRepos(userID, limit, offset interface{}) *gomock.Call {
+// GetStarredRepos indicates an expected call of GetStarredRepos.
+func (mr *MockUCCodeHubIMockRecorder) GetStarredRepos(userID, limit, offset, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockUCCodeHubI)(nil).GetStarredRepos), userID, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStarredRepos", reflect.TypeOf((*MockUCCodeHubI)(nil).GetStarredRepos), userID, limit, offset, requestUserID)
 }
 
-// CreateIssue mocks base method
+// CreateIssue mocks base method.
 func (m *MockUCCodeHubI) CreateIssue(issue models.Issue) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateIssue", issue)
@@ -71,13 +71,13 @@ func (m *MockUCCodeHubI) CreateIssue(issue models.Issue) error {
 	return ret0
 }
 
-// CreateIssue indicates an expected call of CreateIssue
+// CreateIssue indicates an expected call of CreateIssue.
 func (mr *MockUCCodeHubIMockRecorder) CreateIssue(issue interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIssue", reflect.TypeOf((*MockUCCodeHubI)(nil).CreateIssue), issue)
 }
 
-// UpdateIssue mocks base method
+// UpdateIssue mocks base method.
 func (m *MockUCCodeHubI) UpdateIssue(issue models.Issue) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateIssue", issue)
@@ -85,13 +85,13 @@ func (m *MockUCCodeHubI) UpdateIssue(issue models.Issue) error {
 	return ret0
 }
 
-// UpdateIssue indicates an expected call of UpdateIssue
+// UpdateIssue indicates an expected call of UpdateIssue.
 func (mr *MockUCCodeHubIMockRecorder) UpdateIssue(issue interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIssue", reflect.TypeOf((*MockUCCodeHubI)(nil).UpdateIssue), issue)
 }
 
-// CloseIssue mocks base method
+// CloseIssue mocks base method.
 func (m *MockUCCodeHubI) CloseIssue(issueID, userID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CloseIssue", issueID, userID)
@@ -99,13 +99,13 @@ func (m *MockUCCodeHubI) CloseIssue(issueID, userID int64) error {
 	return ret0
 }
 
-// CloseIssue indicates an expected call of CloseIssue
+// CloseIssue indicates an expected call of CloseIssue.
 func (mr *MockUCCodeHubIMockRecorder) CloseIssue(issueID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseIssue", reflect.TypeOf((*MockUCCodeHubI)(nil).CloseIssue), issueID, userID)
 }
 
-// GetIssuesList mocks base method
+// GetIssuesList mocks base method.
 func (m *MockUCCodeHubI) GetIssuesList(repoID, userID, limit, offset int64) (models.IssuesSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetIssuesList", repoID, userID, limit, offset)
@@ -114,13 +114,13 @@ func (m *MockUCCodeHubI) GetIssuesList(repoID, userID, limit, offset int64) (mod
 	return ret0, ret1
 }
 
-// GetIssuesList indicates an expected call of GetIssuesList
+// GetIssuesList indicates an expected call of GetIssuesList.
 func (mr *MockUCCodeHubIMockRecorder) GetIssuesList(repoID, userID, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIssuesList", reflect.TypeOf((*MockUCCodeHubI)(nil).GetIssuesList), repoID, userID, limit, offset)
 }
 
-// GetIssue mocks base method
+// GetIssue mocks base method.
 func (m *MockUCCodeHubI) GetIssue(issueID, userID int64) (models.Issue, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetIssue", issueID, userID)
@@ -129,13 +129,13 @@ func (m *MockUCCodeHubI) GetIssue(issueID, userID int64) (models.Issue, error) {
 	return ret0, ret1
 }
 
-// GetIssue indicates an expected call of GetIssue
+// GetIssue indicates an expected call of GetIssue.
 func (mr *MockUCCodeHubIMockRecorder) GetIssue(issueID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIssue", reflect.TypeOf((*MockUCCodeHubI)(nil).GetIssue), issueID, userID)
 }
 
-// GetNews mocks base method
+// GetNews mocks base method.
 func (m *MockUCCodeHubI) GetNews(repoID, userID, limit, offset int64) (models.NewsSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNews", repoID, userID, limit, offset)
@@ -144,13 +144,13 @@ func (m *MockUCCodeHubI) GetNews(repoID, userID, limit, offset int64) (models.Ne
 	return ret0, ret1
 }
 
-// GetNews indicates an expected call of GetNews
+// GetNews indicates an expected call of GetNews.
 func (mr *MockUCCodeHubIMockRecorder) GetNews(repoID, userID, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNews", reflect.TypeOf((*MockUCCodeHubI)(nil).GetNews), repoID, userID, limit, offset)
 }
 
-// GetUserStaredList mocks base method
+// GetUserStaredList mocks base method.
 func (m *MockUCCodeHubI) GetUserStaredList(repoID, limit, offset int64) (models.UserSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserStaredList", repoID, limit, offset)
@@ -159,14 +159,14 @@ func (m *MockUCCodeHubI) GetUserStaredList(repoID, limit, offset int64) (models.
 	return ret0, ret1
 }
 
-// GetUserStaredList indicates an expected call of GetUserStaredList
+// GetUserStaredList indicates an expected call of GetUserStaredList.
 func (mr *MockUCCodeHubIMockRecorder) GetUserStaredList(repoID, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserStaredList", reflect.TypeOf((*MockUCCodeHubI)(nil).GetUserStaredList), repoID, limit, offset)
 }
 
-// Search mocks base method
-func (m *MockUCCodeHubI) Search(query, params string, limit, offset, userID int64) (interface{}, error) {
+// Search mocks base method.
+func (m *MockUCCodeHubI) Search(query, params string, limit, offset int64, userID *int64) (interface{}, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Search", query, params, limit, offset, userID)
 	ret0, _ := ret[0].(interface{})
@@ -174,27 +174,28 @@ func (m *MockUCCodeHubI) Search(query, params string, limit, offset, userID int6
 	return ret0, ret1
 }
 
-// Search indicates an expected call of Search
+// Search indicates an expected call of Search.
 func (mr *MockUCCodeHubIMockRecorder) Search(query, params, limit, offset, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockUCCodeHubI)(nil).Search), query, params, limit, offset, userID)
 }
 
-// CreatePL mocks base method
-func (m *MockUCCodeHubI) CreatePL(request models.PullRequest) error {
+// CreatePL mocks base method.
+func (m *MockUCCodeHubI) CreatePL(request models.PullRequest) (models.PullRequest, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePL", request)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(models.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// CreatePL indicates an expected call of CreatePL
+// CreatePL indicates an expected call of CreatePL.
 func (mr *MockUCCodeHubIMockRecorder) CreatePL(request interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePL", reflect.TypeOf((*MockUCCodeHubI)(nil).CreatePL), request)
 }
 
-// GetPLIn mocks base method
+// GetPLIn mocks base method.
 func (m *MockUCCodeHubI) GetPLIn(repo git.Repository, limit, offset int64) (models.PullReqSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPLIn", repo, limit, offset)
@@ -203,13 +204,13 @@ func (m *MockUCCodeHubI) GetPLIn(repo git.Repository, limit, offset int64) (mode
 	return ret0, ret1
 }
 
-// GetPLIn indicates an expected call of GetPLIn
+// GetPLIn indicates an expected call of GetPLIn.
 func (mr *MockUCCodeHubIMockRecorder) GetPLIn(repo, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPLIn", reflect.TypeOf((*MockUCCodeHubI)(nil).GetPLIn), repo, limit, offset)
 }
 
-// GetPLOut mocks base method
+// GetPLOut mocks base method.
 func (m *MockUCCodeHubI) GetPLOut(repo git.Repository, limit, offset int64) (models.PullReqSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPLOut", repo, limit, offset)
@@ -218,13 +219,13 @@ func (m *MockUCCodeHubI) GetPLOut(repo git.Repository, limit, offset int64) (mod
 	return ret0, ret1
 }
 
-// GetPLOut indicates an expected call of GetPLOut
+// GetPLOut indicates an expected call of GetPLOut.
 func (mr *MockUCCodeHubIMockRecorder) GetPLOut(repo, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPLOut", reflect.TypeOf((*MockUCCodeHubI)(nil).GetPLOut), repo, limit, offset)
 }
 
-// ApprovePL mocks base method
+// ApprovePL mocks base method.
 func (m *MockUCCodeHubI) ApprovePL(pl models.PullRequest, userID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ApprovePL", pl, userID)
@@ -232,13 +233,13 @@ func (m *MockUCCodeHubI) ApprovePL(pl models.PullRequest, userID int64) error {
 	return ret0
 }
 
-// ApprovePL indicates an expected call of ApprovePL
+// ApprovePL indicates an expected call of ApprovePL.
 func (mr *MockUCCodeHubIMockRecorder) ApprovePL(pl, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApprovePL", reflect.TypeOf((*MockUCCodeHubI)(nil).ApprovePL), pl, userID)
 }
 
-// ClosePL mocks base method
+// ClosePL mocks base method.
 func (m *MockUCCodeHubI) ClosePL(pl models.PullRequest, userID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ClosePL", pl, userID)
@@ -246,23 +247,53 @@ func (m *MockUCCodeHubI) ClosePL(pl models.PullRequest, userID int64) error {
 	return ret0
 }
 
-// ClosePL indicates an expected call of ClosePL
+// ClosePL indicates an expected call of ClosePL.
 func (mr *MockUCCodeHubIMockRecorder) ClosePL(pl, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClosePL", reflect.TypeOf((*MockUCCodeHubI)(nil).ClosePL), pl, userID)
 }
 
-// GetAllMRUser mocks base method
-func (m *MockUCCodeHubI) GetAllMRUser(userID int64) (models.PullReqSet, error) {
+// GetAllMRUser mocks base method.
+func (m *MockUCCodeHubI) GetAllMRUser(userID, limit, offset int64) (models.PullReqSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllMRUser", userID)
+	ret := m.ctrl.Call(m, "GetAllMRUser", userID, limit, offset)
 	ret0, _ := ret[0].(models.PullReqSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAllMRUser indicates an expected call of GetAllMRUser
-func (mr *MockUCCodeHubIMockRecorder) GetAllMRUser(userID interface{}) *gomock.Call {
+// GetAllMRUser indicates an expected call of GetAllMRUser.
+func (mr *MockUCCodeHubIMockRecorder) GetAllMRUser(userID, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMRUser", reflect.TypeOf((*MockUCCodeHubI)(nil).GetAllMRUser), userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMRUser", reflect.TypeOf((*MockUCCodeHubI)(nil).GetAllMRUser), userID, limit, offset)
+}
+
+// GetMRByID mocks base method.
+func (m *MockUCCodeHubI) GetMRByID(mrID int64) (models.PullRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMRByID", mrID)
+	ret0, _ := ret[0].(models.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMRByID indicates an expected call of GetMRByID.
+func (mr *MockUCCodeHubIMockRecorder) GetMRByID(mrID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMRByID", reflect.TypeOf((*MockUCCodeHubI)(nil).GetMRByID), mrID)
+}
+
+// GetMRDiffByID mocks base method.
+func (m *MockUCCodeHubI) GetMRDiffByID(mrID int64) (models.PullRequestDiff, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMRDiffByID", mrID)
+	ret0, _ := ret[0].(models.PullRequestDiff)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMRDiffByID indicates an expected call of GetMRDiffByID.
+func (mr *MockUCCodeHubIMockRecorder) GetMRDiffByID(mrID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMRDiffByID", reflect.TypeOf((*MockUCCodeHubI)(nil).GetMRDiffByID), mrID)
 }

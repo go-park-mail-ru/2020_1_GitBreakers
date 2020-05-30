@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git"
@@ -84,5 +85,18 @@ func (u UseCase) UpdateMergeRequestsStatuses(ownerLogin, repoName string) error 
 		return err
 	}
 
-	return u.mergeRepo.UpdateMergeRequestsStatusByRepoId(codehub.StatusNeedsUpdate, repo.ID)
+	updateErrors := u.mergeRepo.UpdateOpenedMRAssociatedWithRepoByRepoID(repo.ID)
+	if len(updateErrors) == 0 {
+		return nil
+	}
+
+	var summaryErrorString string
+	for _, err := range updateErrors {
+		summaryErrorString += fmt.Sprintf("%+v; ", err)
+	}
+
+	return errors.WithStack(
+		fmt.Errorf("some errors happen when updating repo %s/%s: %+v",
+			ownerLogin, repoName, summaryErrorString),
+	)
 }

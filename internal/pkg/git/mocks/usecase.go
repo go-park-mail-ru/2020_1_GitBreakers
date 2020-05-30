@@ -10,30 +10,30 @@ import (
 	reflect "reflect"
 )
 
-// MockGitUseCaseI is a mock of GitUseCaseI interface
+// MockGitUseCaseI is a mock of GitUseCaseI interface.
 type MockGitUseCaseI struct {
 	ctrl     *gomock.Controller
 	recorder *MockGitUseCaseIMockRecorder
 }
 
-// MockGitUseCaseIMockRecorder is the mock recorder for MockGitUseCaseI
+// MockGitUseCaseIMockRecorder is the mock recorder for MockGitUseCaseI.
 type MockGitUseCaseIMockRecorder struct {
 	mock *MockGitUseCaseI
 }
 
-// NewMockGitUseCaseI creates a new mock instance
+// NewMockGitUseCaseI creates a new mock instance.
 func NewMockGitUseCaseI(ctrl *gomock.Controller) *MockGitUseCaseI {
 	mock := &MockGitUseCaseI{ctrl: ctrl}
 	mock.recorder = &MockGitUseCaseIMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockGitUseCaseI) EXPECT() *MockGitUseCaseIMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
+// Create mocks base method.
 func (m *MockGitUseCaseI) Create(userID int64, repos *git.Repository) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", userID, repos)
@@ -41,13 +41,13 @@ func (m *MockGitUseCaseI) Create(userID int64, repos *git.Repository) error {
 	return ret0
 }
 
-// Create indicates an expected call of Create
+// Create indicates an expected call of Create.
 func (mr *MockGitUseCaseIMockRecorder) Create(userID, repos interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockGitUseCaseI)(nil).Create), userID, repos)
 }
 
-// GetRepo mocks base method
+// GetRepo mocks base method.
 func (m *MockGitUseCaseI) GetRepo(userName, repoName string, requestUserID *int64) (git.Repository, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepo", userName, repoName, requestUserID)
@@ -56,13 +56,13 @@ func (m *MockGitUseCaseI) GetRepo(userName, repoName string, requestUserID *int6
 	return ret0, ret1
 }
 
-// GetRepo indicates an expected call of GetRepo
+// GetRepo indicates an expected call of GetRepo.
 func (mr *MockGitUseCaseIMockRecorder) GetRepo(userName, repoName, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepo", reflect.TypeOf((*MockGitUseCaseI)(nil).GetRepo), userName, repoName, requestUserID)
 }
 
-// DeleteByOwnerID mocks base method
+// DeleteByOwnerID mocks base method.
 func (m *MockGitUseCaseI) DeleteByOwnerID(ownerID int64, repoName string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteByOwnerID", ownerID, repoName)
@@ -70,28 +70,28 @@ func (m *MockGitUseCaseI) DeleteByOwnerID(ownerID int64, repoName string) error 
 	return ret0
 }
 
-// DeleteByOwnerID indicates an expected call of DeleteByOwnerID
+// DeleteByOwnerID indicates an expected call of DeleteByOwnerID.
 func (mr *MockGitUseCaseIMockRecorder) DeleteByOwnerID(ownerID, repoName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByOwnerID", reflect.TypeOf((*MockGitUseCaseI)(nil).DeleteByOwnerID), ownerID, repoName)
 }
 
-// GetRepoList mocks base method
-func (m *MockGitUseCaseI) GetRepoList(userName string, requestUserID *int64) (git.RepositorySet, error) {
+// GetRepoList mocks base method.
+func (m *MockGitUseCaseI) GetRepoList(userName string, offset, limit int64, requestUserID *int64) (git.RepositorySet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRepoList", userName, requestUserID)
+	ret := m.ctrl.Call(m, "GetRepoList", userName, offset, limit, requestUserID)
 	ret0, _ := ret[0].(git.RepositorySet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRepoList indicates an expected call of GetRepoList
-func (mr *MockGitUseCaseIMockRecorder) GetRepoList(userName, requestUserID interface{}) *gomock.Call {
+// GetRepoList indicates an expected call of GetRepoList.
+func (mr *MockGitUseCaseIMockRecorder) GetRepoList(userName, offset, limit, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoList", reflect.TypeOf((*MockGitUseCaseI)(nil).GetRepoList), userName, requestUserID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoList", reflect.TypeOf((*MockGitUseCaseI)(nil).GetRepoList), userName, offset, limit, requestUserID)
 }
 
-// GetBranchList mocks base method
+// GetBranchList mocks base method.
 func (m *MockGitUseCaseI) GetBranchList(requestUserID *int64, userName, repoName string) (git.BranchSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBranchList", requestUserID, userName, repoName)
@@ -100,13 +100,13 @@ func (m *MockGitUseCaseI) GetBranchList(requestUserID *int64, userName, repoName
 	return ret0, ret1
 }
 
-// GetBranchList indicates an expected call of GetBranchList
+// GetBranchList indicates an expected call of GetBranchList.
 func (mr *MockGitUseCaseIMockRecorder) GetBranchList(requestUserID, userName, repoName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranchList", reflect.TypeOf((*MockGitUseCaseI)(nil).GetBranchList), requestUserID, userName, repoName)
 }
 
-// FilesInCommitByPath mocks base method
+// FilesInCommitByPath mocks base method.
 func (m *MockGitUseCaseI) FilesInCommitByPath(requset git.FilesCommitRequest, requesrUserID *int64) (git.FileInCommitSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FilesInCommitByPath", requset, requesrUserID)
@@ -115,13 +115,13 @@ func (m *MockGitUseCaseI) FilesInCommitByPath(requset git.FilesCommitRequest, re
 	return ret0, ret1
 }
 
-// FilesInCommitByPath indicates an expected call of FilesInCommitByPath
+// FilesInCommitByPath indicates an expected call of FilesInCommitByPath.
 func (mr *MockGitUseCaseIMockRecorder) FilesInCommitByPath(requset, requesrUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesInCommitByPath", reflect.TypeOf((*MockGitUseCaseI)(nil).FilesInCommitByPath), requset, requesrUserID)
 }
 
-// GetCommitsByCommitHash mocks base method
+// GetCommitsByCommitHash mocks base method.
 func (m *MockGitUseCaseI) GetCommitsByCommitHash(params git.CommitRequest, requestUserID *int64) (git.CommitSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommitsByCommitHash", params, requestUserID)
@@ -130,13 +130,13 @@ func (m *MockGitUseCaseI) GetCommitsByCommitHash(params git.CommitRequest, reque
 	return ret0, ret1
 }
 
-// GetCommitsByCommitHash indicates an expected call of GetCommitsByCommitHash
+// GetCommitsByCommitHash indicates an expected call of GetCommitsByCommitHash.
 func (mr *MockGitUseCaseIMockRecorder) GetCommitsByCommitHash(params, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommitsByCommitHash", reflect.TypeOf((*MockGitUseCaseI)(nil).GetCommitsByCommitHash), params, requestUserID)
 }
 
-// GetCommitsByBranchName mocks base method
+// GetCommitsByBranchName mocks base method.
 func (m *MockGitUseCaseI) GetCommitsByBranchName(userLogin, repoName, branchName string, offset, limit int64, requestUserID *int64) (git.CommitSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommitsByBranchName", userLogin, repoName, branchName, offset, limit, requestUserID)
@@ -145,13 +145,28 @@ func (m *MockGitUseCaseI) GetCommitsByBranchName(userLogin, repoName, branchName
 	return ret0, ret1
 }
 
-// GetCommitsByBranchName indicates an expected call of GetCommitsByBranchName
+// GetCommitsByBranchName indicates an expected call of GetCommitsByBranchName.
 func (mr *MockGitUseCaseIMockRecorder) GetCommitsByBranchName(userLogin, repoName, branchName, offset, limit, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommitsByBranchName", reflect.TypeOf((*MockGitUseCaseI)(nil).GetCommitsByBranchName), userLogin, repoName, branchName, offset, limit, requestUserID)
 }
 
-// GetFileByPath mocks base method
+// GetBranchInfoByNames mocks base method.
+func (m *MockGitUseCaseI) GetBranchInfoByNames(userLogin, repoName, branchName string, currUserID *int64) (git.Branch, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBranchInfoByNames", userLogin, repoName, branchName, currUserID)
+	ret0, _ := ret[0].(git.Branch)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBranchInfoByNames indicates an expected call of GetBranchInfoByNames.
+func (mr *MockGitUseCaseIMockRecorder) GetBranchInfoByNames(userLogin, repoName, branchName, currUserID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBranchInfoByNames", reflect.TypeOf((*MockGitUseCaseI)(nil).GetBranchInfoByNames), userLogin, repoName, branchName, currUserID)
+}
+
+// GetFileByPath mocks base method.
 func (m *MockGitUseCaseI) GetFileByPath(params git.FilesCommitRequest, requestUserID *int64) (git.FileCommitted, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFileByPath", params, requestUserID)
@@ -160,13 +175,43 @@ func (m *MockGitUseCaseI) GetFileByPath(params git.FilesCommitRequest, requestUs
 	return ret0, ret1
 }
 
-// GetFileByPath indicates an expected call of GetFileByPath
+// GetFileByPath indicates an expected call of GetFileByPath.
 func (mr *MockGitUseCaseIMockRecorder) GetFileByPath(params, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileByPath", reflect.TypeOf((*MockGitUseCaseI)(nil).GetFileByPath), params, requestUserID)
 }
 
-// GetRepoHead mocks base method
+// GetFileContentByBranch mocks base method.
+func (m *MockGitUseCaseI) GetFileContentByBranch(userLogin, repoName, branchName, filePath string, currUserID *int64) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileContentByBranch", userLogin, repoName, branchName, filePath, currUserID)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileContentByBranch indicates an expected call of GetFileContentByBranch.
+func (mr *MockGitUseCaseIMockRecorder) GetFileContentByBranch(userLogin, repoName, branchName, filePath, currUserID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileContentByBranch", reflect.TypeOf((*MockGitUseCaseI)(nil).GetFileContentByBranch), userLogin, repoName, branchName, filePath, currUserID)
+}
+
+// GetFileContentByCommitHash mocks base method.
+func (m *MockGitUseCaseI) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath string, currUserID *int64) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileContentByCommitHash", userLogin, repoName, commitHash, filePath, currUserID)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileContentByCommitHash indicates an expected call of GetFileContentByCommitHash.
+func (mr *MockGitUseCaseIMockRecorder) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath, currUserID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileContentByCommitHash", reflect.TypeOf((*MockGitUseCaseI)(nil).GetFileContentByCommitHash), userLogin, repoName, commitHash, filePath, currUserID)
+}
+
+// GetRepoHead mocks base method.
 func (m *MockGitUseCaseI) GetRepoHead(userLogin, repoName string, requestUserID *int64) (git.Branch, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepoHead", userLogin, repoName, requestUserID)
@@ -175,13 +220,13 @@ func (m *MockGitUseCaseI) GetRepoHead(userLogin, repoName string, requestUserID 
 	return ret0, ret1
 }
 
-// GetRepoHead indicates an expected call of GetRepoHead
+// GetRepoHead indicates an expected call of GetRepoHead.
 func (mr *MockGitUseCaseIMockRecorder) GetRepoHead(userLogin, repoName, requestUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoHead", reflect.TypeOf((*MockGitUseCaseI)(nil).GetRepoHead), userLogin, repoName, requestUserID)
 }
 
-// Fork mocks base method
+// Fork mocks base method.
 func (m *MockGitUseCaseI) Fork(repoID int64, author, repoName, newName string, currUserID int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Fork", repoID, author, repoName, newName, currUserID)
@@ -189,7 +234,7 @@ func (m *MockGitUseCaseI) Fork(repoID int64, author, repoName, newName string, c
 	return ret0
 }
 
-// Fork indicates an expected call of Fork
+// Fork indicates an expected call of Fork.
 func (mr *MockGitUseCaseIMockRecorder) Fork(repoID, author, repoName, newName, currUserID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fork", reflect.TypeOf((*MockGitUseCaseI)(nil).Fork), repoID, author, repoName, newName, currUserID)

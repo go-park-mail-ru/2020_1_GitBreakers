@@ -1,14 +1,18 @@
-create or replace view user_profile_view(id, login, email, name, avatar_path, created_at) as
-SELECT users.id,
-       users.login,
-       users.email,
-       users.name,
-       users.avatar_path,
-       users.created_at
+-- Views
+
+DROP VIEW IF EXISTS user_profile_view CASCADE;
+CREATE VIEW user_profile_view AS
+SELECT id,
+       login,
+       email,
+       name,
+       avatar_path,
+       created_at
 FROM users;
 
 
-create or replace view git_repository_user_view(id, owner_id, name, description, is_fork, is_public, stars, forks, merge_requests_open, parent_id, created_at, user_login, user_email, user_name, user_avatar_path, user_created_at) as
+DROP VIEW IF EXISTS git_repository_user_view CASCADE;
+CREATE VIEW git_repository_user_view AS
 SELECT gr.id,
        gr.owner_id,
        gr.name,
@@ -25,11 +29,12 @@ SELECT gr.id,
        upv.name        AS user_name,
        upv.avatar_path AS user_avatar_path,
        upv.created_at  AS user_created_at
-FROM git_repositories gr
+FROM git_repositories AS gr
          JOIN user_profile_view upv ON gr.owner_id = upv.id;
 
 
-create or replace view git_repository_parent_user_view(id, owner_id, name, description, is_fork, is_public, stars, forks, merge_requests_open, parent_id, created_at, user_login, user_email, user_name, user_avatar_path, user_created_at, parent_owner_id, parent_name, parent_description, parent_is_fork, parent_is_public, parent_stars, parent_forks, parent_merge_requests_open, parent_parent_id, parent_created_at, parent_user_login, parent_user_email, parent_user_name, parent_user_avatar_path, parent_user_created_at) as
+DROP VIEW IF EXISTS git_repository_parent_user_view CASCADE;
+CREATE VIEW git_repository_parent_user_view AS
 SELECT gr.id,
        gr.owner_id,
        gr.name,
@@ -61,11 +66,12 @@ SELECT gr.id,
        grparent.user_name           AS parent_user_name,
        grparent.user_avatar_path    AS parent_user_avatar_path,
        grparent.user_created_at     AS parent_user_created_at
-FROM git_repository_user_view gr
+FROM git_repository_user_view AS gr
          LEFT JOIN git_repository_user_view grparent ON gr.parent_id = grparent.id;
 
 
-create or replace view users_git_repositories_view(repository_id, user_id, role, created_at, git_repository_owner_id, git_repository_name, git_repository_description, git_repository_is_fork, git_repository_is_public, git_repository_stars, git_repository_forks, git_repository_merge_requests_open, git_repository_created_at, git_repository_parent_id, user_login, user_email, user_name, user_avatar_path, user_created_at) as
+DROP VIEW IF EXISTS users_git_repositories_view CASCADE;
+CREATE VIEW users_git_repositories_view AS
 SELECT ugr.repository_id,
        ugr.user_id,
        ugr.role,
@@ -85,12 +91,13 @@ SELECT ugr.repository_id,
        upv.name               AS user_name,
        upv.avatar_path        AS user_avatar_path,
        upv.created_at         AS user_created_at
-FROM users_git_repositories ugr
-         JOIN git_repositories gr ON ugr.repository_id = gr.id
-         JOIN user_profile_view upv ON ugr.user_id = upv.id;
+FROM users_git_repositories AS ugr
+         JOIN git_repositories AS gr ON ugr.repository_id = gr.id
+         JOIN user_profile_view AS upv ON ugr.user_id = upv.id;
 
 
-create or replace view git_repository_user_stars_view(repository_id, author_id, created_at, user_id, user_login, user_email, user_name, user_avatar_path, user_created_at, git_repository_owner_id, git_repository_name, git_repository_description, git_repository_is_fork, git_repository_is_public, git_repository_stars, git_repository_forks, git_repository_merge_requests_open, git_repository_created_at, git_repository_parent_id) as
+DROP VIEW IF EXISTS git_repository_user_stars_view CASCADE;
+CREATE VIEW git_repository_user_stars_view AS
 SELECT grus.repository_id,
        grus.author_id,
        grus.created_at,
@@ -110,12 +117,13 @@ SELECT grus.repository_id,
        gr.merge_requests_open AS git_repository_merge_requests_open,
        gr.created_at          AS git_repository_created_at,
        gr.parent_id           AS git_repository_parent_id
-FROM git_repository_user_stars grus
-         JOIN user_profile_view upv ON grus.author_id = upv.id
-         JOIN git_repositories gr ON grus.repository_id = gr.id;
+FROM git_repository_user_stars AS grus
+         JOIN user_profile_view AS upv ON grus.author_id = upv.id
+         JOIN git_repositories AS gr ON grus.repository_id = gr.id;
 
 
-create or replace view issues_users_view(id, author_id, repository_id, title, message, label, is_closed, created_at, user_id, user_login, user_email, user_name, user_avatar_path, user_created_at) as
+DROP VIEW IF EXISTS issues_users_view CASCADE;
+CREATE VIEW issues_users_view AS
 SELECT i.id,
        i.author_id,
        i.repository_id,
@@ -130,11 +138,12 @@ SELECT i.id,
        upv.name        AS user_name,
        upv.avatar_path AS user_avatar_path,
        upv.created_at  AS user_created_at
-FROM issues i
-         JOIN user_profile_view upv ON i.author_id = upv.id;
+FROM issues AS i
+         JOIN user_profile_view AS upv on i.author_id = upv.id;
 
 
-create or replace view news_users_view(id, author_id, repository_id, message, label, created_at, user_id, user_login, user_email, user_name, user_avatar_path, user_created_at) as
+DROP VIEW IF EXISTS news_users_view CASCADE;
+CREATE VIEW news_users_view AS
 SELECT n.id,
        n.author_id,
        n.repository_id,
@@ -147,13 +156,14 @@ SELECT n.id,
        upv.name        AS user_name,
        upv.avatar_path AS user_avatar_path,
        upv.created_at  AS user_created_at
-FROM news n
-         JOIN user_profile_view upv ON n.author_id = upv.id;
+FROM news AS n
+         JOIN user_profile_view AS upv ON n.author_id = upv.id;
 
-
-create or replace view merge_requests_view(id, author_id, from_repository_id, to_repository_id, from_repository_branch, to_repository_branch, title, message, label, status, diff, is_closed, is_accepted, created_at, user_login, user_email, user_name, user_avatar_path, user_created_at, git_repository_from_owner_id, git_repository_from_name, git_repository_from_description, git_repository_from_is_fork, git_repository_from_is_public, git_repository_from_stars, git_repository_from_forks, git_repository_from_merge_requests_open, git_repository_from_parent_id, git_repository_from_created_at, git_repository_to_owner_id, git_repository_to_name, git_repository_to_description, git_repository_to_is_fork, git_repository_to_is_public, git_repository_to_stars, git_repository_to_forks, git_repository_to_merge_requests_open, git_repository_to_parent_id, git_repository_to_created_at) as
+DROP VIEW IF EXISTS merge_requests_view CASCADE;
+CREATE VIEW merge_requests_view AS
 SELECT mr.id,
        mr.author_id,
+       mr.closer_user_id,
        mr.from_repository_id,
        mr.to_repository_id,
        mr.from_repository_branch,
@@ -171,6 +181,11 @@ SELECT mr.id,
        upv.name                   AS user_name,
        upv.avatar_path            AS user_avatar_path,
        upv.created_at             AS user_created_at,
+       upv_closer.login           AS closer_user_login,
+       upv_closer.email           AS closer_user_email,
+       upv_closer.name            AS closer_user_name,
+       upv_closer.avatar_path     AS closer_user_avatar_path,
+       upv_closer.created_at      AS closer_user_created_at,
        grfrom.owner_id            AS git_repository_from_owner_id,
        grfrom.name                AS git_repository_from_name,
        grfrom.description         AS git_repository_from_description,
@@ -191,8 +206,9 @@ SELECT mr.id,
        grto.merge_requests_open   AS git_repository_to_merge_requests_open,
        grto.parent_id             AS git_repository_to_parent_id,
        grto.created_at            AS git_repository_to_created_at
-FROM merge_requests mr
-         JOIN user_profile_view upv ON mr.author_id = upv.id
-         JOIN git_repositories grfrom ON mr.from_repository_id = grfrom.id
-         LEFT JOIN git_repositories grto ON mr.to_repository_id = grto.id;
+FROM merge_requests AS mr
+         LEFT JOIN user_profile_view AS upv ON mr.author_id = upv.id
+         LEFT JOIN user_profile_view AS upv_closer ON mr.closer_user_id = upv_closer.id
+         LEFT JOIN git_repositories AS grfrom ON mr.from_repository_id = grfrom.id
+         JOIN git_repositories AS grto ON mr.to_repository_id = grto.id;
 

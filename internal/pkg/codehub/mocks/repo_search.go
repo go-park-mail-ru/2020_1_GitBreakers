@@ -10,30 +10,30 @@ import (
 	reflect "reflect"
 )
 
-// MockRepoSearchI is a mock of RepoSearchI interface
+// MockRepoSearchI is a mock of RepoSearchI interface.
 type MockRepoSearchI struct {
 	ctrl     *gomock.Controller
 	recorder *MockRepoSearchIMockRecorder
 }
 
-// MockRepoSearchIMockRecorder is the mock recorder for MockRepoSearchI
+// MockRepoSearchIMockRecorder is the mock recorder for MockRepoSearchI.
 type MockRepoSearchIMockRecorder struct {
 	mock *MockRepoSearchI
 }
 
-// NewMockRepoSearchI creates a new mock instance
+// NewMockRepoSearchI creates a new mock instance.
 func NewMockRepoSearchI(ctrl *gomock.Controller) *MockRepoSearchI {
 	mock := &MockRepoSearchI{ctrl: ctrl}
 	mock.recorder = &MockRepoSearchIMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepoSearchI) EXPECT() *MockRepoSearchIMockRecorder {
 	return m.recorder
 }
 
-// GetFromUsers mocks base method
+// GetFromUsers mocks base method.
 func (m *MockRepoSearchI) GetFromUsers(query string, limit, offset int64) (models.UserSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFromUsers", query, limit, offset)
@@ -42,14 +42,14 @@ func (m *MockRepoSearchI) GetFromUsers(query string, limit, offset int64) (model
 	return ret0, ret1
 }
 
-// GetFromUsers indicates an expected call of GetFromUsers
+// GetFromUsers indicates an expected call of GetFromUsers.
 func (mr *MockRepoSearchIMockRecorder) GetFromUsers(query, limit, offset interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromUsers", reflect.TypeOf((*MockRepoSearchI)(nil).GetFromUsers), query, limit, offset)
 }
 
-// GetFromStarredRepos mocks base method
-func (m *MockRepoSearchI) GetFromStarredRepos(query string, limit, offset, userID int64) (models.RepoSet, error) {
+// GetFromStarredRepos mocks base method.
+func (m *MockRepoSearchI) GetFromStarredRepos(query string, limit, offset int64, userID *int64) (models.RepoSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFromStarredRepos", query, limit, offset, userID)
 	ret0, _ := ret[0].(models.RepoSet)
@@ -57,29 +57,29 @@ func (m *MockRepoSearchI) GetFromStarredRepos(query string, limit, offset, userI
 	return ret0, ret1
 }
 
-// GetFromStarredRepos indicates an expected call of GetFromStarredRepos
+// GetFromStarredRepos indicates an expected call of GetFromStarredRepos.
 func (mr *MockRepoSearchIMockRecorder) GetFromStarredRepos(query, limit, offset, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromStarredRepos", reflect.TypeOf((*MockRepoSearchI)(nil).GetFromStarredRepos), query, limit, offset, userID)
 }
 
-// GetFromAllRepos mocks base method
-func (m *MockRepoSearchI) GetFromAllRepos(query string, limit, offset int64) (models.RepoSet, error) {
+// GetFromAllRepos mocks base method.
+func (m *MockRepoSearchI) GetFromAllRepos(query string, limit, offset int64, userID *int64) (models.RepoSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFromAllRepos", query, limit, offset)
+	ret := m.ctrl.Call(m, "GetFromAllRepos", query, limit, offset, userID)
 	ret0, _ := ret[0].(models.RepoSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetFromAllRepos indicates an expected call of GetFromAllRepos
-func (mr *MockRepoSearchIMockRecorder) GetFromAllRepos(query, limit, offset interface{}) *gomock.Call {
+// GetFromAllRepos indicates an expected call of GetFromAllRepos.
+func (mr *MockRepoSearchIMockRecorder) GetFromAllRepos(query, limit, offset, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromAllRepos", reflect.TypeOf((*MockRepoSearchI)(nil).GetFromAllRepos), query, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromAllRepos", reflect.TypeOf((*MockRepoSearchI)(nil).GetFromAllRepos), query, limit, offset, userID)
 }
 
-// GetFromOwnRepos mocks base method
-func (m *MockRepoSearchI) GetFromOwnRepos(query string, limit, offset, userID int64) (models.RepoSet, error) {
+// GetFromOwnRepos mocks base method.
+func (m *MockRepoSearchI) GetFromOwnRepos(query string, limit, offset int64, userID *int64) (models.RepoSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFromOwnRepos", query, limit, offset, userID)
 	ret0, _ := ret[0].(models.RepoSet)
@@ -87,7 +87,7 @@ func (m *MockRepoSearchI) GetFromOwnRepos(query string, limit, offset, userID in
 	return ret0, ret1
 }
 
-// GetFromOwnRepos indicates an expected call of GetFromOwnRepos
+// GetFromOwnRepos indicates an expected call of GetFromOwnRepos.
 func (mr *MockRepoSearchIMockRecorder) GetFromOwnRepos(query, limit, offset, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromOwnRepos", reflect.TypeOf((*MockRepoSearchI)(nil).GetFromOwnRepos), query, limit, offset, userID)

@@ -10,6 +10,7 @@ import (
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	userMock "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user/mocks"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http/helpers"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/golang/mock/gomock"
 	"github.com/steinfletcher/apitest"
@@ -33,7 +34,7 @@ func TestGitDelivery_CreateRepo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -155,7 +156,7 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -175,7 +176,8 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 
 		someLogin := "keksik"
 		gomock.InOrder(
-			m.EXPECT().GetRepoList(someLogin, gomock.Any()).
+			m.EXPECT().GetRepoList(
+				someLogin, helpers.DefaultOffset, helpers.DefaultLimit, gomock.Any()).
 				Return(repolist, nil).
 				Times(1))
 
@@ -196,7 +198,8 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 
 		someLogin := "keksik"
 		gomock.InOrder(
-			m.EXPECT().GetRepoList(someLogin, gomock.Any()).
+			m.EXPECT().GetRepoList(
+				someLogin, helpers.DefaultOffset, helpers.DefaultLimit, gomock.Any()).
 				Return(repolist, entityerrors.AccessDenied()).
 				Times(1))
 
@@ -228,7 +231,8 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 			u.EXPECT().GetByID(gomock.Any()).
 				Return(someUser, nil).
 				Times(1),
-			m.EXPECT().GetRepoList(someUser.Login, gomock.Any()).
+			m.EXPECT().GetRepoList(
+				someUser.Login, helpers.DefaultOffset, helpers.DefaultLimit, gomock.Any()).
 				Return(repolist, nil).
 				Times(1))
 
@@ -259,7 +263,8 @@ func TestGitDelivery_GetRepoList(t *testing.T) {
 			u.EXPECT().GetByID(gomock.Any()).
 				Return(someUser, errors.New("some error")).
 				Times(1),
-			m.EXPECT().GetRepoList(someUser.Login, gomock.Any()).
+			m.EXPECT().GetRepoList(someUser.Login,
+				helpers.DefaultOffset, helpers.DefaultLimit, gomock.Any()).
 				Return(repolist, nil).
 				Times(0))
 
@@ -279,7 +284,7 @@ func TestGitDelivery_GetRepo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -378,7 +383,7 @@ func TestGitDelivery_GetBranchList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -485,7 +490,7 @@ func TestGitDelivery_GetCommitsList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 
@@ -598,7 +603,7 @@ func TestGitDelivery_GetCommitsByBranchName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard)
+	newlogger := logger.NewTextFormatSimpleLogger(ioutil.Discard, 1)
 	u := userMock.NewMockUCUser(ctrl)
 	m := gitMock.NewMockGitUseCaseI(ctrl)
 

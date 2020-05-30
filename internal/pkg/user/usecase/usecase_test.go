@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net/http"
+	"image"
+	"image/color"
+	"image/png"
 	"testing"
-	"time"
 )
 
 var someUser = models.User{
@@ -22,6 +22,32 @@ var someUser = models.User{
 	Login:    "alahahbar",
 	Image:    "/static/image/avatar/kek.png",
 	Email:    "putin@kremlin.ru",
+}
+
+func createFakeImage(width, height int) *image.RGBA {
+	upLeft := image.Point{}
+	lowRight := image.Point{X: width, Y: height}
+
+	img := image.NewRGBA(image.Rectangle{Min: upLeft, Max: lowRight})
+
+	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
+	cyan := color.RGBA{R: 100, G: 200, B: 200, A: 0xff}
+
+	// Set color for each pixel.
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			switch {
+			case x < width/2 && y < height/2: // upper left quadrant
+				img.Set(x, y, cyan)
+			case x >= width/2 && y >= height/2: // lower right quadrant
+				img.Set(x, y, color.White)
+			default:
+				// Use zero value.
+			}
+		}
+	}
+
+	return img
 }
 
 func TestUCUser_Create(t *testing.T) {
@@ -311,23 +337,11 @@ func TestUCUser_UploadAvatar(t *testing.T) {
 
 	m := mocks.NewMockRepoUser(ctrl)
 
-	someName := "some_name"
-	clHttp := http.Client{
-		Timeout: 10 * time.Second,
-	}
-	//http get fake open image
-	reqImg, err := clHttp.Get("http://fakeimg.pl/3000x3000")
+	someName := "some_name.png"
 
-	binaryImage := bytes.NewBuffer(nil)
-	if reqImg != nil && reqImg.StatusCode == 200 {
-
-		_, err = io.Copy(binaryImage, reqImg.Body)
-		require.Nil(t, err)
-		defer reqImg.Body.Close()
-
-	} else {
-		binaryImage = bytes.NewBuffer([]byte("some binary content"))
-	}
+	binaryImage := new(bytes.Buffer)
+	err := png.Encode(binaryImage, createFakeImage(10, 10))
+	require.NoError(t, err)
 	useCase := UCUser{m}
 
 	t.Run("UploadAvatar ok", func(t *testing.T) {

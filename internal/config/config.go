@@ -16,6 +16,7 @@ type Config struct {
 	ALLOWED_ORIGINS          []string
 	REDIS_PASS               string
 	LOGFILE                  string
+	GIT_SERVER_LOGFILE       string
 	PATH_PREFIX              string
 	GIT_USER_REPOS_DIR       string
 	GIT_USER_PULLRQ_DIR      string
@@ -38,6 +39,7 @@ func New() *Config {
 		REDIS_PASS:           getEnv("REDIS_PASS", ""),
 		PATH_PREFIX:          getEnv("PATH_PREFIX", "/home/ubuntu/CodeHub/"),
 		LOGFILE:              getEnv("LOGFILE", "logfile.log"),
+		GIT_SERVER_LOGFILE:   getEnv("GIT_SERVER_LOGFILE", "gitserver_logfile.log"),
 		ALLOWED_ORIGINS: getEnvAsSlice("ALLOWED_ORIGINS",
 			[]string{"http://code-hub.space"}, ","),
 		GIT_USER_REPOS_DIR:       getEnv("GIT_USER_REPOS_DIR", "codehub_repositories"),

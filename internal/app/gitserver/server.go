@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/config"
-	monitoring2 "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
+	codehubMetrics "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/monitoring"
 	mergeRepository "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/codehub/repository/postgres/merge"
 	gitRepository "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/git/repository"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/gitserver/delivery"
@@ -17,6 +17,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	"github.com/sosedoff/gitkit"
 	"log"
 	"net/http"
@@ -27,16 +28,31 @@ import (
 
 func StartNew() {
 	conf := config.New()
-	prometheus.MustRegister(monitoring2.Hits, monitoring2.RequestDuration, monitoring2.DBQueryDuration)
+	prometheus.MustRegister(codehubMetrics.Hits, codehubMetrics.RequestDuration, codehubMetrics.DBQueryDuration)
+
+	f, err := os.OpenFile(conf.GIT_SERVER_LOGFILE, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		logrus.Fatalln("Failed to open gitserver logfile:", err)
+	}
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			logrus.Errorln("Failed to close logfile:", err)
+		}
+	}()
+
+	customLogger := logger.NewTextFormatSimpleLogger(f, 1)
+
+	if _, err = fmt.Fprintf(f, ">>>>>>>>>>>>%v<<<<<<<<<<<<\n", time.Now()); err != nil {
+		msg := fmt.Sprintln("Failed to write gitserver start timestamp in log output:", err)
+		customLogger.Error(msg)
+		log.Fatal(msg)
+	}
 
 	userClient, err := clients.NewUserClient()
 	if err != nil {
 		log.Fatal(err, "not connect to auth server")
 	}
-
-	customLogger := logger.NewTextFormatSimpleLogger(os.Stdout)
-
-	customLogger.Printf(">>>>>>>>>>>>%v<<<<<<<<<<<<\n", time.Now())
 
 	//берутся из .env файла
 	connStr := "user=" + conf.POSTGRES_USER + " password=" +
@@ -59,17 +75,17 @@ func StartNew() {
 
 	absGitRepoDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_REPOS_DIR))
 	if pathErr != nil {
-		customLogger.Fatalln("bad git directory path:", err)
+		customLogger.Fatalln("bad git repositories directory path:", err)
 		return
 	}
 
 	absPullsDir, pathErr := filepath.Abs(filepath.Clean(conf.GIT_USER_PULLRQ_DIR))
 	if pathErr != nil {
-		log.Fatalln("bad git directory path:", err)
+		log.Fatalln("bad git pull requests directory path:", err)
 	}
 
 	gitRepos := gitRepository.NewRepository(db, absGitRepoDir)
-	mergeRepos := mergeRepository.NewPullRequestRepository(db, absPullsDir)
+	mergeRepos := mergeRepository.NewPullRequestRepository(db, gitRepos, absPullsDir)
 
 	gitkitConfig := gitkit.Config{
 		Dir:        conf.GIT_USER_REPOS_DIR,
@@ -85,7 +101,7 @@ func StartNew() {
 	}
 
 	panicMiddleware := middleware.CreatePanicMiddleware(customLogger)
-	accessLogMiddleware := middlewareCommon.CreateAccessLogMiddleware(1, customLogger)
+	accessLogMiddleware := middlewareCommon.CreateAccessLogMiddleware(customLogger)
 
 	routerTemplate := fmt.Sprintf("/{%s}/{%s}.git",
 		delivery.OwnerLoginMuxParameter, delivery.RepositoryNameMuxParameter)

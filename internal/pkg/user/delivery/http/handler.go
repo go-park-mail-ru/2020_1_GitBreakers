@@ -2,17 +2,22 @@ package http
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/app/clients/interfaces"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/session"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/user"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/http/helpers"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -20,6 +25,7 @@ type UserHttp struct {
 	SessHttp session.SessDelivery
 	Logger   *logger.SimpleLogger
 	UClient  interfaces.UserClientI
+	UCUser   user.UCUser
 }
 
 func (UsHttp *UserHttp) Create(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +112,7 @@ func (UsHttp *UserHttp) Update(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
+func (UsHttp *UserHttp) LoginByLoginOrEmail(w http.ResponseWriter, r *http.Request) {
 	if res := r.Context().Value(models.UserIDKey); res != nil {
 		UsHttp.Logger.HttpInfo(r.Context(), "already authorized", http.StatusNotAcceptable)
 		w.WriteHeader(http.StatusNotAcceptable)
@@ -120,17 +126,19 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := govalidator.ValidateStruct(input); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "govalidator", "validate struct", errors.Cause(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	var userModel models.User
+	var err error
+
+	if govalidator.IsEmail(input.Login) {
+		userModel, err = UsHttp.UCUser.GetByEmail(input.Login)
+	} else {
+		userModel, err = UsHttp.UClient.GetByLogin(input.Login)
 	}
 
-	User, err := UsHttp.UClient.GetByLogin(input.Login)
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
 		w.WriteHeader(http.StatusNotFound)
-		UsHttp.Logger.HttpLogError(r.Context(), "", "GetByLogin", errors.Cause(err))
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		return
 	case err != nil:
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
@@ -138,22 +146,22 @@ func (UsHttp *UserHttp) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isUser, err := UsHttp.UClient.CheckPass(User.Login, input.Password)
+	isUser, err := UsHttp.UClient.CheckPass(userModel.Login, input.Password)
 	if err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "user/delivery/http", "Login: ",
+		UsHttp.Logger.HttpLogError(r.Context(), "user/delivery/http", "LoginByLoginOrEmail: ",
 			errors.Cause(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if !isUser {
-		UsHttp.Logger.HttpLogWarning(r.Context(), "user/delivery/http", "Login",
+		UsHttp.Logger.HttpLogWarning(r.Context(), "user/delivery/http", "LoginByLoginOrEmail",
 			"bad credentials")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	cookie, err := UsHttp.SessHttp.Create(User.ID)
+	cookie, err := UsHttp.SessHttp.Create(userModel.ID)
 	if err != nil {
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -227,8 +235,14 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//6MB max
-	if err := r.ParseMultipartForm(6 << 20); err != nil {
-		UsHttp.Logger.HttpLogError(r.Context(), "http", "ParseMultipartForm", errors.Cause(err))
+	err := r.ParseMultipartForm(6 << 20)
+	switch {
+	case err == multipart.ErrMessageTooLarge:
+		UsHttp.Logger.HttpLogError(r.Context(), "http", "ParseMultipartForm", err)
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	case err != nil:
+		UsHttp.Logger.HttpLogError(r.Context(), "http", "ParseMultipartForm", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -253,6 +267,12 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, err := helpers.CheckImageFileContentType(binaryImage.Bytes()); err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	currUser := r.Context().Value(models.UserIDKey).(int64)
 
 	err = UsHttp.UClient.UploadAvatar(currUser, header.Filename, binaryImage.Bytes(), int64(binaryImage.Len()))
@@ -265,20 +285,60 @@ func (UsHttp *UserHttp) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	UsHttp.Logger.HttpLogInfo(r.Context(), "new avatar loaded")
 }
 
-func (UsHttp *UserHttp) GetInfoByLogin(w http.ResponseWriter, r *http.Request) {
-	slug := mux.Vars(r)["login"]
-	userData, err := UsHttp.UClient.GetByLogin(slug)
+func (UsHttp *UserHttp) GetInfoByLoginOrEmail(w http.ResponseWriter, r *http.Request) {
+	slug := mux.Vars(r)["login_or_email"]
+
+	var userModel models.User
+	var err error
+
+	if govalidator.IsEmail(slug) {
+		userModel, err = UsHttp.UCUser.GetByEmail(slug)
+	} else {
+		userModel, err = UsHttp.UClient.GetByLogin(slug)
+	}
 
 	switch {
 	case errors.Is(err, entityerrors.DoesNotExist()):
-		UsHttp.Logger.HttpLogWarning(r.Context(), "user", "GetByLogin", errors.Cause(err).Error())
 		w.WriteHeader(http.StatusNotFound)
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		return
 	case err != nil:
 		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
 
+	if _, _, err := easyjson.MarshalToHTTPResponseWriter(userModel, w); err != nil {
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	UsHttp.Logger.HttpInfo(r.Context(), "info received", http.StatusOK)
+}
+
+func (UsHttp *UserHttp) GetInfoByID(w http.ResponseWriter, r *http.Request) {
+	slug := mux.Vars(r)["id"]
+
+	id, err := strconv.ParseInt(slug, 10, 64)
+	if err != nil {
+		UsHttp.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("bad request: %v", err))
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	userData, err := UsHttp.UClient.GetByID(id)
+
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		UsHttp.Logger.HttpLogInfo(r.Context(), fmt.Sprintf("user with id=%d does not exist", id))
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	case err != nil:
+		UsHttp.Logger.HttpLogCallerError(r.Context(), *UsHttp, err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError)
+		return
 	}
 
 	if _, _, err := easyjson.MarshalToHTTPResponseWriter(userData, w); err != nil {

@@ -102,8 +102,14 @@ func CreateGitReceivePackMiddleware(delivery GitServerDelivery) func(http.Handle
 
 			if needNextHandler {
 				next.ServeHTTP(w, r)
-			}
 
+				// Update merge requests associated with this repo
+				repoInfo := getRepoInfo(r)
+				if err := updateMrStatuses(repoInfo, delivery); err != nil {
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					delivery.Logger.HttpLogCallerError(r.Context(), delivery, err)
+				}
+			}
 		})
 	}
 }
@@ -168,10 +174,6 @@ func gitReceivePackHandler(w http.ResponseWriter, r *http.Request, delivery GitS
 	if perm == permTypes.NoAccess() || perm == permTypes.ReadAccess() {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return false, nil
-	}
-
-	if err := updateMrStatuses(repoInfo, delivery); err != nil {
-		return false, err
 	}
 
 	return needNextHandle, nil

@@ -41,8 +41,8 @@ func (GU *GitUseCase) DeleteByOwnerID(ownerID int64, repoName string) error {
 	return GU.Repo.DeleteByOwnerID(ownerID, repoName)
 }
 
-func (GU *GitUseCase) GetRepoList(userName string, requestUserID *int64) (gitmodels.RepositorySet, error) {
-	rawRepoList, err := GU.Repo.GetAnyReposByUserLogin(userName, 0, 100)
+func (GU *GitUseCase) GetRepoList(userName string, offset, limit int64, requestUserID *int64) (gitmodels.RepositorySet, error) {
+	rawRepoList, err := GU.Repo.GetAnyReposByUserLogin(userName, offset, limit)
 	if err != nil {
 		return nil, errors.Wrap(err, "didn't get repolist")
 	}
@@ -144,4 +144,52 @@ func (GU *GitUseCase) Fork(repoID int64, author, repoName, newName string, currU
 	}
 
 	return err
+}
+
+func (GU *GitUseCase) GetBranchInfoByNames(userLogin, repoName, branchName string, currUserID *int64) (gitmodels.Branch, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(currUserID, userLogin, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return gitmodels.Branch{}, entityerrors.DoesNotExist()
+	case err == nil && !isReadyToRead:
+		return gitmodels.Branch{}, entityerrors.AccessDenied()
+	case err != nil:
+		return gitmodels.Branch{}, errors.WithStack(err)
+	}
+
+	branch, err := GU.Repo.GetBranchInfoByNames(userLogin, repoName, branchName)
+
+	return branch, errors.WithStack(err)
+}
+
+func (GU *GitUseCase) GetFileContentByBranch(userLogin, repoName, branchName, filePath string, currUserID *int64) ([]byte, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(currUserID, userLogin, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return nil, entityerrors.DoesNotExist()
+	case err == nil && !isReadyToRead:
+		return nil, entityerrors.AccessDenied()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	content, err := GU.Repo.GetFileContentByBranch(userLogin, repoName, branchName, filePath)
+
+	return content, errors.WithStack(err)
+}
+
+func (GU *GitUseCase) GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath string, currUserID *int64) ([]byte, error) {
+	isReadyToRead, err := GU.Repo.CheckReadAccess(currUserID, userLogin, repoName)
+	switch {
+	case errors.Is(err, entityerrors.DoesNotExist()):
+		return nil, entityerrors.DoesNotExist()
+	case err == nil && !isReadyToRead:
+		return nil, entityerrors.AccessDenied()
+	case err != nil:
+		return nil, errors.WithStack(err)
+	}
+
+	content, err := GU.Repo.GetFileContentByCommitHash(userLogin, repoName, commitHash, filePath)
+
+	return content, errors.WithStack(err)
 }

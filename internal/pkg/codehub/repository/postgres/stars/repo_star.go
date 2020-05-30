@@ -5,6 +5,7 @@ import (
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models"
 	gitmodels "github.com/go-park-mail-ru/2020_1_GitBreakers/internal/pkg/models/git"
 	"github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/entityerrors"
+	perm "github.com/go-park-mail-ru/2020_1_GitBreakers/pkg/permission_types"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -78,7 +79,9 @@ func (repo *StarRepository) DelStar(userID int64, repoID int64) error {
 	return nil
 }
 
-func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset int64) (gitRepos []gitmodels.Repository, err error) {
+func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset int64,
+	requestUserID *int64) (gitRepos []gitmodels.Repository, err error) {
+
 	rows, err := repo.DB.Query(
 		`	SELECT 	gruv.id,
 					   	gruv.owner_id,
@@ -91,8 +94,10 @@ func (repo *StarRepository) GetStarredRepos(userID int64, limit int64, offset in
 	       				gruv.user_login
 				FROM git_repository_user_stars AS grus
 						JOIN git_repository_user_view AS gruv ON gruv.id = grus.repository_id
+						JOIN users_git_repositories AS ugr ON gruv.id = ugr.repository_id
+							AND (ugr.user_id = $4 AND ugr.role NOT IN ($5) OR gruv.is_public = TRUE)
 				WHERE grus.author_id = $1 LIMIT $2 OFFSET $3`,
-		userID, limit, offset)
+		userID, limit, offset, requestUserID, perm.NoAccess())
 	if err != nil {
 		return nil, errors.Wrapf(err, "error occurs in StarRepository in GetStarredRepos function "+
 			"with userId=%v", userID)
