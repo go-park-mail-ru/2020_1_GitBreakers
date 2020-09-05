@@ -128,7 +128,7 @@ func StartNew() {
 		conf.ALLOWED_ORIGINS,
 		middleware.DefaultCSRFCookieName,
 		csrfHandlers.TokenHeaderName,
-		false,
+		true,
 		gorCSRF.SameSiteNoneMode,
 		conf.COOKIE_EXPIRE_HOURS*3600,
 	)
@@ -290,7 +290,7 @@ func initNewHandler(db *sqlx.DB, logger logger.SimpleLogger, conf *config.Config
 	sessDelivery := http2.SessionHttp{
 		CookieName:       "session_id",
 		CookieExpireTime: time.Duration(conf.COOKIE_EXPIRE_HOURS) * time.Hour,
-		CookieSecure:     false,
+		CookieSecure:     true,
 		CookieSiteMode:   http.SameSiteNoneMode,
 		CookiePath:       "/",
 		Client:           &sessClient,
